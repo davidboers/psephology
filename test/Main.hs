@@ -4,6 +4,7 @@ module Main (main) where
 
 import Test.Tasty
 import Test.Tasty.HUnit
+import Test.Tasty.Runners.TAP
 
 import Data.Bifunctor qualified
 import Data.Maybe
@@ -16,8 +17,13 @@ import Psephology.SampleElections
 import Psephology.Spoilers
 import Psephology.Voter
 
+useTAP :: Bool
+useTAP = False
+
 main :: IO ()
-main = defaultMain tests
+main
+    | useTAP = defaultMainWithIngredients [tapRunner] tests
+    | otherwise = defaultMain tests
 
 tests :: TestTree
 tests =
