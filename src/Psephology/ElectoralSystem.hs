@@ -28,12 +28,12 @@ votesOrdinal f candidates voters =
     | c <- [0 .. (length candidates - 1)]
     ]
 
--- Returns the tally for each candidate based on 'preference'.
+-- | Returns the tally for each candidate based on 'preference'.
 votes :: (Voter a) => [Candidate] -> [a] -> [Int]
 votes =
     votesOrdinal preference
 
--- Returns the tally for each candidate based on 'lastPreference'.
+-- | Returns the tally for each candidate based on 'lastPreference'.
 antiVotes :: (Voter a) => [Candidate] -> [a] -> [Int]
 antiVotes =
     votesOrdinal lastPreference
@@ -41,13 +41,13 @@ antiVotes =
 -- First-past-the-post
 -- See [here](https://en.wikipedia.org/wiki/First-past-the-post_voting) for a detailed explanation.
 
--- Returns the index of the candidate that wins a FPTP election.
+-- | Returns the index of the candidate that wins a FPTP election.
 firstPastThePost :: (Voter a) => [Candidate] -> [a] -> Int
 firstPastThePost candidates voters =
     let tally = votes candidates voters
      in argmax (tally !!) [0 .. length candidates - 1]
 
--- Returns the index of the candidate that is disliked most by the most voters.
+-- | Returns the index of the candidate that is disliked most by the most voters.
 antiPlurality :: (Voter a) => [Candidate] -> [a] -> Int
 antiPlurality candidates voters =
     let tally = antiVotes candidates voters
@@ -55,7 +55,7 @@ antiPlurality candidates voters =
 
 -- Two-round system
 
--- Returns the index of the candidate that wins a TRS election.
+-- | Returns the index of the candidate that wins a TRS election.
 twoRoundThreshold :: (Voter a) => Double -> [Candidate] -> [a] -> Int
 twoRoundThreshold floatingThreshold candidates voters =
     let tally = votes candidates voters
@@ -63,7 +63,7 @@ twoRoundThreshold floatingThreshold candidates voters =
             then argmax (tally !!) [0 .. (length candidates - 1)]
             else secondRound candidates voters tally
 
--- Shortcut for 'twoRoundThreshold' with the threshold set at 50%.
+-- | Shortcut for 'twoRoundThreshold' with the threshold set at 50%.
 twoRound :: (Voter a) => [Candidate] -> [a] -> Int
 twoRound = twoRoundThreshold 0.5
 
@@ -78,7 +78,7 @@ firstRoundDecisive floatingThreshold tally =
     let solidThreshold = floor $ floatingThreshold * fromIntegral (sum tally)
      in maximum tally > solidThreshold
 
--- Returns a list of the indexes of the candidates in the top 2 positions.
+-- | Returns a list of the indexes of the candidates in the top 2 positions.
 includeListTRS :: [Candidate] -> [Int] -> [Int]
 includeListTRS candidates tally =
     let cutoff = minimum $ take 2 $ sortBy (comparing Data.Ord.Down) tally
@@ -89,12 +89,12 @@ includeListTRS candidates tally =
 
 -- Instant-Runoff Voting
 
--- Returns the index of the candidate that wins an IRV election.
+-- | Returns the index of the candidate that wins an IRV election.
 instantRunoffVoting :: (Voter a) => [Candidate] -> [a] -> Int
 instantRunoffVoting candidates voters =
     instantRunoff candidates voters (votes candidates voters)
 
--- Single iteration of IRV. No bulk exclusions or early elections.
+-- | Single iteration of IRV. No bulk exclusions or early elections.
 instantRunoff :: (Voter a) => [Candidate] -> [a] -> [Int] -> Int
 instantRunoff [_] _ _ = 0
 instantRunoff candidates voters prevTally =
@@ -109,33 +109,33 @@ includeListIRV candidates tally =
 
 -- Borda count
 
--- @'traditionalBordaWeight' n r@ returns @n@ - @r@ where @n@ is the total number of candidates and @r@ is the candidate rank. If @r@ is -1, returns 0.
+-- | @'traditionalBordaWeight' n r@ returns @n@ - @r@ where @n@ is the total number of candidates and @r@ is the candidate rank. If @r@ is -1, returns 0.
 traditionalBordaWeight :: Int -> Int -> Double
 traditionalBordaWeight _ (-1) = 0
 traditionalBordaWeight n r =
     fromIntegral $ n - r
 
--- @'dowdallWeight' n r@ returns 1 / @r@ where @n@ is the total number of candidates and @r@ is the candidate rank. If @r@ is -1, returns 0.
+-- | @'dowdallWeight' n r@ returns 1 / @r@ where @n@ is the total number of candidates and @r@ is the candidate rank. If @r@ is -1, returns 0.
 dowdallWeight :: Int -> Int -> Double
 dowdallWeight _ (-1) = 0
 dowdallWeight _ r =
     1 / fromIntegral r
 
--- @'bordaTally weightFormula candidates voters c'@ returns the Borda tally for a specific candidate @c@.
+-- | @'bordaTally' weightFormula candidates voters c@ returns the Borda tally for a specific candidate @c@.
 bordaTally :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> [a] -> Candidate -> Double
 bordaTally weightFormula candidates voters c =
     sum $ map (weightFormula (length candidates) . rank candidates c) voters
 
--- @'bordaCountWFormula' weightFormula candidates voters@ returns the index of the candidate that wins a Borda count using @weightFormula@.
+-- | @'bordaCountWFormula' weightFormula candidates voters@ returns the index of the candidate that wins a Borda count using @weightFormula@.
 bordaCountWFormula :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
 bordaCountWFormula weightFormula candidates voters =
     argmax (bordaTally weightFormula candidates voters . (candidates !!)) [0 .. length candidates - 1]
 
--- Shortcut for 'bordaCountWFormula'
+-- | Shortcut for 'bordaCountWFormula'
 bordaCount :: (Voter a) => [Candidate] -> [a] -> Int
 bordaCount = bordaCountWFormula traditionalBordaWeight
 
--- Shortcut for 'bordaCountWFormula'
+-- | Shortcut for 'bordaCountWFormula'
 dowdallSystem :: (Voter a) => [Candidate] -> [a] -> Int
 dowdallSystem = bordaCountWFormula dowdallWeight
 

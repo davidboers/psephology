@@ -13,16 +13,15 @@ class Voter a where
     preference :: [Candidate] -> a -> Int
 
     -- | @'rank' c v@ returns voter @v@'s ranking for @c@ or -1 if truncated.
-    -- Switch order of v and c?
     rank :: [Candidate] -> Candidate -> a -> Int
 
--- Modeled voter preferences
+-- | Modeled voter preferences
 instance Voter [Double] where
     preference candidates v = argmin (\n -> dist v (candidates !! n)) [0 .. (length candidates - 1)]
 
     rank candidates c v = rank candidates c (map (dist v) candidates)
 
--- Given voter preferences, ex. from a .blt file.
+-- | Given voter preferences, ex. from a .blt file.
 instance Voter [Candidate] where
     preference _ [] = -1
     preference candidates (nextChoice : v) =
@@ -39,7 +38,7 @@ lastPreference candidates v =
         candidates_without = map (candidates !!) indexes_without
      in indexes_without !! lastPreference candidates_without v
 
--- For limited preferential voting
+-- | For limited preferential voting
 truncateAt :: Int -> [[Candidate]] -> [[Candidate]]
 truncateAt k = map (take k)
 
