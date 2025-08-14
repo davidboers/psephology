@@ -1,8 +1,9 @@
+[Psephology](https://en.wikipedia.org/wiki/Psephology) • [Social choice theory](https://en.wikipedia.org/wiki/Social_choice_theory) • [Spoiler effect](https://en.wikipedia.org/wiki/Spoiler_effect) • [Arrow's impossibility theorem](https://en.wikipedia.org/wiki/Arrow%27s_impossibility_theorem)
 
 # TODO list
 
-* Pathology finder
-* Spoiler finder for McKelvey-Schofield chaos
-* Import from .blt (lol)
-* Test suite
-    * Easy way of displaying outcomes for every method
+- Spoiler finder for McKelvey-Schofield chaos
+- Import from .blt (no yacc)
+- Test suite
+  - Pathologies
+  - Improve tests (one at a time)
