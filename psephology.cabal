@@ -37,6 +37,7 @@ library
                       Psephology.Spoilers.Proxies
                       Psephology.Condorcet
                       Psephology.ElectoralSystem
+                      Psephology.McKelveySchofield
                       Psephology.Pathologies
                       Psephology.SampleElections
                       Psephology.SinglePeakedPreferences

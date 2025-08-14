@@ -9,6 +9,7 @@ import Test.Tasty.Runners.TAP
 import Data.Bifunctor qualified
 import Data.Maybe
 
+import Psephology (findASpoiler, newMajority)
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
@@ -29,8 +30,11 @@ tests :: TestTree
 tests =
     testGroup
         "Tests"
-        [testTennesseeCapitalElection]
+        [ testTennesseeCapitalElection
+        , testMcKelveySchofield
+        ]
 
+testTennesseeCapitalElection :: TestTree
 testTennesseeCapitalElection =
     testGroup
         "Tennessee Capital election"
@@ -86,6 +90,20 @@ testTennesseeCapitalElection =
   where
     candidates = tennesseeCapitalCandidates
     voters = tennesseeCapital
+
+testMcKelveySchofield :: TestTree
+testMcKelveySchofield =
+    testGroup
+        "McKelvey-Schofield chaos theorem"
+        [ testCase "(simple spoiler)" $
+            findASpoiler p1 voters @?= basicSpoiler
+        , testCase "(new majority)" $
+            newMajority p1 voters basicSpoiler @?= [0, 2]
+        ]
+  where
+    p1 = Spacial [9, 1]
+    voters = [[0, 0], [10, 0], [10, 10]]
+    basicSpoiler = Spacial [4, 4]
 
 -- Helpers
 

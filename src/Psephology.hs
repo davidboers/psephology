@@ -8,6 +8,7 @@ module Psephology (
     module Psephology.Candidate,
     module Psephology.Condorcet,
     module Psephology.ElectoralSystem,
+    module Psephology.McKelveySchofield,
     module Psephology.Pathologies,
     module Psephology.SampleElections,
     module Psephology.SinglePeakedPreferences,
@@ -18,6 +19,7 @@ import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
+import Psephology.McKelveySchofield
 import Psephology.Pathologies
 import Psephology.SampleElections
 import Psephology.SinglePeakedPreferences

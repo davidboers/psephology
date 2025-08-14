@@ -2,8 +2,8 @@
 
 # TODO list
 
-- Spoiler finder for McKelvey-Schofield chaos
 - Import from .blt (no yacc)
 - Test suite
   - Pathologies
   - Improve tests (one at a time)
+- Bulk elections
