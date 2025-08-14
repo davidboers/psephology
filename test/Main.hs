@@ -2,69 +2,132 @@
 
 module Main (main) where
 
+import Test.Tasty
+import Test.Tasty.HUnit
+
 import Data.Bifunctor qualified
-import Data.List (elemIndex, find, intersperse, nub, sort, sortBy, sortOn, subsequences)
-import Data.List.NonEmpty (sortWith)
 import Data.Maybe
-import Data.Ord (Down (Down), comparing)
-import GHC.OldList (findIndex)
 
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
-import Psephology.Pathologies
 import Psephology.SampleElections
-import Psephology.SinglePeakedPreferences
 import Psephology.Spoilers
-import Psephology.Spoilers.Clones
-import Psephology.Spoilers.Proxies
 import Psephology.Voter
 
-eachSystem :: (Voter a, Show b) => ([Candidate] -> [a] -> ElectoralSystem a -> b) -> [Candidate] -> [a] -> String
-eachSystem f candidates voters =
-    unlines $
-        map
-            (\(name, es) -> "   " ++ name ++ ": " ++ show (f candidates voters es))
-            [ ("FPTP", firstPastThePost)
-            , ("Anti-plurality", antiPlurality)
-            , ("TRS", twoRound)
-            , ("IRV", instantRunoffVoting)
-            , ("Borda", bordaCount)
-            , ("Dowdall", dowdallSystem)
-            ]
-
-proxyPairLists :: (Voter a) => [Candidate] -> [a] -> ElectoralSystem a -> [(Candidate, Candidate)]
-proxyPairLists candidates voters es =
-    map (Data.Bifunctor.bimap (candidates !!) (candidates !!)) $ proxies candidates voters es
-
 main :: IO ()
-main = do
-    let voters = tennesseeCapital
-    let candidates = tennesseeCapitalCandidates
-    -- FPTP: Memphis
-    -- Anti-plurality: Nashville
-    -- TRS: Nashville
-    -- IRV: Knoxville
-    -- Borda: Nashville
-    -- Dowdall: Nashville
-    putStrLn "Winners: "
-    putStrLn $ eachSystem (\_ _ es -> candidates !! es candidates voters) candidates voters
+main = defaultMain tests
 
-    putStr "Condorcet winner: " -- Nashville
-    print $ candidates !! fromJust (condorcetWinner candidates voters)
+tests :: TestTree
+tests =
+    testGroup
+        "Tests"
+        [testTennesseeCapitalElection]
 
-    putStr "Pairwise majorities: "
-    print $ condorcetMatrix numPreferOver candidates voters
+testTennesseeCapitalElection =
+    testGroup
+        "Tennessee Capital election"
+        [ testWinnerBySystem
+            candidates
+            voters
+            [ "Memphis"
+            , "Nashville" -- Or Chattanooga
+            , "Nashville"
+            , "Knoxville"
+            , "Nashville"
+            , "Nashville"
+            , "Nashville"
+            ]
+        , testCondorcetWinner candidates voters "Nashville"
+        , testCase "(pairwise scores)" $
+            condorcetMatrix numPreferOver candidates voters
+                @?= [ [100, 58, 58, 58]
+                    , [42, 100, 32, 32]
+                    , [42, 68, 100, 17]
+                    , [42, 68, 83, 100]
+                    ]
+        , testCase "(.blt export)" $
+            export candidates voters "Tennessee capital election"
+                @?= "4 1\n42 1 2 3 4 0\n26 2 3 4 1 0\n15 3 4 2 1 0\n17 4 3 2 1 0\n0\n\"Memphis\"\n\"Nashville\"\n\"Chattanooga\"\n\"Knoxville\"\n\"Tennessee capital election\"\n"
+        , testClones
+            candidates
+            voters
+            [ ["Chattanooga", "Knoxville"]
+            , ["Nashville", "Chattanooga", "Knoxville"]
+            ]
+        , testSpoilers
+            candidates
+            voters
+            [ []
+            , ["Memphis"]
+            , ["Chattanooga", "Knoxville"]
+            , ["Memphis", "Nashville"]
+            , []
+            , []
+            ]
+        , testProxies
+            candidates
+            voters
+            [ [("Memphis", "Nashville")]
+            , [("Nashville", "Chattanooga")]
+            , [("Chattanooga", "Knoxville")]
+            , [("Chattanooga", "Knoxville")]
+            , [("Nashville", "Chattanooga")]
+            , [("Memphis", "Nashville")]
+            ]
+        ]
+  where
+    candidates = tennesseeCapitalCandidates
+    voters = tennesseeCapital
 
-    putStrLn ".blt file: "
-    putStr $ export candidates voters "Unnamed"
+-- Helpers
 
-    putStrLn "Clones: " -- [[Chattanooga,Knoxville],[Nashville,Chattanooga,Knoxville]]
-    print $ map (map (candidates !!)) $ clones candidates voters
+namer candidates = show . (!!) candidates
+namer1 candidates = map (namer candidates)
+namer2 candidates = map (namer1 candidates)
+namer1t candidates = map (Data.Bifunctor.bimap (namer candidates) (namer candidates))
 
-    putStrLn "Spoilers: "
-    putStrLn $ eachSystem (\_ _ es -> map (candidates !!) $ spoilers candidates voters es) candidates voters
+systems :: (Voter a) => [(String, ElectoralSystem a)]
+systems =
+    [ ("FPTP", firstPastThePost)
+    , ("Anti-plurality", antiPlurality)
+    , ("TRS", twoRound)
+    , ("IRV", instantRunoffVoting)
+    , ("Borda", bordaCount)
+    , ("Dowdall", dowdallSystem)
+    ]
 
-    putStrLn "Proxies: "
-    putStrLn $ eachSystem proxyPairLists candidates voters
+-- Compares an outcome of function f(c,v) given electoral system es.
+compareOutcome :: (Voter a, Show b, Eq b) => (ElectoralSystem a -> b) -> ((TestName, ElectoralSystem a), b) -> TestTree
+compareOutcome f_CV ((name, es), correctAnswer) =
+    testCase name $ f_CV es @?= correctAnswer
+
+testBySystem :: (Voter a, Show b, Eq b) => (ElectoralSystem a -> b) -> [b] -> [TestTree]
+testBySystem f_CV = zipWith (curry (compareOutcome f_CV)) systems
+
+testWinnerBySystem :: (Voter a) => [Candidate] -> [a] -> [String] -> TestTree
+testWinnerBySystem candidates voters results =
+    testGroup "(winner by system)" $
+        testBySystem (\es -> namer candidates $ es candidates voters) results
+
+testCondorcetWinner :: (Voter a) => [Candidate] -> [a] -> String -> TestTree
+testCondorcetWinner candidates voters correctAnswer =
+    testCase "(Condorcet winner)" $
+        namer candidates (fromJust (condorcetWinner candidates voters)) @?= correctAnswer
+
+testClones :: (Voter a) => [Candidate] -> [a] -> [[String]] -> TestTree
+testClones candidates voters correctAnswer = testCase "(clones)" $ byNames @?= correctAnswer
+  where
+    byNumbers = clones candidates voters
+    byNames = namer2 candidates byNumbers
+
+testSpoilers :: (Voter a) => [Candidate] -> [a] -> [[String]] -> TestTree
+testSpoilers candidates voters correctAnswers =
+    testGroup "(spoilers)" $
+        testBySystem (namer1 candidates . spoilers candidates voters) correctAnswers
+
+testProxies :: (Voter a) => [Candidate] -> [a] -> [[(String, String)]] -> TestTree
+testProxies candidates voters correctAnswers =
+    testGroup "(spoilers)" $
+        testBySystem (namer1t candidates . proxies candidates voters) correctAnswers

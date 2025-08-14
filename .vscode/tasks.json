@@ -9,9 +9,13 @@
     },
     {
       "type": "shell",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
       "label": "Run tests (tests/Main.hs)",
       "command": "cabal",
-      "args": ["run", "psephology-test"]
+      "args": ["run"]
     }
   ]
 }

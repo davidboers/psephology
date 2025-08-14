@@ -71,6 +71,8 @@ test-suite psephology-test
     -- Test dependencies.
     build-depends:
         base,
-        psephology
+        psephology,
+        tasty,
+        tasty-hunit
     hs-source-dirs:   test
     default-language: Haskell2010
