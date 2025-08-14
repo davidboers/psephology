@@ -1,0 +1,8 @@
+# Binaries
+*.exe
+*.hi
+*.ho
+dist-newstyle
+
+# Docs
+docs

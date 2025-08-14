@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Make documentation",
+      "command": "cabal",
+      "args": ["haddock-project", "--out=docs"]
+    },
+    {
+      "type": "shell",
+      "label": "Run tests (tests/Main.hs)",
+      "command": "cabal",
+      "args": ["run", "psephology-test"]
+    }
+  ]
+}
