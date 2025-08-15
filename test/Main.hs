@@ -9,7 +9,7 @@ import Test.Tasty.Runners.TAP
 import Data.Bifunctor qualified
 import Data.Maybe
 
-import Psephology (findASpoiler, newMajority, spoilerPotential)
+import Psephology (condorcetFailure, findASpoiler, majorityCoalitions, majorityFailure, mutualMajorityFailure, newMajority, spoilerPotential)
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
@@ -47,7 +47,6 @@ testTennesseeCapitalElection =
             , "Knoxville"
             , "Nashville"
             , "Nashville"
-            , "Nashville"
             ]
         , testCondorcetWinner candidates voters "Nashville"
         , testCase "(pairwise scores)" $
@@ -66,25 +65,37 @@ testTennesseeCapitalElection =
             [ ["Chattanooga", "Knoxville"]
             , ["Nashville", "Chattanooga", "Knoxville"]
             ]
+        , testCase "(majority coalitions)" $
+            majorityCoalitions candidates voters @?= [[1, 2, 3]]
         , testSpoilers
             candidates
             voters
-            [ []
-            , ["Memphis"]
-            , ["Chattanooga", "Knoxville"]
-            , ["Memphis", "Nashville"]
-            , []
-            , []
+            [ [] -- FPTP
+            , ["Memphis"] -- Anti-plurality
+            , ["Chattanooga", "Knoxville"] -- TRS
+            , ["Memphis", "Nashville"] -- IRV
+            , [] -- Borda
+            , [] -- Dowdall
             ]
         , testProxies
             candidates
             voters
-            [ [("Memphis", "Nashville")]
-            , [("Nashville", "Chattanooga")]
-            , [("Chattanooga", "Knoxville")]
-            , [("Chattanooga", "Knoxville")]
-            , [("Nashville", "Chattanooga")]
-            , [("Memphis", "Nashville")]
+            [ [("Memphis", "Nashville")] -- FPTP
+            , [("Nashville", "Chattanooga")] -- Anti-plurality
+            , [("Chattanooga", "Knoxville")] -- TRS
+            , [("Chattanooga", "Knoxville")] -- IRV
+            , [("Nashville", "Chattanooga")] -- Borda
+            , [("Memphis", "Nashville")] -- Dowdall
+            ]
+        , testForPathologies
+            candidates
+            voters
+            [ [True, False, True] -- FPTP
+            , [False, False, False] -- Anti-plurality
+            , [False, False, False] -- TRS
+            , [True, False, False] -- IRV
+            , [False, False, False] -- Borda
+            , [False, False, False] -- Dowdall
             ]
         ]
   where
@@ -155,5 +166,21 @@ testSpoilers candidates voters correctAnswers =
 
 testProxies :: (Voter a) => [Candidate] -> [a] -> [[(String, String)]] -> TestTree
 testProxies candidates voters correctAnswers =
-    testGroup "(spoilers)" $
+    testGroup "(proxies)" $
         testBySystem (namer1t candidates . proxies candidates voters) correctAnswers
+
+testForPathologiesBySystem :: (Voter a) => [Candidate] -> [a] -> (String, ElectoralSystem a) -> [Bool] -> TestTree
+testForPathologiesBySystem candidates voters (systemName, es) correctAnswers =
+    testGroup systemName $
+        zipWith
+            (\(pathologyName, f) correctAnswer -> testCase pathologyName $ f candidates voters es @?= correctAnswer)
+            [ ("Condorcet failure", condorcetFailure)
+            , ("Majority failure", majorityFailure)
+            , ("Mutual majority failure", mutualMajorityFailure)
+            ]
+            correctAnswers
+
+testForPathologies :: (Voter a) => [Candidate] -> [a] -> [[Bool]] -> TestTree
+testForPathologies candidates voters correctAnswers =
+    testGroup "(pathologies)" $
+        zipWith (testForPathologiesBySystem candidates voters) systems correctAnswers
