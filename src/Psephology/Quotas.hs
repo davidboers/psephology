@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-type-defaults #-}
 module Psephology.Quotas (hare, droop, hagenbachBischoff, imperiali, majority) where
 
 import Psephology.Voter
