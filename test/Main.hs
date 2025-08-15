@@ -25,7 +25,7 @@ useTAP = False
 
 main :: IO ()
 main = do
-    voters <- singlePeakedVotersNormalCentered 1000 2
+    voters <- singlePeakedVotersNormalCentered 1000000 2
     if useTAP
         then defaultMainWithIngredients [tapRunner] (tests voters)
         else defaultMain (tests voters)
@@ -36,8 +36,11 @@ tests voters =
         "Tests"
         [ testTennesseeCapitalElection
         , testMcKelveySchofield
-        , testCase "(p)" $
-            map (map floor) voters @?= []
+        , testCase "Export generated voters to CSV" $
+            do
+                let csv = unlines $ map (concatMap (\x -> show x ++ ",")) voters
+                writeFile "test/heatmaps/voters.csv" csv
+                True @?= True
         ]
 
 testTennesseeCapitalElection :: TestTree
