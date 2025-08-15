@@ -9,12 +9,14 @@ import Test.Tasty.Runners.TAP
 import Data.Bifunctor qualified
 import Data.Maybe
 
-import Psephology (condorcetFailure, findASpoiler, majorityCoalitions, majorityFailure, mutualMajorityFailure, newMajority, spoilerPotential)
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
+import Psephology.McKelveySchofield (findASpoiler, newMajority, spoilerPotential)
+import Psephology.Pathologies (condorcetFailure, majorityCoalitions, majorityFailure, mutualMajorityFailure)
 import Psephology.SampleElections
+import Psephology.SinglePeakedPreferences
 import Psephology.Spoilers
 import Psephology.Voter
 
@@ -22,16 +24,20 @@ useTAP :: Bool
 useTAP = False
 
 main :: IO ()
-main
-    | useTAP = defaultMainWithIngredients [tapRunner] tests
-    | otherwise = defaultMain tests
+main = do
+    voters <- singlePeakedVotersNormalCentered 1000 2
+    if useTAP
+        then defaultMainWithIngredients [tapRunner] (tests voters)
+        else defaultMain (tests voters)
 
-tests :: TestTree
-tests =
+tests :: [[Double]] -> TestTree
+tests voters =
     testGroup
         "Tests"
         [ testTennesseeCapitalElection
         , testMcKelveySchofield
+        , testCase "(p)" $
+            map (map floor) voters @?= []
         ]
 
 testTennesseeCapitalElection :: TestTree
