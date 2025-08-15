@@ -8,6 +8,7 @@
   - New dimensions
 - Import from .blt (no yacc)
 - Test suite
-  - Pathologies
   - Improve tests (one at a time)
 - Bulk elections
+- Convert a list of formal voters into a list of theoretical voters
+- Test homogeneity
