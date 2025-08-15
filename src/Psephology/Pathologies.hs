@@ -47,17 +47,16 @@ solidCoalition candidates voters l =
 -- | @'isPrefersSet' candidates l v@ returns True if voter @v@ prefers all candidates in @l@ to all other candidates.
 isPrefersSet :: (Voter a) => [Candidate] -> [Int] -> a -> Bool
 isPrefersSet candidates l v =
-    let anti_l = map (candidates !!) $ filter (`notElem` l) [0 .. length candidates - 1]
-        least_preferred_l = lastPreference (map (candidates !!) l) v
-        preferred_anti_l = preference anti_l v
-     in preference [candidates !! least_preferred_l, candidates !! preferred_anti_l] v == least_preferred_l
+    let anti_l = [0 .. length candidates - 1] \\ l
+        least_preferred_l = l !! lastPreference (map (candidates !!) l) v
+        preferred_anti_l = anti_l !! preference (map (candidates !!) anti_l) v
+     in preference [candidates !! least_preferred_l, candidates !! preferred_anti_l] v == 0
 
 -- | Returns a list of 'solidCoalition's that are supported by a majority of @voters@.
 majorityCoalitions :: (Voter a) => [Candidate] -> [a] -> [[Int]]
 majorityCoalitions candidates voters =
-    let subs = filter (\sub -> length sub > 1) $ subsequences [0 .. length candidates - 1]
-        coalitions = map (solidCoalition candidates voters) subs
-     in map (subs !!) $ filter (\i -> length (coalitions !! i) >= majority voters) [0 .. length subs - 1]
+    let subs = filter (\sub -> length sub > 1 && length sub < length candidates) $ subsequences [0 .. length candidates - 1]
+     in filter (\sub -> length (solidCoalition candidates voters sub) >= majority voters) subs
 
 -- | Returns True if the winning candidate falls outside at least one majority coalition.
 mutualMajorityFailure :: (Voter a) => [Candidate] -> [a] -> ElectoralSystem a -> Bool
