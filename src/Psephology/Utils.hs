@@ -1,8 +1,19 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Psephology.Utils (hare, droop, hagenbachBischoff, imperiali, majority, fullPreferentialPermutations, optionalPreferentialPermutations) where
+module Psephology.Utils (hare, droop, hagenbachBischoff, imperiali, majority, fullPreferentialPermutations, optionalPreferentialPermutations, integrate) where
 
 import Psephology.Voter
+
+factorial :: (Integral a) => a -> a
+factorial n = product [1 .. n]
+
+-- Simple trapezoid rule implementation
+integrate :: (Double -> Double) -> Double -> Double -> Int -> Double
+integrate f a b n =
+    let h = (b - a) / fromIntegral n
+        xs = [a + fromIntegral i * h | i <- [1 .. (n - 1)]]
+        sumMiddle = sum (map f xs)
+     in h * ((f a + f b) / 2 + sumMiddle)
 
 -- Quotas
 
@@ -30,9 +41,6 @@ majority :: (Voter a) => [a] -> Int
 majority voters = droop (length voters) 1
 
 -- Permutations
-
-factorial :: (Integral a) => a -> a
-factorial n = product [1 .. n]
 
 -- Returns the number of possible candidate orderings given a number of candidates @n@ without any truncated ballots.
 fullPreferentialPermutations :: Int -> Int
