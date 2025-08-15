@@ -10,6 +10,7 @@ module Psephology (
     module Psephology.ElectoralSystem,
     module Psephology.McKelveySchofield,
     module Psephology.Pathologies,
+    module Psephology.Quotas,
     module Psephology.SampleElections,
     module Psephology.SinglePeakedPreferences,
     module Psephology.Voter,
@@ -21,6 +22,7 @@ import Psephology.Condorcet
 import Psephology.ElectoralSystem
 import Psephology.McKelveySchofield
 import Psephology.Pathologies
+import Psephology.Quotas
 import Psephology.SampleElections
 import Psephology.SinglePeakedPreferences
 import Psephology.Voter

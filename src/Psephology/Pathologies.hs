@@ -3,7 +3,7 @@ module Psephology.Pathologies where
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
-import Psephology.Utils
+import Psephology.Quotas
 import Psephology.Voter
 
 import Data.List

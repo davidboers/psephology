@@ -39,6 +39,7 @@ library
                       Psephology.ElectoralSystem
                       Psephology.McKelveySchofield
                       Psephology.Pathologies
+                      Psephology.Quotas
                       Psephology.SampleElections
                       Psephology.SinglePeakedPreferences
                       Psephology.Voter
