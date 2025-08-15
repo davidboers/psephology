@@ -38,6 +38,7 @@ library
                       Psephology.Condorcet
                       Psephology.ElectoralSystem
                       Psephology.McKelveySchofield
+                      Psephology.Parliament
                       Psephology.Pathologies
                       Psephology.Quotas
                       Psephology.SampleElections

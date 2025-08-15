@@ -9,6 +9,7 @@ module Psephology (
     module Psephology.Condorcet,
     module Psephology.ElectoralSystem,
     module Psephology.McKelveySchofield,
+    module Psephology.Parliament,
     module Psephology.Pathologies,
     module Psephology.Quotas,
     module Psephology.SampleElections,
@@ -21,6 +22,7 @@ import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
 import Psephology.McKelveySchofield
+import Psephology.Parliament
 import Psephology.Pathologies
 import Psephology.Quotas
 import Psephology.SampleElections
