@@ -14,9 +14,9 @@ import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
 import Psephology.McKelveySchofield (findASpoiler, newMajority, spoilerPotential)
+import Psephology.Parliament (Election (Election), Parliament, generate, winners)
 import Psephology.Pathologies (condorcetFailure, majorityCoalitions, majorityFailure, mutualMajorityFailure)
 import Psephology.SampleElections
-import Psephology.SinglePeakedPreferences
 import Psephology.Spoilers
 import Psephology.Voter
 
@@ -25,20 +25,20 @@ useTAP = False
 
 main :: IO ()
 main = do
-    voters <- singlePeakedVotersNormalCentered 1000000 2
+    parliament <- generate 1000 2 1000 10 100
     if useTAP
-        then defaultMainWithIngredients [tapRunner] (tests voters)
-        else defaultMain (tests voters)
+        then defaultMainWithIngredients [tapRunner] (tests parliament)
+        else defaultMain $ tests parliament
 
-tests :: [[Double]] -> TestTree
-tests voters =
+tests :: Parliament -> TestTree
+tests parliament =
     testGroup
         "Tests"
         [ testTennesseeCapitalElection
         , testMcKelveySchofield
         , testCase "Export generated voters to CSV" $
             do
-                let csv = unlines $ map (concatMap (\x -> show x ++ ",")) voters
+                let csv = unlines $ zipWith (\winner (Election candidates _) -> show $ candidates !! winner) (winners instantRunoffVoting parliament) parliament
                 writeFile "test/heatmaps/voters.csv" csv
                 True @?= True
         ]
