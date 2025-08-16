@@ -30,9 +30,9 @@ the list.
 -}
 singlePeakedVotersNormalLim :: Double -> [Double] -> Int -> Int -> IO [[Double]]
 singlePeakedVotersNormalLim limit means n dims = do
-    g <- getStdGen
+    g <- newStdGen
     let seeds = map mkStdGen $ take (n * dims) (randoms g :: [Int])
-     in return $ gather dims $ zipWith (normDistValues limit) (concatMap (replicate n) means) seeds
+    return $ gather dims $ zipWith (normDistValues limit) (concatMap (replicate n) means) seeds
 
 normDistValues :: Double -> Double -> StdGen -> Double
 normDistValues limit mean g =
