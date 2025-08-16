@@ -13,6 +13,7 @@ module Psephology.ElectoralSystem (
     bordaCount,
     bordaTally,
     dowdallSystem,
+    systems,
 ) where
 
 import Data.List (sortBy)
@@ -27,7 +28,6 @@ votesOrdinal f candidates voters =
     [ length $ filter (\v -> f candidates v == c) voters
     | c <- [0 .. (length candidates - 1)]
     ]
-
 -- | Returns the tally for each candidate based on 'preference'.
 votes :: (Voter a) => [Candidate] -> [a] -> [Int]
 votes =
@@ -140,3 +140,13 @@ dowdallSystem :: (Voter a) => [Candidate] -> [a] -> Int
 dowdallSystem = bordaCountWFormula dowdallWeight
 
 type ElectoralSystem a = [Candidate] -> [a] -> Int
+
+systems :: (Voter a) => [(String, ElectoralSystem a)]
+systems =
+    [ ("FPTP", firstPastThePost)
+    , ("Anti-plurality", antiPlurality)
+    , ("TRS", twoRound)
+    , ("IRV", instantRunoffVoting)
+    , ("Borda", bordaCount)
+    , ("Dowdall", dowdallSystem)
+    ]

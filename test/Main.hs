@@ -139,16 +139,6 @@ namer1 candidates = map (namer candidates)
 namer2 candidates = map (namer1 candidates)
 namer1t candidates = map (Data.Bifunctor.bimap (namer candidates) (namer candidates))
 
-systems :: (Voter a) => [(String, ElectoralSystem a)]
-systems =
-    [ ("FPTP", firstPastThePost)
-    , ("Anti-plurality", antiPlurality)
-    , ("TRS", twoRound)
-    , ("IRV", instantRunoffVoting)
-    , ("Borda", bordaCount)
-    , ("Dowdall", dowdallSystem)
-    ]
-
 -- Compares an outcome of function f(c,v) given electoral system es.
 compareOutcome :: (Voter a, Show b, Eq b) => (ElectoralSystem a -> b) -> ((TestName, ElectoralSystem a), b) -> TestTree
 compareOutcome f_CV ((name, es), correctAnswer) =
