@@ -38,8 +38,13 @@ tests parliament =
         , testMcKelveySchofield
         , testCase "Export generated voters to CSV" $
             do
-                let csv = unlines $ zipWith (\winner (Election candidates _) -> show $ candidates !! winner) (winners instantRunoffVoting parliament) parliament
+                let csv = unlines $ map (concatMap (\x -> show x ++ ",")) $ concatMap (\(Election _ voters) -> voters) parliament
                 writeFile "test/heatmaps/voters.csv" csv
+                True @?= True
+        , testCase "Export generated electeds to CSV" $
+            do
+                let csv = unlines $ zipWith (\winner (Election candidates _) -> show $ candidates !! winner) (winners instantRunoffVoting parliament) parliament
+                writeFile "test/heatmaps/elected.csv" csv
                 True @?= True
         ]
 
