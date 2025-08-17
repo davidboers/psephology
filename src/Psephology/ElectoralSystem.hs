@@ -24,10 +24,14 @@ import Psephology.Candidate
 import Psephology.Voter
 
 votesOrdinal :: (Voter a) => ([Candidate] -> a -> Int) -> [Candidate] -> [a] -> [Int]
-votesOrdinal f candidates voters =
-    [ length $ filter (\v -> f candidates v == c) voters
-    | c <- [0 .. (length candidates - 1)]
-    ]
+votesOrdinal f candidates =
+    foldl
+        ( \t v ->
+            [ if f candidates v == i then t !! i + 1 else t !! i
+            | i <- [0 .. length candidates - 1]
+            ]
+        )
+        (replicate (length candidates) 0)
 
 -- | Returns the tally for each candidate based on 'preference'.
 votes :: (Voter a) => [Candidate] -> [a] -> [Int]

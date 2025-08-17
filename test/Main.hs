@@ -26,7 +26,7 @@ useTAP = False
 
 main :: IO ()
 main = do
-    parliament <- generate 10 2 50 10 100
+    parliament <- generate 1000 2 100 5 100
     if useTAP
         then defaultMainWithIngredients [tapRunner] (tests parliament)
         else defaultMain $ tests parliament
