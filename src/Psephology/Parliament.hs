@@ -7,16 +7,18 @@ import qualified Control.Monad
 
 import Psephology.Candidate
 import Psephology.ElectoralSystem
+import Psephology.Pathologies
 import Psephology.SinglePeakedPreferences
+import Psephology.Spoilers
 
-data Election = Election [Candidate] [[Double]]
+data Election a = Election [Candidate] [a]
 
-type Parliament = [Election]
+type Parliament a = [Election a]
 
-winners :: ElectoralSystem [Double] -> Parliament -> [Int]
+winners :: ElectoralSystem [Double] -> Parliament [Double] -> [Int]
 winners es = map (\(Election candidates voters) -> es candidates voters)
 
-generate :: Int -> Int -> Int -> Int -> Double -> IO Parliament
+generate :: Int -> Int -> Int -> Int -> Double -> IO (Parliament [Double])
 generate n dims no_voters no_candidates limit =
     Control.Monad.replicateM n $ do
         let center = replicate dims (limit / 2)
@@ -24,3 +26,22 @@ generate n dims no_voters no_candidates limit =
         let candidates = map Spacial cs
         voters <- singlePeakedVotersNormalLim limit center no_voters dims
         return $ Election candidates voters
+
+pathologies :: Parliament [Double] -> [[String]]
+pathologies parliament =
+    [ ""
+    , "# spoiled "
+    , "# proxies*"
+    , "Cond. fail"
+    , "Maj. failu"
+    , "MM failure"
+    ]
+        : [ [ systemName
+            , show $ length $ filter (\(Election candidates voters) -> not (null (spoilers candidates voters es))) parliament
+            , show $ length $ filter (\(Election candidates voters) -> length (proxies candidates voters es) > 1) parliament
+            , show $ length $ filter (\(Election candidates voters) -> condorcetFailure candidates voters es) parliament
+            , show $ length $ filter (\(Election candidates voters) -> majorityFailure candidates voters es) parliament
+            , show $ length $ filter (\(Election candidates voters) -> mutualMajorityFailure candidates voters es) parliament
+            ]
+          | (systemName, es) <- systems :: [(String, ElectoralSystem [Double])]
+          ]

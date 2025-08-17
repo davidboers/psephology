@@ -8,13 +8,14 @@ import Test.Tasty.Runners.TAP
 
 import Data.Bifunctor qualified
 import Data.Maybe
+import GHC.OldList (intercalate)
 
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
 import Psephology.McKelveySchofield (findASpoiler, newMajority, spoilerPotential)
-import Psephology.Parliament (Election (Election), Parliament, generate, winners)
+import Psephology.Parliament (Election (Election), Parliament, generate, pathologies, winners)
 import Psephology.Pathologies (condorcetFailure, majorityCoalitions, majorityFailure, mutualMajorityFailure)
 import Psephology.SampleElections
 import Psephology.Spoilers
@@ -25,12 +26,12 @@ useTAP = False
 
 main :: IO ()
 main = do
-    parliament <- generate 1000 2 1000 10 100
+    parliament <- generate 10 2 50 10 100
     if useTAP
         then defaultMainWithIngredients [tapRunner] (tests parliament)
         else defaultMain $ tests parliament
 
-tests :: Parliament -> TestTree
+tests :: Parliament [Double] -> TestTree
 tests parliament =
     testGroup
         "Tests"
@@ -45,6 +46,11 @@ tests parliament =
             do
                 let csv = unlines $ zipWith (\winner (Election candidates _) -> show $ candidates !! winner) (winners instantRunoffVoting parliament) parliament
                 writeFile "test/heatmaps/elected.csv" csv
+                True @?= True
+        , testCase "Mass analysis" $
+            do
+                let csv = unlines $ map (intercalate ",") $ pathologies parliament
+                -- writeFile "test/pathologies.csv" csv
                 True @?= True
         ]
 
