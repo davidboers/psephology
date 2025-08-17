@@ -19,7 +19,7 @@ isClones :: (Voter a) => [a] -> [Candidate] -> Bool
 isClones voters candidates =
     all
         ( \v ->
-            let ranks = map (\c -> rank candidates c v) candidates
+            let ranks = map (rank candidates v) candidates
              in isContinuous ranks
         )
         voters

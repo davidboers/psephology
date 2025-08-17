@@ -12,14 +12,14 @@ class Voter a where
     -- | @'preference' candidates v@ returns the index of the candidate in @candidates@ that is the voter's highest choice between the given @candidates@.
     preference :: [Candidate] -> a -> Int
 
-    -- | @'rank' c v@ returns voter @v@'s ranking for @c@ or -1 if truncated.
-    rank :: [Candidate] -> Candidate -> a -> Int
+    -- | @'rank' v c@ returns voter @v@'s ranking for @c@ or -1 if truncated.
+    rank :: [Candidate] -> a -> Candidate -> Int
 
 -- | Modeled voter preferences
 instance Voter [Double] where
     preference candidates v = argmin (\n -> dist v (candidates !! n)) [0 .. (length candidates - 1)]
 
-    rank candidates c v = rank candidates c (map (dist v) candidates)
+    rank candidates v = rank candidates (map (dist v) candidates)
 
 -- | Given voter preferences, ex. from a .blt file.
 instance Voter [Candidate] where
@@ -27,7 +27,7 @@ instance Voter [Candidate] where
     preference candidates (nextChoice : v) =
         fromMaybe (preference candidates v) $ elemIndex nextChoice candidates
 
-    rank _ c v =
+    rank _ v c =
         (+ 1) $ fromMaybe (-2) (elemIndex c v) -- Ew
 
 lastPreference :: (Voter a) => [Candidate] -> a -> Int
