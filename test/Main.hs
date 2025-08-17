@@ -67,6 +67,7 @@ testTennesseeCapitalElection =
             , "Knoxville"
             , "Nashville"
             , "Nashville"
+            , "Nashville"
             ]
         , testCondorcetWinner candidates voters "Nashville"
         , testCase "(pairwise scores)" $
@@ -96,6 +97,7 @@ testTennesseeCapitalElection =
             , ["Memphis", "Nashville"] -- IRV
             , [] -- Borda
             , [] -- Dowdall
+            , [] -- Ranked pairs
             ]
         , testProxies
             candidates
@@ -106,6 +108,7 @@ testTennesseeCapitalElection =
             , [("Chattanooga", "Knoxville")] -- IRV
             , [("Nashville", "Chattanooga")] -- Borda
             , [("Memphis", "Nashville")] -- Dowdall
+            , [("Memphis", "Nashville")] -- Ranked pairs
             ]
         , testForPathologies
             candidates
