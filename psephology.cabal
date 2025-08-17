@@ -37,6 +37,10 @@ library
                       Psephology.Spoilers.Proxies
                       Psephology.Condorcet
                       Psephology.ElectoralSystem
+                      Psephology.ElectoralSystems.Plurality
+                      Psephology.ElectoralSystems.Runoff
+                      Psephology.ElectoralSystems.Borda
+                      Psephology.ElectoralSystems.Condorcet
                       Psephology.McKelveySchofield
                       Psephology.Parliament
                       Psephology.Pathologies
@@ -49,6 +53,7 @@ library
     other-modules:
         Psephology.Utils
         Psephology.Spoilers.Utils
+        Psephology.Counting
 
     build-depends:
         base,

@@ -8,6 +8,10 @@ module Psephology (
     module Psephology.Candidate,
     module Psephology.Condorcet,
     module Psephology.ElectoralSystem,
+    module Psephology.ElectoralSystems.Plurality,
+    module Psephology.ElectoralSystems.Runoff,
+    module Psephology.ElectoralSystems.Borda,
+    module Psephology.ElectoralSystems.Condorcet,
     module Psephology.McKelveySchofield,
     module Psephology.Parliament,
     module Psephology.Pathologies,
@@ -21,6 +25,10 @@ import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
+import Psephology.ElectoralSystems.Borda
+import Psephology.ElectoralSystems.Condorcet
+import Psephology.ElectoralSystems.Plurality
+import Psephology.ElectoralSystems.Runoff
 import Psephology.McKelveySchofield
 import Psephology.Parliament
 import Psephology.Pathologies
