@@ -28,6 +28,7 @@ votesOrdinal f candidates voters =
     [ length $ filter (\v -> f candidates v == c) voters
     | c <- [0 .. (length candidates - 1)]
     ]
+
 -- | Returns the tally for each candidate based on 'preference'.
 votes :: (Voter a) => [Candidate] -> [a] -> [Int]
 votes =
@@ -121,15 +122,22 @@ dowdallWeight _ (-1) = 0
 dowdallWeight _ r =
     1 / fromIntegral r
 
--- | @'bordaTally' weightFormula candidates voters c@ returns the Borda tally for a specific candidate @c@.
-bordaTally :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> [a] -> Candidate -> Double
-bordaTally weightFormula candidates voters c =
-    sum $ map (weightFormula (length candidates) . rank candidates c) voters
+-- | @'weights' weightFormula candidates v@ returns a list of the weight given to each candidate by voter @v@.
+weights :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> a -> [Double]
+weights weightFormula candidates v =
+    let n = length candidates
+     in map (weightFormula n . rank candidates v) candidates
+
+-- | @'bordaTally' weightFormula candidates voters@ returns the Borda tally for each candidate.
+bordaTally :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> [a] -> [Double]
+bordaTally weightFormula candidates =
+    foldl (\t -> zipWith (+) t . weights weightFormula candidates) (replicate (length candidates) 0)
 
 -- | @'bordaCountWFormula' weightFormula candidates voters@ returns the index of the candidate that wins a Borda count using @weightFormula@.
 bordaCountWFormula :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
 bordaCountWFormula weightFormula candidates voters =
-    argmax (bordaTally weightFormula candidates voters . (candidates !!)) [0 .. length candidates - 1]
+    let points = bordaTally weightFormula candidates voters
+     in argmax (points !!) [0 .. length candidates - 1]
 
 -- | Shortcut for 'bordaCountWFormula'
 bordaCount :: (Voter a) => [Candidate] -> [a] -> Int
@@ -147,6 +155,6 @@ systems =
     , ("Anti-plurality", antiPlurality)
     , ("TRS", twoRound)
     , ("IRV", instantRunoffVoting)
-    , ("Borda", bordaCount)
-    , ("Dowdall", dowdallSystem)
+    --, ("Borda", bordaCount)
+    --, ("Dowdall", dowdallSystem)
     ]
