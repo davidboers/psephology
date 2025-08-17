@@ -11,6 +11,7 @@ module Psephology.ElectoralSystem (
     traditionalBordaWeight,
     dowdallWeight,
     bordaCount,
+    weights,
     bordaTally,
     dowdallSystem,
     systems,
@@ -159,6 +160,6 @@ systems =
     , ("Anti-plurality", antiPlurality)
     , ("TRS", twoRound)
     , ("IRV", instantRunoffVoting)
-    --, ("Borda", bordaCount)
-    --, ("Dowdall", dowdallSystem)
+    , ("Borda", bordaCount)
+    , ("Dowdall", dowdallSystem)
     ]

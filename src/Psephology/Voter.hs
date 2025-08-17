@@ -19,7 +19,7 @@ class Voter a where
 instance Voter [Double] where
     preference candidates v = argmin (\n -> dist v (candidates !! n)) [0 .. (length candidates - 1)]
 
-    rank candidates v = rank candidates (map (dist v) candidates)
+    rank candidates v = rank candidates (sortOn (dist v) candidates)
 
 -- | Given voter preferences, ex. from a .blt file.
 instance Voter [Candidate] where
