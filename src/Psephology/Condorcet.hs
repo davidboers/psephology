@@ -3,7 +3,7 @@
 module Psephology.Condorcet (condorcetWinner, condorcetMatrix, numPreferOver, smithSet, pairwiseMaj) where
 
 import Psephology.Candidate
-import Psephology.ElectoralSystem
+import Psephology.Counting
 import Psephology.Voter
 
 import Data.List
