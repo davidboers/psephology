@@ -7,8 +7,6 @@
   - Optimized spoiler finder
   - New dimensions
 - Import from .blt (no yacc)
-- Test suite
-  - Improve tests (one at a time)
-- Bulk elections
+- Proxy cycles
 - Convert a list of formal voters into a list of theoretical voters
 - Test homogeneity
