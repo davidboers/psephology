@@ -3,6 +3,7 @@ module Psephology.ElectoralSystems.Runoff (
     twoRound,
     firstRoundDecisive,
     instantRunoffVoting,
+    coombsMethod,
 ) where
 
 import Data.List (sortBy)
@@ -53,17 +54,29 @@ includeListTRS candidates tally =
 -- | Returns the index of the candidate that wins an IRV election.
 instantRunoffVoting :: (Voter a) => [Candidate] -> [a] -> Int
 instantRunoffVoting candidates voters =
-    instantRunoff candidates voters (votes candidates voters)
+    instantRunoff includeListIRV candidates voters (votes candidates voters)
 
 -- | Single iteration of IRV. No bulk exclusions or early elections.
-instantRunoff :: (Voter a) => [Candidate] -> [a] -> [Int] -> Int
-instantRunoff [_] _ _ = 0
-instantRunoff candidates voters prevTally =
-    let newSetIndexes = includeListIRV candidates prevTally
+instantRunoff :: (Voter a) => ([Candidate] -> [a] -> [Int] -> [Int]) -> [Candidate] -> [a] -> [Int] -> Int
+instantRunoff _ [_] _ _ = 0
+instantRunoff includeList candidates voters prevTally =
+    let newSetIndexes = includeList candidates voters prevTally
         newSet = map (candidates !!) newSetIndexes
-     in newSetIndexes !! instantRunoff newSet voters (votes newSet voters)
+     in newSetIndexes !! instantRunoff includeList newSet voters (votes newSet voters)
 
-includeListIRV :: [Candidate] -> [Int] -> [Int]
-includeListIRV candidates tally =
+includeListIRV :: (Voter a) => [Candidate] -> [a] -> [Int] -> [Int]
+includeListIRV candidates _ tally =
     let excluding = argmin (tally !!) [0 .. (length candidates - 1)]
+     in filter (excluding /=) [0 .. (length candidates - 1)]
+
+-- [Coombs' method](https://en.wikipedia.org/wiki/Coombs%27_method)
+
+coombsMethod :: (Voter a) => [Candidate] -> [a] -> Int
+coombsMethod candidates voters =
+    instantRunoff coombsInclude candidates voters (votes candidates voters)
+
+coombsInclude :: (Voter a) => [Candidate] -> [a] -> [Int] -> [Int]
+coombsInclude candidates voters _ =
+    let antitally = antiVotes candidates voters
+        excluding = argmax (antitally !!) [0 .. (length candidates - 1)]
      in filter (excluding /=) [0 .. (length candidates - 1)]
