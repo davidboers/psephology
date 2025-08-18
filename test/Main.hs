@@ -62,13 +62,16 @@ testTennesseeCapitalElection =
         [ testWinnerBySystem
             candidates
             voters
-            [ "Memphis"
-            , "Nashville" -- Or Chattanooga
-            , "Nashville"
-            , "Knoxville"
-            , "Nashville"
-            , "Nashville"
-            , "Nashville"
+            [ "Memphis" -- FPTP
+            , "Nashville" -- (Or Chattanooga) Anti-plurality
+            , "Nashville" -- TRS
+            , "Knoxville" -- IRV
+            , "Nashville" -- Borda
+            , "Nashville" -- Dowdall
+            , "Nashville" -- Nanson
+            , "Nashville" -- Baldwin
+            , "Nashville" -- Copeland-Llull
+            , "Nashville" -- Ranked pairs
             ]
         , testCondorcetWinner candidates voters "Nashville"
         , testCase "(pairwise scores)" $
@@ -96,8 +99,12 @@ testTennesseeCapitalElection =
             , ["Memphis"] -- Anti-plurality
             , ["Chattanooga", "Knoxville"] -- TRS
             , ["Memphis", "Nashville"] -- IRV
+            , [] -- Coombs
             , [] -- Borda
             , [] -- Dowdall
+            , [] -- Nanson
+            , [] -- Baldwin
+            , [] -- Copeland-Llull
             , [] -- Ranked pairs
             ]
         , testProxies
@@ -107,9 +114,13 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Anti-plurality
             , [("Chattanooga", "Knoxville")] -- TRS
             , [("Chattanooga", "Knoxville")] -- IRV
+            , [("Nashville", "Chattanooga")] -- Coombs
             , [("Nashville", "Chattanooga")] -- Borda
             , [("Memphis", "Nashville")] -- Dowdall
-            , [("Memphis", "Nashville")] -- Ranked pairs
+            , [("Nashville", "Chattanooga")] -- Nanson
+            , [("Nashville", "Chattanooga")] -- Baldwin
+            , [("Nashville", "Chattanooga")] -- Copeland-Llull
+            , [("Nashville", "Chattanooga")] -- Ranked pairs
             ]
         , testForPathologies
             candidates
@@ -118,8 +129,13 @@ testTennesseeCapitalElection =
             , [False, False, False] -- Anti-plurality
             , [False, False, False] -- TRS
             , [True, False, False] -- IRV
+            , [] -- Coombs
             , [False, False, False] -- Borda
             , [False, False, False] -- Dowdall
+            , [False, False, False] -- Nanson
+            , [False, False, False] -- Baldwin
+            , [False, False, False] -- Copeland-Llull
+            , [False, False, False] -- Ranked pairs
             ]
         ]
   where

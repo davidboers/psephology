@@ -19,7 +19,11 @@ systems =
     , ("Anti-plurality", antiPlurality)
     , ("TRS", twoRound)
     , ("IRV", instantRunoffVoting)
+    , ("Coombs", coombsMethod)
     , ("Borda", bordaCount)
     , ("Dowdall", dowdallSystem)
+    , ("Nanson", nansonsMethod)
+    , ("Copeland-Llull", copelandLlull)
+    , ("Baldwin", baldwinsMethod)
     , ("Ranked pairs", rankedPairs)
     ]
