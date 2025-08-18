@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
-module Psephology.Condorcet (condorcetWinner, condorcetMatrix, numPreferOver, smithSet, pairwiseMaj) where
+module Psephology.Condorcet (condorcetWinner, condorcetMatrix, numPreferOver, copelandScore, smithSet, pairwiseMaj) where
 
 import Psephology.Candidate
 import Psephology.Counting
