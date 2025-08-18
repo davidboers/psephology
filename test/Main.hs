@@ -14,6 +14,7 @@ import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
+import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
 import Psephology.McKelveySchofield (findASpoiler, newMajority, spoilerPotential)
 import Psephology.Parliament (Election (Election), Parliament, generate, pathologies, winners)
 import Psephology.Pathologies (condorcetFailure, majorityCoalitions, majorityFailure, mutualMajorityFailure)
@@ -50,7 +51,7 @@ tests parliament =
         , testCase "Mass analysis" $
             do
                 let csv = unlines $ map (intercalate ",") $ pathologies parliament
-                -- writeFile "test/pathologies.csv" csv
+                writeFile "test/pathologies.csv" csv
                 True @?= True
         ]
 
