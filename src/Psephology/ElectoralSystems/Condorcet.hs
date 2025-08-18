@@ -1,25 +1,54 @@
-module Psephology.ElectoralSystems.Condorcet (rankedPairs) where
+module Psephology.ElectoralSystems.Condorcet (nansonsMethod, baldwinsMethod, copelandLlull, rankedPairs) where
 
 import Data.List
+import Data.List.Extras (argmax)
 import Data.Maybe
 import qualified Data.Ord
 
 import Psephology.Candidate
-import Psephology.Condorcet (pairwiseMaj)
-import Psephology.Counting
+import Psephology.Condorcet (copelandScore, pairwiseMaj)
+import Psephology.ElectoralSystems.Borda
 import Psephology.Voter
+
+-- | [Nanson](https://en.wikipedia.org/wiki/Nanson%27s_method#Nanson_method)
+nansonsMethod :: (Voter a) => [Candidate] -> [a] -> Int
+nansonsMethod [_] _ = 0
+nansonsMethod candidates voters =
+    let tally = bordaTally traditionalBordaWeight candidates voters
+        threshold = sum tally / fromIntegral (length candidates)
+        keeping = filter (\i -> (tally !! i) > threshold) [0 .. length candidates - 1]
+     in if null keeping -- Double check
+            then argmax (tally !!) [0 .. length candidates - 1]
+            else keeping !! nansonsMethod (map (candidates !!) keeping) voters
+
+-- | [Baldwin](https://en.wikipedia.org/wiki/Nanson%27s_method#Baldwin_method)
+baldwinsMethod :: (Voter a) => [Candidate] -> [a] -> Int
+baldwinsMethod [_] _ = 0
+baldwinsMethod candidates voters =
+    let tally = bordaTally traditionalBordaWeight candidates voters
+        threshold = minimum tally
+        keeping = filter (\i -> (tally !! i) /= threshold) [0 .. length candidates - 1]
+     in if null keeping -- Double check
+            then argmax (tally !!) [0 .. length candidates - 1]
+            else keeping !! baldwinsMethod (map (candidates !!) keeping) voters
+
+-- | [Copeland-Llull](https://en.wikipedia.org/wiki/Copeland%27s_method)
+copelandLlull :: (Voter a) => [Candidate] -> [a] -> Int
+copelandLlull candidates voters =
+    argmax (copelandScore candidates voters) [0 .. length candidates - 1]
 
 -- | [Ranked pairs](https://en.wikipedia.org/wiki/Ranked_pairs)
 rankedPairs :: (Voter a) => [Candidate] -> [a] -> Int
 rankedPairs candidates voters =
-    fromJust $ findWinner $
-    foldl
-        ( \l (i, j, _) ->
-            if createsParadox ((i, j) : l)
-                then l
-                else (i, j) : l
-        )
-        []
+    fromJust
+        $ findWinner
+        $ foldl
+            ( \l (i, j, _) ->
+                if createsParadox ((i, j) : l)
+                    then l
+                    else (i, j) : l
+            )
+            []
         $ sortOn (Data.Ord.Down . (\(_, _, maj) -> maj)) pairs
   where
     pairs =
