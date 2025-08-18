@@ -39,6 +39,7 @@ library
                       Psephology.ElectoralSystem
                       Psephology.ElectoralSystems.Plurality
                       Psephology.ElectoralSystems.Runoff
+                      Psephology.ElectoralSystems.Rated
                       Psephology.ElectoralSystems.Borda
                       Psephology.ElectoralSystems.Condorcet
                       Psephology.McKelveySchofield

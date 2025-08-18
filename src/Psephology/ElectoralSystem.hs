@@ -9,6 +9,7 @@ import Psephology.Voter
 import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Condorcet
 import Psephology.ElectoralSystems.Plurality
+import Psephology.ElectoralSystems.Rated
 import Psephology.ElectoralSystems.Runoff
 
 type ElectoralSystem a = [Candidate] -> [a] -> Int
@@ -26,4 +27,8 @@ systems =
     , ("Copeland-Llull", copelandLlull)
     , ("Baldwin", baldwinsMethod)
     , ("Ranked pairs", rankedPairs)
+    , ("Approval", approvalVoting)
+    , ("Highest median", highestMedian 0 10)
+    , ("Score", scoreVoting 0 10)
+    , ("STAR", starVoting 0 10)
     ]
