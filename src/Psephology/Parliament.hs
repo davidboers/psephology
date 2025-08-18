@@ -4,8 +4,10 @@ candidates in voters exist on the same space (same dimensions and bounds).
 module Psephology.Parliament where
 
 import qualified Control.Monad
+import Data.Maybe (isNothing)
 
 import Psephology.Candidate
+import Psephology.Condorcet (condorcetWinner)
 import Psephology.ElectoralSystem
 import Psephology.Pathologies
 import Psephology.SinglePeakedPreferences
@@ -30,6 +32,7 @@ generate n dims no_voters no_candidates limit =
 pathologies :: Parliament [Double] -> [[String]]
 pathologies parliament =
     [ ""
+    , "# paradoxs"
     , "# spoiled "
     , "# proxies*"
     , "Cond. fail"
@@ -37,6 +40,7 @@ pathologies parliament =
     , "MM failure"
     ]
         : [ [ systemName
+            , show no_paradoxes
             , show $ length $ filter (\(Election candidates voters) -> not (null (spoilers candidates voters es))) parliament
             , show $ length $ filter (\(Election candidates voters) -> length (proxies candidates voters es) > 1) parliament
             , show $ length $ filter (\(Election candidates voters) -> condorcetFailure candidates voters es) parliament
@@ -45,3 +49,5 @@ pathologies parliament =
             ]
           | (systemName, es) <- systems :: [(String, ElectoralSystem [Double])]
           ]
+  where
+    no_paradoxes = length $ filter (\(Election candidates voters) -> isNothing $ condorcetWinner candidates voters) parliament
