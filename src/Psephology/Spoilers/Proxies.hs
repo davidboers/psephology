@@ -1,5 +1,7 @@
 module Psephology.Spoilers.Proxies where
 
+import Data.List (subsequences)
+
 import Psephology.Candidate
 import Psephology.ElectoralSystem
 import Psephology.Spoilers.Utils
@@ -9,9 +11,7 @@ import Psephology.Voter
 proxies :: (Voter a) => [Candidate] -> [a] -> ElectoralSystem a -> [(Int, Int)]
 proxies candidates voters es =
     [ (a, b)
-    | a <- [0 .. length candidates - 1]
-    , b <- [0 .. length candidates - 1]
-    , a < b
+    | [a, b] <- filter (\sub -> length sub == 2) $ subsequences [0 .. length candidates - 1]
     , isProxy candidates voters es a b
     ]
 
