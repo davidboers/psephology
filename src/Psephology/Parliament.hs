@@ -12,6 +12,7 @@ import Psephology.ElectoralSystem
 import Psephology.Pathologies
 import Psephology.SinglePeakedPreferences
 import Psephology.Spoilers
+import Psephology.Voter (Voter)
 
 data Election a = Election [Candidate] [a]
 
@@ -29,7 +30,7 @@ generate n dims no_voters no_candidates limit =
         voters <- singlePeakedVotersNormalLim limit center no_voters dims
         return $ Election candidates voters
 
-pathologies :: Parliament [Double] -> [[String]]
+pathologies :: (Voter a) => Parliament a -> [[String]]
 pathologies parliament =
     [ ""
     , "# paradoxs"
@@ -47,7 +48,7 @@ pathologies parliament =
             , show $ length $ filter (\(Election candidates voters) -> majorityFailure candidates voters es) parliament
             , show $ length $ filter (\(Election candidates voters) -> mutualMajorityFailure candidates voters es) parliament
             ]
-          | (systemName, es) <- systems :: [(String, ElectoralSystem [Double])]
+          | (systemName, es) <- systems :: (Voter a) => [(String, ElectoralSystem a)]
           ]
   where
     no_paradoxes = length $ filter (\(Election candidates voters) -> isNothing $ condorcetWinner candidates voters) parliament
