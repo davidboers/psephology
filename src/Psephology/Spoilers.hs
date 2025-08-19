@@ -20,7 +20,7 @@ isSpoiler candidates voters es i
     | es candidates voters == i = False
     | otherwise = isJust $ spoilee candidates voters es i
 
-{- | @'spoilee' candidates voters es i@ returns the candidate for whom the election (under @es@) is spoiled if @i@ doesn't participate,
+{- | @'spoilee' candidates voters es i@ returns the candidate for whom the election (under @es@) is spoiled if @i@ participates,
 or Nothing if @i@ isn't a spoiler.
 -}
 spoilee :: (Voter a) => [Candidate] -> [a] -> ElectoralSystem a -> Int -> Maybe Int
