@@ -40,7 +40,9 @@ instance Voter [Candidate] where
         fromMaybe (preference candidates v) $ elemIndex nextChoice candidates
 
     rank _ v c =
-        (+ 1) $ fromMaybe (-2) (elemIndex c v) -- Ew
+        case elemIndex c v of
+            Just a -> a + 1
+            Nothing -> length v + 1
 
     -- \| Not recommended, this instance is intended for ordinal preferences. Returns the traditional Borda score of the candidate
     score mn _ candidates v c =
@@ -48,11 +50,13 @@ instance Voter [Candidate] where
 
 lastPreference :: (Voter a) => [Candidate] -> a -> Int
 lastPreference [_] _ = 0
-lastPreference candidates v =
-    let p = preference candidates v
-        indexes_without = filter (p /=) [0 .. length candidates - 1]
-        candidates_without = map (candidates !!) indexes_without
-     in indexes_without !! lastPreference candidates_without v
+lastPreference candidates v
+    | p == -1 = 0
+    | otherwise = indexes_without !! lastPreference candidates_without v
+  where
+    p = preference candidates v
+    indexes_without = filter (p /=) [0 .. length candidates - 1]
+    candidates_without = map (candidates !!) indexes_without
 
 -- | For limited preferential voting
 truncateAt :: Int -> [[Candidate]] -> [[Candidate]]

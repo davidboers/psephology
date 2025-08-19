@@ -2,8 +2,8 @@ module Psephology.Pathologies where
 
 import Psephology.Candidate
 import Psephology.Condorcet
-import Psephology.ElectoralSystem
 import Psephology.Counting
+import Psephology.ElectoralSystem
 import Psephology.Quotas
 import Psephology.Voter
 
@@ -50,8 +50,12 @@ isPrefersSet :: (Voter a) => [Candidate] -> [Int] -> a -> Bool
 isPrefersSet candidates l v =
     let anti_l = [0 .. length candidates - 1] \\ l
         least_preferred_l = l !! lastPreference (map (candidates !!) l) v
-        preferred_anti_l = anti_l !! preference (map (candidates !!) anti_l) v
-     in preference [candidates !! least_preferred_l, candidates !! preferred_anti_l] v == 0
+        preferred_anti_l
+            | pref == -1 = -1
+            | otherwise = anti_l !! pref
+          where
+            pref = preference (map (candidates !!) anti_l) v
+     in ((preferred_anti_l == -1) || (preference [candidates !! least_preferred_l, candidates !! preferred_anti_l] v == 0))
 
 -- | Returns a list of 'solidCoalition's that are supported by a majority of @voters@.
 majorityCoalitions :: (Voter a) => [Candidate] -> [a] -> [[Int]]
