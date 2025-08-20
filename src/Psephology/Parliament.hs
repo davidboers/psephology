@@ -18,7 +18,7 @@ data Election a = Election [Candidate] [a]
 
 type Parliament a = [Election a]
 
-winners :: ElectoralSystem [Double] -> Parliament [Double] -> [Int]
+winners :: ElectoralSystem a -> Parliament a -> [Int]
 winners es = map (\(Election candidates voters) -> es candidates voters)
 
 generate :: Int -> Int -> Int -> Int -> Double -> IO (Parliament [Double])
