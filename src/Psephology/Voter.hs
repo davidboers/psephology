@@ -72,6 +72,6 @@ utilityM _ _ = error "Attempting to calculate utility of a categorical candidate
 argmaxC :: Ord b => (Candidate -> b) -> [Candidate] -> Int
 argmaxC f candidates = argmax (\i -> f $ candidates !! i) [0 .. length candidates - 1]
 
--- | @'argminC' f candidates@ returns the index of the candidate that maximizes @f@.
+-- | @'argminC' f candidates@ returns the index of the candidate that minimizes @f@.
 argminC :: Ord b => (Candidate -> b) -> [Candidate] -> Int
 argminC f candidates = argmin (\i -> f $ candidates !! i) [0 .. length candidates - 1]
