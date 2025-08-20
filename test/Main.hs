@@ -68,6 +68,7 @@ testTennesseeCapitalElection =
             , "Knoxville" -- IRV
             , "Nashville" -- Borda
             , "Nashville" -- Dowdall
+            , "Nashville" -- Icelandic Borda
             , "Nashville" -- Nanson
             , "Nashville" -- Baldwin
             , "Nashville" -- Copeland-Llull
@@ -102,6 +103,7 @@ testTennesseeCapitalElection =
             , [] -- Coombs
             , [] -- Borda
             , [] -- Dowdall
+            , [] -- Icelandic Borda
             , [] -- Nanson
             , [] -- Baldwin
             , [] -- Copeland-Llull
@@ -117,6 +119,7 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Coombs
             , [("Nashville", "Chattanooga")] -- Borda
             , [("Memphis", "Nashville")] -- Dowdall
+            , [("Nashville", "Chattanooga")] -- Icelandic Borda
             , [("Nashville", "Chattanooga")] -- Nanson
             , [("Nashville", "Chattanooga")] -- Baldwin
             , [("Nashville", "Chattanooga")] -- Copeland-Llull
@@ -132,6 +135,7 @@ testTennesseeCapitalElection =
             , [] -- Coombs
             , [False, False, False] -- Borda
             , [False, False, False] -- Dowdall
+            , [False, False, False] -- Icelandic Borda
             , [False, False, False] -- Nanson
             , [False, False, False] -- Baldwin
             , [False, False, False] -- Copeland-Llull

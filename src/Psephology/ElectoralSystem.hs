@@ -23,6 +23,7 @@ systems =
     , ("Coombs", coombsMethod)
     , ("Borda", bordaCount)
     , ("Dowdall", dowdallSystem)
+    , ("Icelandic Borda", icelandicBorda)
     , ("Nanson", nansonsMethod)
     , ("Copeland-Llull", copelandLlull)
     , ("Baldwin", baldwinsMethod)

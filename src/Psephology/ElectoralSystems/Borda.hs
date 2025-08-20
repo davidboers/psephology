@@ -1,10 +1,12 @@
 module Psephology.ElectoralSystems.Borda (
     traditionalBordaWeight,
     dowdallWeight,
+    icelandicWeight,
     bordaCount,
     weights,
     bordaTally,
     dowdallSystem,
+    icelandicBorda,
 ) where
 
 import Data.List.Extras (argmax)
@@ -25,6 +27,11 @@ dowdallWeight :: Int -> Int -> Double
 dowdallWeight _ (-1) = 0
 dowdallWeight _ r =
     1 / fromIntegral r
+
+-- | @'icelandicWeight' n r@ returns (@n@ - @r@ - 1) / @n@ where @n@ is the total number of candidates and @r@ is the candidate rank.
+icelandicWeight :: Int -> Int -> Double
+icelandicWeight n r =
+    fromIntegral (n - r + 1) / fromIntegral n
 
 -- | @'weights' weightFormula candidates v@ returns a list of the weight given to each candidate by voter @v@.
 weights :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> a -> [Double]
@@ -50,3 +57,7 @@ bordaCount = bordaCountWFormula traditionalBordaWeight
 -- | Shortcut for 'bordaCountWFormula'
 dowdallSystem :: (Voter a) => [Candidate] -> [a] -> Int
 dowdallSystem = bordaCountWFormula dowdallWeight
+
+-- | Shortcut for 'bordaCountWFormula'
+icelandicBorda :: (Voter a) => [Candidate] -> [a] -> Int
+icelandicBorda = bordaCountWFormula icelandicWeight
