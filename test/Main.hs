@@ -33,26 +33,13 @@ main = do
         else defaultMain $ tests parliament
 
 tests :: Parliament [Double] -> TestTree
-tests parliament =
+tests _ =
     testGroup
         "Tests"
         [ testTennesseeCapitalElection
         , testMcKelveySchofield
-        , testCase "Export generated voters to CSV" $
-            do
-                let csv = unlines $ map (concatMap (\x -> show x ++ ",")) $ concatMap (\(Election _ voters) -> voters) parliament
-                writeFile "test/heatmaps/voters.csv" csv
-                True @?= True
-        , testCase "Export generated electeds to CSV" $
-            do
-                let csv = unlines $ zipWith (\winner (Election candidates _) -> show $ candidates !! winner) (winners instantRunoffVoting parliament) parliament
-                writeFile "test/heatmaps/elected.csv" csv
-                True @?= True
-        , testCase "Mass analysis" $
-            do
-                let csv = unlines $ map (intercalate ",") $ pathologies parliament
-                writeFile "test/pathologies.csv" csv
-                True @?= True
+        -- Enable as you wish
+        -- , testGeneratedParliament parliament
         ]
 
 testTennesseeCapitalElection :: TestTree
@@ -168,11 +155,36 @@ testMcKelveySchofield =
     voters = [[0, 0], [10, 0], [10, 10]]
     basicSpoiler = [1, 9]
 
+testGeneratedParliament :: Parliament [Double] -> TestTree
+testGeneratedParliament parliament =
+    testGroup
+        "Generated parliament"
+        [ testCase "Export generated voters to CSV" $
+            do
+                let csv = unlines $ map (concatMap (\x -> show x ++ ",")) $ concatMap (\(Election _ voters) -> voters) parliament
+                writeFile "test/heatmaps/voters.csv" csv
+                True @?= True
+        , testCase "Export generated electeds to CSV" $
+            do
+                let csv = unlines $ zipWith (\winner (Election candidates _) -> show $ candidates !! winner) (winners instantRunoffVoting parliament) parliament
+                writeFile "test/heatmaps/elected.csv" csv
+                True @?= True
+        , testCase "Mass analysis" $
+            do
+                let csv = unlines $ map (intercalate ",") $ pathologies parliament
+                writeFile "test/pathologies.csv" csv
+                True @?= True
+        ]
+
 -- Helpers
 
+namer :: (Show b) => [b] -> Int -> String
 namer candidates = show . (!!) candidates
+namer1 :: (Show b) => [b] -> [Int] -> [String]
 namer1 candidates = map (namer candidates)
+namer2 :: (Show b) => [b] -> [[Int]] -> [[String]]
 namer2 candidates = map (namer1 candidates)
+namer1t :: (Data.Bifunctor.Bifunctor p, Show b) => [b] -> [p Int Int] -> [p String String]
 namer1t candidates = map (Data.Bifunctor.bimap (namer candidates) (namer candidates))
 
 -- Compares an outcome of function f(c,v) given electoral system es.
