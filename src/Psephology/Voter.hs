@@ -27,10 +27,10 @@ instance Voter [Double] where
 
     -- \| Uses a relative formula
     score mn mx candidates v c =
-        mn + round (fromIntegral (mx - mn) * (1.0 - ((dc - min_d) / (max_d - min_d))))
+        mn + round (fromIntegral (mx - mn) * ((dc - min_d) / (max_d - min_d)))
       where
-        dc = -utilityM v c -- This needs to be rationalized.
-        d = map (negate . utilityM v) candidates
+        dc = utilityM v c
+        d = map (utilityM v) candidates
         min_d = minimum d
         max_d = maximum d
 
@@ -49,7 +49,7 @@ instance Voter [Candidate] where
     score mn _ candidates v c =
         length candidates - rank candidates v c + mn
 
-lastPreference :: (Voter a) => [Candidate] -> a -> Int
+lastPreference :: Voter a => [Candidate] -> a -> Int
 lastPreference [_] _ = 0
 lastPreference candidates v
     | p == -1 = 0
@@ -69,9 +69,9 @@ utilityM p1 (Spacial p2) = utilityV p1 p2
 utilityM _ _ = error "Attempting to calculate utility of a categorical candidate."
 
 -- | @'argmaxC' f candidates@ returns the index of the candidate that maximizes @f@.
-argmaxC :: (Ord b) => (Candidate -> b) -> [Candidate] -> Int
+argmaxC :: Ord b => (Candidate -> b) -> [Candidate] -> Int
 argmaxC f candidates = argmax (\i -> f $ candidates !! i) [0 .. length candidates - 1]
 
 -- | @'argminC' f candidates@ returns the index of the candidate that maximizes @f@.
-argminC :: (Ord b) => (Candidate -> b) -> [Candidate] -> Int
+argminC :: Ord b => (Candidate -> b) -> [Candidate] -> Int
 argminC f candidates = argmin (\i -> f $ candidates !! i) [0 .. length candidates - 1]
