@@ -158,9 +158,9 @@ testMcKelveySchofield =
             spoilerPotential p1 voters @?= 0.313032999999999
         ]
   where
-    p1 = Spacial [9, 1]
+    p1 = [9, 1]
     voters = [[0, 0], [10, 0], [10, 10]]
-    basicSpoiler = Spacial [4, 4]
+    basicSpoiler = [4, 4]
 
 -- Helpers
 
