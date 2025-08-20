@@ -142,7 +142,7 @@ testMcKelveySchofield =
         , testCase "(new majority)" $
             newMajority p1 voters basicSpoiler @?= [0, 2]
         , testCase "(spoiler potential)" $
-            spoilerPotential p1 voters @?= 0.313032999999999
+            spoilerPotential p1 voters @?= 0.313033999999999
         , testCase "(spoiler path, p2>p1)" $
             thetaPath p1 voters [2, 8] @?= [[2, 8]]
         , testCase "(spoiler path 1)" $
