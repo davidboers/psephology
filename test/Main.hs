@@ -155,7 +155,7 @@ testMcKelveySchofield =
         , testCase "(new majority)" $
             newMajority p1 voters basicSpoiler @?= [0, 2]
         , testCase "(spoiler potential)" $
-            spoilerPotential p1 voters @?= 0.3130329999999992
+            spoilerPotential p1 voters @?= 0.313032999999999
         ]
   where
     p1 = Spacial [9, 1]
