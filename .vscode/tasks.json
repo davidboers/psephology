@@ -16,6 +16,12 @@
       "label": "Run tests (tests/Main.hs)",
       "command": "cabal",
       "args": ["run"]
+    },
+    {
+      "type": "shell",
+      "label": "Build library",
+      "command": "cabal",
+      "args": ["build"]
     }
   ]
 }
