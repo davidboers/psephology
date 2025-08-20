@@ -20,6 +20,7 @@ import Psephology.Voter (preference)
 import Data.List
 import Data.List.Extras (argmin)
 import Data.Maybe (fromMaybe)
+import Psephology.Efficiency (utilityV)
 
 -- | Step size for candidate generation in the policy space.
 candidateStep :: Double
@@ -85,20 +86,15 @@ function:
 
 A more Haskellic way of putting it:
 
-\[U(x_i,x) = \phi\circ \|x-x_i\|\]
+\[U(x_i,x) = \phi_i\circ \|x-x_i\|\]
 
 \(\|\|\) is the Euclidean distance between the two points, and \(\phi\), which is defined by McKelvey as "any monotone decreasing
 function":
-This module actually makes minimal use of this function, finding other ways to measure utility/distance. This function is provided
-for the purpose of completeness.
 
-This module actually makes little use of this function, finding other ways to measure utility/distance. This function is provided
-for the purpose of completeness.
+\[\phi_i(d) = \|x_i\|-d\]
 -}
 utility :: [Double] -> [Double] -> Double
-utility xi x =
-    let phi d = 1 - d
-     in phi $ sqrt $ sum $ zipWith (\v1 v2 -> (v1 - v2) ** 2) x xi
+utility = utilityV
 
 -- | @'newMajority' p1 voters p2@ returns a list of the indexes of @voters@ that prefer @p2@ over @p1@.
 newMajority :: [Double] -> [[Double]] -> [Double] -> [Int]

@@ -32,6 +32,7 @@ library
     exposed-modules:  Psephology
                       Psephology.BLT
                       Psephology.Candidate
+                      Psephology.Efficiency
                       Psephology.Spoilers
                       Psephology.Spoilers.Clones
                       Psephology.Spoilers.Proxies

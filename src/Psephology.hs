@@ -7,6 +7,7 @@ module Psephology (
     module Psephology.BLT,
     module Psephology.Candidate,
     module Psephology.Condorcet,
+    module Psephology.Efficiency,
     module Psephology.ElectoralSystem,
     module Psephology.ElectoralSystems.Borda,
     module Psephology.ElectoralSystems.Condorcet,
@@ -25,6 +26,7 @@ module Psephology (
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
+import Psephology.Efficiency
 import Psephology.ElectoralSystem
 import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Condorcet

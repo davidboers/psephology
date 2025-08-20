@@ -1,12 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module Psephology.Voter (Voter (..), lastPreference, truncateAt, dist) where
+module Psephology.Voter (Voter (..), lastPreference, truncateAt, utilityM, argmaxC, argminC) where
 
 import Data.List
-import Data.List.Extras.Argmax (argmin)
+import Data.List.Extras.Argmax (argmax, argmin)
 import Data.Maybe
 
 import Psephology.Candidate
+import Psephology.Efficiency (utilityV)
 
 class Voter a where
     -- | @'preference' candidates v@ returns the index of the candidate in @candidates@ that is the voter's highest choice between the given @candidates@.
@@ -20,16 +21,16 @@ class Voter a where
 
 -- | Modeled voter preferences
 instance Voter [Double] where
-    preference candidates v = argmin (\n -> dist v (candidates !! n)) [0 .. (length candidates - 1)]
+    preference candidates v = argmaxC (utilityM v) candidates
 
-    rank candidates v = rank candidates (sortOn (dist v) candidates)
+    rank candidates v = rank candidates (sortOn (negate . utilityM v) candidates)
 
     -- \| Uses a relative formula
     score mn mx candidates v c =
         mn + round (fromIntegral (mx - mn) * (1.0 - ((dc - min_d) / (max_d - min_d))))
       where
-        dc = dist v c
-        d = map (dist v) candidates
+        dc = -utilityM v c -- This needs to be rationalized.
+        d = map (negate . utilityM v) candidates
         min_d = minimum d
         max_d = maximum d
 
@@ -62,13 +63,15 @@ lastPreference candidates v
 truncateAt :: Int -> [[Candidate]] -> [[Candidate]]
 truncateAt k = map (take k)
 
--- | Euclidean distance between a spacial voter and a spacial candidate
-dist :: [Double] -> Candidate -> Double
-dist p1 (NamedSpacial _ p2) = dist p1 (Spacial p2)
-dist p1 (Spacial p2) = sqrt $ sum $ dist1D p1 p2
-dist _ _ = error "Attempting to calculate distance between spacial and categorical candidates."
+utilityM :: [Double] -> Candidate -> Double
+utilityM p1 (NamedSpacial _ p2) = utilityM p1 (Spacial p2)
+utilityM p1 (Spacial p2) = utilityV p1 p2
+utilityM _ _ = error "Attempting to calculate utility of a categorical candidate."
 
-dist1D :: [Double] -> [Double] -> [Double]
-dist1D (p1i : p1) (p2i : p2) = ((p2i - p1i) ** 2) : dist1D p1 p2
-dist1D [] _ = []
-dist1D _ [] = []
+-- | @'argmaxC' f candidates@ returns the index of the candidate that maximizes @f@.
+argmaxC :: (Ord b) => (Candidate -> b) -> [Candidate] -> Int
+argmaxC f candidates = argmax (\i -> f $ candidates !! i) [0 .. length candidates - 1]
+
+-- | @'argminC' f candidates@ returns the index of the candidate that maximizes @f@.
+argminC :: (Ord b) => (Candidate -> b) -> [Candidate] -> Int
+argminC f candidates = argmin (\i -> f $ candidates !! i) [0 .. length candidates - 1]

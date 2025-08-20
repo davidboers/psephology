@@ -58,4 +58,4 @@ singlePeakedVotersNormalCentered n dims = singlePeakedVotersNormalLim 100 (repli
 formalize :: [Candidate] -> [[Double]] -> [[Candidate]]
 formalize _ [] = []
 formalize candidates (v : voters) =
-    sortOn (dist v) candidates : formalize candidates voters
+    sortOn (negate . utilityM v) candidates : formalize candidates voters
