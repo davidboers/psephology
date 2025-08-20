@@ -15,7 +15,7 @@ import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
 import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
-import Psephology.McKelveySchofield (findASpoiler, newMajority, spoilerPotential)
+import Psephology.McKelveySchofield (findASpoiler, newMajority, spoilerPotential, thetaPath)
 import Psephology.Parliament (Election (Election), Parliament, generate, pathologies, winners)
 import Psephology.Pathologies (condorcetFailure, majorityCoalitions, majorityFailure, mutualMajorityFailure)
 import Psephology.SampleElections
@@ -156,11 +156,17 @@ testMcKelveySchofield =
             newMajority p1 voters basicSpoiler @?= [0, 2]
         , testCase "(spoiler potential)" $
             spoilerPotential p1 voters @?= 0.313032999999999
+        , testCase "(spoiler path, p2>p1)" $
+            thetaPath p1 voters [2, 8] @?= [[2, 8]]
+        , testCase "(spoiler path 1)" $
+            thetaPath p1 voters [0, 0] @?= [[1, 9], [0, 0]]
+        , testCase "(spoiler path 2)" $
+            thetaPath p1 voters [-3, 0] @?= [[1, 9], [-2.5, -2], [-3, 0]]
         ]
   where
     p1 = [9, 1]
     voters = [[0, 0], [10, 0], [10, 10]]
-    basicSpoiler = [4, 4]
+    basicSpoiler = [1, 9]
 
 -- Helpers
 

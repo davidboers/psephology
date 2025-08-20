@@ -2,11 +2,6 @@
 
 # TODO list
 
-- McKelvey-Schofield
-  - Iterative process to achieve a given outcome
-  - Optimized spoiler finder
-  - New dimensions
-- Import from .blt (no yacc)
 - Proxy cycles
 - Convert a list of formal voters into a list of theoretical voters
-- Test homogeneity
+- Automatic district creator
