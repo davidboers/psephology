@@ -32,23 +32,24 @@ library
     exposed-modules:  Psephology
                       Psephology.BLT
                       Psephology.Candidate
-                      Psephology.Efficiency
-                      Psephology.Spoilers
-                      Psephology.Spoilers.Clones
-                      Psephology.Spoilers.Proxies
                       Psephology.Condorcet
+                      Psephology.Efficiency
                       Psephology.ElectoralSystem
-                      Psephology.ElectoralSystems.Plurality
-                      Psephology.ElectoralSystems.Runoff
-                      Psephology.ElectoralSystems.Rated
                       Psephology.ElectoralSystems.Borda
                       Psephology.ElectoralSystems.Condorcet
+                      Psephology.ElectoralSystems.Plurality
+                      Psephology.ElectoralSystems.Rated
+                      Psephology.ElectoralSystems.Runoff
                       Psephology.McKelveySchofield
                       Psephology.Parliament
                       Psephology.Pathologies
                       Psephology.Quotas
+                      Psephology.Redistricting.Utilitarian
                       Psephology.SampleElections
                       Psephology.SinglePeakedPreferences
+                      Psephology.Spoilers
+                      Psephology.Spoilers.Clones
+                      Psephology.Spoilers.Proxies
                       Psephology.Voter
 
     -- Modules included in this library but not exported.

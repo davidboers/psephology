@@ -14,10 +14,11 @@ import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
-import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
-import Psephology.McKelveySchofield (findASpoiler, newMajority, spoilerPotential, thetaPath)
-import Psephology.Parliament (Election (Election), Parliament, generate, pathologies, winners)
-import Psephology.Pathologies (condorcetFailure, majorityCoalitions, majorityFailure, mutualMajorityFailure)
+import Psephology.ElectoralSystems.Runoff
+import Psephology.McKelveySchofield
+import Psephology.Parliament
+import Psephology.Pathologies
+import Psephology.Redistricting.Utilitarian
 import Psephology.SampleElections
 import Psephology.Spoilers
 import Psephology.Voter
@@ -38,6 +39,7 @@ tests _ =
         "Tests"
         [ testTennesseeCapitalElection
         , testMcKelveySchofield
+        , testRedistricting
         -- Enable as you wish
         -- , testGeneratedParliament parliament
         ]
@@ -155,18 +157,64 @@ testMcKelveySchofield =
     voters = [[0, 0], [10, 0], [10, 10]]
     basicSpoiler = [1, 9]
 
+testRedistricting :: TestTree
+testRedistricting =
+    testGroup
+        "Redistricting"
+        [ testCase "(utilitarian)" $
+            noNonDissolved districts @?= noDistricts
+        , testCase "(export journal)" $
+            do
+                writeFile "test/redistricting/journal1.csv" $
+                    unlines $
+                        map (concatMap (++ ",")) csv
+                True @?= True
+        , testCase "(export districts)" $
+            do
+                writeFile "test/redistricting/test1.csv" $
+                    unlines $
+                        map
+                            ( \d@(District idD precincts _) ->
+                                concatMap (++ ",") $
+                                    show idD
+                                        : show (populationD d)
+                                        : map (\(Precinct _ p) -> show $ show p) precincts
+                            )
+                            districts
+                True @?= True
+        ]
+  where
+    testPrecincts :: [Precinct]
+    testPrecincts =
+        [ Precinct 1 [x, y]
+        | x <- [0.5, 1.5 .. 9.5]
+        , y <- [0.5, 1.5 .. 9.5]
+        ]
+
+    noDistricts = 5
+
+    (csv, districts) = reduceVerbose (Just 100) noDistricts (precinctsToDistricts testPrecincts)
+
 testGeneratedParliament :: Parliament [Double] -> TestTree
 testGeneratedParliament parliament =
     testGroup
         "Generated parliament"
         [ testCase "Export generated voters to CSV" $
             do
-                let csv = unlines $ map (concatMap (\x -> show x ++ ",")) $ concatMap (\(Election _ voters) -> voters) parliament
+                let csv =
+                        unlines $
+                            map (concatMap (\x -> show x ++ ",")) $
+                                concatMap (\(Election _ voters) -> voters) parliament
                 writeFile "test/heatmaps/voters.csv" csv
                 True @?= True
         , testCase "Export generated electeds to CSV" $
             do
-                let csv = unlines $ zipWith (\winner (Election candidates _) -> show $ candidates !! winner) (winners instantRunoffVoting parliament) parliament
+                let csv =
+                        unlines $
+                            zipWith
+                                (\winner (Election candidates _) -> show $ candidates !! winner)
+                                (winners instantRunoffVoting parliament)
+                                parliament
                 writeFile "test/heatmaps/elected.csv" csv
                 True @?= True
         , testCase "Mass analysis" $
@@ -178,61 +226,76 @@ testGeneratedParliament parliament =
 
 -- Helpers
 
-namer :: (Show b) => [b] -> Int -> String
+namer :: Show b => [b] -> Int -> String
 namer candidates = show . (!!) candidates
-namer1 :: (Show b) => [b] -> [Int] -> [String]
+namer1 :: Show b => [b] -> [Int] -> [String]
 namer1 candidates = map (namer candidates)
-namer2 :: (Show b) => [b] -> [[Int]] -> [[String]]
+namer2 :: Show b => [b] -> [[Int]] -> [[String]]
 namer2 candidates = map (namer1 candidates)
-namer1t :: (Data.Bifunctor.Bifunctor p, Show b) => [b] -> [p Int Int] -> [p String String]
+namer1t
+    :: (Data.Bifunctor.Bifunctor p, Show b) => [b] -> [p Int Int] -> [p String String]
 namer1t candidates = map (Data.Bifunctor.bimap (namer candidates) (namer candidates))
 
 -- Compares an outcome of function f(c,v) given electoral system es.
-compareOutcome :: (Voter a, Show b, Eq b) => (ElectoralSystem a -> b) -> ((TestName, ElectoralSystem a), b) -> TestTree
+compareOutcome
+    :: (Voter a, Show b, Eq b)
+    => (ElectoralSystem a -> b)
+    -> ((TestName, ElectoralSystem a), b)
+    -> TestTree
 compareOutcome f_CV ((name, es), correctAnswer) =
     testCase name $ f_CV es @?= correctAnswer
 
-testBySystem :: (Voter a, Show b, Eq b) => (ElectoralSystem a -> b) -> [b] -> [TestTree]
+testBySystem
+    :: (Voter a, Show b, Eq b) => (ElectoralSystem a -> b) -> [b] -> [TestTree]
 testBySystem f_CV = zipWith (curry (compareOutcome f_CV)) systems
 
-testWinnerBySystem :: (Voter a) => [Candidate] -> [a] -> [String] -> TestTree
+testWinnerBySystem :: Voter a => [Candidate] -> [a] -> [String] -> TestTree
 testWinnerBySystem candidates voters results =
     testGroup "(winner by system)" $
         testBySystem (\es -> namer candidates $ es candidates voters) results
 
-testCondorcetWinner :: (Voter a) => [Candidate] -> [a] -> String -> TestTree
+testCondorcetWinner :: Voter a => [Candidate] -> [a] -> String -> TestTree
 testCondorcetWinner candidates voters correctAnswer =
     testCase "(Condorcet winner)" $
-        namer candidates (fromJust (condorcetWinner candidates voters)) @?= correctAnswer
+        namer candidates (fromJust (condorcetWinner candidates voters))
+            @?= correctAnswer
 
-testClones :: (Voter a) => [Candidate] -> [a] -> [[String]] -> TestTree
+testClones :: Voter a => [Candidate] -> [a] -> [[String]] -> TestTree
 testClones candidates voters correctAnswer = testCase "(clones)" $ byNames @?= correctAnswer
   where
     byNumbers = clones candidates voters
     byNames = namer2 candidates byNumbers
 
-testSpoilers :: (Voter a) => [Candidate] -> [a] -> [[String]] -> TestTree
+testSpoilers :: Voter a => [Candidate] -> [a] -> [[String]] -> TestTree
 testSpoilers candidates voters correctAnswers =
     testGroup "(spoilers)" $
         testBySystem (namer1 candidates . spoilers candidates voters) correctAnswers
 
-testProxies :: (Voter a) => [Candidate] -> [a] -> [[(String, String)]] -> TestTree
+testProxies
+    :: Voter a => [Candidate] -> [a] -> [[(String, String)]] -> TestTree
 testProxies candidates voters correctAnswers =
     testGroup "(proxies)" $
         testBySystem (namer1t candidates . proxies candidates voters) correctAnswers
 
-testForPathologiesBySystem :: (Voter a) => [Candidate] -> [a] -> (String, ElectoralSystem a) -> [Bool] -> TestTree
+testForPathologiesBySystem
+    :: Voter a
+    => [Candidate]
+    -> [a]
+    -> (String, ElectoralSystem a)
+    -> [Bool]
+    -> TestTree
 testForPathologiesBySystem candidates voters (systemName, es) correctAnswers =
     testGroup systemName $
         zipWith
-            (\(pathologyName, f) correctAnswer -> testCase pathologyName $ f candidates voters es @?= correctAnswer)
+            ( \(pathologyName, f) correctAnswer -> testCase pathologyName $ f candidates voters es @?= correctAnswer
+            )
             [ ("Condorcet failure", condorcetFailure)
             , ("Majority failure", majorityFailure)
             , ("Mutual majority failure", mutualMajorityFailure)
             ]
             correctAnswers
 
-testForPathologies :: (Voter a) => [Candidate] -> [a] -> [[Bool]] -> TestTree
+testForPathologies :: Voter a => [Candidate] -> [a] -> [[Bool]] -> TestTree
 testForPathologies candidates voters correctAnswers =
     testGroup "(pathologies)" $
         zipWith (testForPathologiesBySystem candidates voters) systems correctAnswers

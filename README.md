@@ -4,5 +4,4 @@
 
 - Proxy cycles
 - Convert a list of formal voters into a list of theoretical voters
-- Automatic district creator
-- McKelvey-Schofield: Spoiler potential doesn't select all candidates
+- System-wise efficiency
