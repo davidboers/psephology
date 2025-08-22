@@ -33,11 +33,11 @@ module Psephology.Redistricting.Utilitarian
     , thenEqualizeVerbose
     ) where
 
-import Data.List (delete, deleteBy, foldl', sortOn, transpose, sort)
+import Data.List (delete, deleteBy, foldl', sort, sortOn, transpose)
 import Data.List.Extras (argmax, argmin)
 import qualified Data.Map.Strict as M
 
-import Psephology.Efficiency (distance, utilityV)
+import Psephology.Efficiency (utilityV)
 import Psephology.Quotas (hare)
 
 tvp :: [District] -> Int
@@ -261,9 +261,7 @@ distributeSurplus quota districts district@(District idD precincts _)
                 sortOn
                     ( \precinct ->
                         if isEqualizing
-                            then
-                                minimum (map (distance (point precinct) . centerD) districts)
-                                    - distance (point precinct) (centerD district)
+                            then utilityPD precinct district - maximum (map (utilityPD precinct) districts)
                             else utilityPD precinct district
                     )
                     precincts
