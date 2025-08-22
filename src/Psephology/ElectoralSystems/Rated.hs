@@ -10,6 +10,7 @@ import Psephology.Candidate
 import Psephology.Condorcet (numPreferOver)
 import Psephology.Counting (scores)
 import Psephology.Voter
+import Psephology.Utils (medianI)
 
 -- Approval voting
 
@@ -31,14 +32,8 @@ Test suite defaults to @highestMedian 0 10@
 -}
 highestMedian :: (Voter a) => Int -> Int -> [Candidate] -> [a] -> Int
 highestMedian mn mx candidates voters =
-    let medians = map (\c -> median $ map (\v -> score mn mx candidates v c) voters) candidates
+    let medians = map (\c -> medianI $ map (\v -> score mn mx candidates v c) voters) candidates
      in argmax (medians !!) [0 .. length candidates - 1]
-
-median :: (Integral a) => [a] -> a
-median [] = 0
-median [a] = a
-median [a, b] = (a + b) `div` 2
-median l@(_ : _ : _ : _) = median $ tail $ init l
 
 -- Score voting
 
