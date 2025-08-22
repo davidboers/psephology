@@ -7,8 +7,8 @@ import Test.Tasty.HUnit
 import Test.Tasty.Runners.TAP
 
 import Data.Bifunctor qualified
+import Data.List (sort, intercalate)
 import Data.Maybe
-import GHC.OldList (intercalate)
 
 import Psephology.BLT
 import Psephology.Candidate
@@ -178,7 +178,7 @@ testRedistricting =
                                 concatMap (++ ",") $
                                     show idD
                                         : show (populationD d)
-                                        : map (\(Precinct _ p) -> show $ show p) precincts
+                                        : map (show . show . point) (sort precincts)
                             )
                             districts
                 True @?= True
@@ -193,7 +193,9 @@ testRedistricting =
 
     noDistricts = 5
 
-    (csv, districts) = reduceVerbose (Just 100) noDistricts (precinctsToDistricts testPrecincts)
+    (csv, districts) =
+        thenEqualizeVerbose 99 1 $
+            reduceVerbose noDistricts (precinctsToDistricts testPrecincts)
 
 testGeneratedParliament :: Parliament [Double] -> TestTree
 testGeneratedParliament parliament =
