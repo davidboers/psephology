@@ -1,5 +1,6 @@
 -- | This module is concerned with study of [social utility efficiency](https://en.wikipedia.org/wiki/Social_utility_efficiency).
 module Psephology.Efficiency (
+    distance,
     -- * Efficiency ratios
     efficiency,
 
