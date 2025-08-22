@@ -33,11 +33,11 @@ module Psephology.Redistricting.Utilitarian
     , thenEqualizeVerbose
     ) where
 
-import Data.List (delete, deleteBy, foldl', sortOn, transpose)
-import qualified Data.Map.Strict as M
+import Data.List (delete, deleteBy, foldl', sortOn, transpose, sort)
 import Data.List.Extras (argmax, argmin)
+import qualified Data.Map.Strict as M
 
-import Psephology.Efficiency (utilityV)
+import Psephology.Efficiency (distance, utilityV)
 import Psephology.Quotas (hare)
 
 tvp :: [District] -> Int
@@ -79,6 +79,9 @@ instance Ord Precinct where
 
 data District = District Int [Precinct] Status
 
+districtID :: District -> Int
+districtID (District idD _ _) = idD
+
 -- | Simple way to check whether a district has been established.
 isEstablished :: District -> Bool
 isEstablished (District _ _ Established) = True
@@ -103,7 +106,7 @@ average :: [Double] -> Double
 average [] = 0.0
 average l = sum l / fromIntegral (length l)
 
--- | @'center' district@ returns the center point of @district@.
+-- | @'centerD' district@ returns the center point of @district@.
 centerD :: District -> [Double]
 centerD (District _ precincts _) =
     map average $ transpose $ map point precincts
@@ -207,39 +210,39 @@ reduceStep x districts
 recordStep :: Phase -> Int -> Int -> [District] -> [District] -> [[String]]
 recordStep phase n quota lastIter districts =
     let lastMap = M.fromList [(idD, district) | district@(District idD _ _) <- lastIter]
-    in map
-        ( \district@(District idD precincts status) ->
-            case M.lookup idD lastMap of
-                Just lastDistrict@(District _ _ lastStatus) ->
-                    [ show phase
-                    , show n
-                    , show idD
-                    , show $ noNonDissolved districts
-                    , show $ show $ centerD district
-                    , show $ length precincts
-                    , show $ populationD district
-                    , show $ populationD district - populationD lastDistrict -- Population change
-                    , show quota
-                    , show $ surplus quota district
-                    , show status
-                    , show $ lastStatus /= status
-                    ]
-                Nothing ->
-                    [ show phase
-                    , show n
-                    , show idD
-                    , show $ noNonDissolved districts
-                    , show $ show $ centerD district
-                    , show $ length precincts
-                    , show $ populationD district
-                    , "N/A" -- Could not find lastIterD
-                    , show quota
-                    , show $ surplus quota district
-                    , show status
-                    , "N/A" -- Could not compare status
-                    ]
-        )
-        districts
+     in map
+            ( \district@(District idD precincts status) ->
+                case M.lookup idD lastMap of
+                    Just lastDistrict@(District _ _ lastStatus) ->
+                        [ show phase
+                        , show n
+                        , show idD
+                        , show $ noNonDissolved districts
+                        , show $ show $ centerD district
+                        , show $ length precincts
+                        , show $ populationD district
+                        , show $ populationD district - populationD lastDistrict -- Population change
+                        , show quota
+                        , show $ surplus quota district
+                        , show status
+                        , show $ lastStatus /= status
+                        ]
+                    Nothing ->
+                        [ show phase
+                        , show n
+                        , show idD
+                        , show $ noNonDissolved districts
+                        , show $ show $ centerD district
+                        , show $ length precincts
+                        , show $ populationD district
+                        , "N/A" -- Could not find lastIterD
+                        , show quota
+                        , show $ surplus quota district
+                        , show status
+                        , "N/A" -- Could not compare status
+                        ]
+            )
+            districts
 
 -- | @'distributeSurpluses' quota districts@ returns @districts@ with all surpluses redistributed given @quota@.
 distributeSurpluses :: Int -> [District] -> [District]
@@ -253,8 +256,18 @@ distributeSurpluses quota districts =
 distributeSurplus :: Int -> [District] -> District -> [District]
 distributeSurplus quota districts district@(District idD precincts _)
     | surplusSize > 0 =
-        let precinctsSorted = sortOn (`utilityPD` district) precincts
-            precinctsToTransfer = selectPrecinctsToTransfer surplusSize precinctsSorted
+        let isEqualizing = all isEstablished districts
+            precinctsSorted =
+                sortOn
+                    ( \precinct ->
+                        if isEqualizing
+                            then
+                                minimum (map (distance (point precinct) . centerD) districts)
+                                    - distance (point precinct) (centerD district)
+                            else utilityPD precinct district
+                    )
+                    precincts
+            precinctsToTransfer = sort $ selectPrecinctsToTransfer surplusSize precinctsSorted
          in distributeSurplusWorker idD districts precinctsToTransfer
     | otherwise = districts
   where
@@ -295,10 +308,14 @@ selectPrecinctsToTransfer surplusSize (x : xs)
 
 -- | @'transferTo' idD districts precinct@ determines which member of @districts@ provides maximum utility for @precinct@, other than @idD@.
 transferTo :: Int -> [District] -> Precinct -> Int
-transferTo idD districts precinct =
-    (\(District id' _ _) -> id') $
-        argmax (utilityPD precinct) $
-            filter (\(District id' _ _) -> id' /= idD) districts
+transferTo idD districts precinct
+    | null deficitDistricts =
+        districtID $ argmax (utilityPD precinct) otherDistricts
+    | otherwise =
+        districtID $ argmax (utilityPD precinct) deficitDistricts
+  where
+    otherDistricts = filter (\(District id' _ _) -> id' /= idD) districts
+    deficitDistricts = filter (\district' -> surplus 20 district' < 0) otherDistricts
 
 -- | @'transfer' districts idD precinct@  transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
 transfer :: [District] -> Int -> Precinct -> [District]
