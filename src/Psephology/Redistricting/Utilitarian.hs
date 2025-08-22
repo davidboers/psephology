@@ -140,7 +140,8 @@ reduceVerbose x districts =
   where
     quota = hare (tvp districts) x
     header =
-        [ "n"
+        [ "Phase"
+        , "n"
         , "ID"
         , "No. districts"
         , "Center"
@@ -151,7 +152,6 @@ reduceVerbose x districts =
         , "Surplus"
         , "Status"
         , "Changed"
-        , "Phase"
         ]
     record = header : recordStep Reduction 0 quota districts districts
 
