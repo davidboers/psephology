@@ -210,7 +210,7 @@ recordStep phase n quota lastIter districts =
     in map
         ( \district@(District idD precincts status) ->
             case M.lookup idD lastMap of
-                Just (District _ _ lastStatus) ->
+                Just lastDistrict@(District _ _ lastStatus) ->
                     [ show phase
                     , show n
                     , show idD
@@ -218,7 +218,7 @@ recordStep phase n quota lastIter districts =
                     , show $ show $ centerD district
                     , show $ length precincts
                     , show $ populationD district
-                    , show $ populationD district - populationD district
+                    , show $ populationD district - populationD lastDistrict -- Population change
                     , show quota
                     , show $ surplus quota district
                     , show status
