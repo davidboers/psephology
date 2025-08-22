@@ -46,7 +46,8 @@ tvp = sum . map populationD
 -- Precincts
 
 data Precinct = Precinct
-    { population :: Int
+    { nameP :: String
+    , population :: Int
     , point :: [Double]
     }
     deriving (Eq)
@@ -72,7 +73,8 @@ utilityPD precinct district =
 instance Ord Precinct where
     compare lhs rhs =
         case compare (head $ point lhs) (head $ point rhs) of
-            EQ -> compare (Precinct 0 (tail $ point lhs)) (Precinct 0 (tail $ point rhs))
+            EQ ->
+                compare (Precinct "" 0 (tail $ point lhs)) (Precinct "" 0 (tail $ point rhs))
             a -> a
 
 -- Districts
@@ -169,6 +171,7 @@ reduceVerboseWorker
     -> [District]
     -> ([[String]], [District])
 reduceVerboseWorker quota record n x districts
+    | n > 157 = (record ++ [["Automatic break"]], districts)
     | noNonDissolved districts <= x = (record, establishRest districts)
     | otherwise =
         reduceVerboseWorker
@@ -190,7 +193,7 @@ reduceVerboseWorker quota record n x districts
 reduceStep :: Int -> [District] -> [District]
 reduceStep x districts
     | total_surplus_of_established > 0 =
-        updateStatuses $ distributeSurpluses quota districts
+        updateStatuses $ mergeSmallest $ distributeSurpluses quota districts
     | otherwise = updateStatuses $ mergeSmallest districts
   where
     quota = hare (tvp districts) x
@@ -307,7 +310,7 @@ selectPrecinctsToTransfer surplusSize (x : xs)
 -- | @'transferTo' quota idD districts precinct@ determines which member of @districts@ provides maximum utility for @precinct@, other than @idD@.
 transferTo :: Int -> Int -> [District] -> Precinct -> Int
 transferTo quota idD districts precinct
-    | null deficitDistricts =
+    | null deficitDistricts || all isEstablished districts =
         districtID $ argmax (utilityPD precinct) otherDistricts
     | otherwise =
         districtID $ argmax (utilityPD precinct) deficitDistricts
@@ -348,7 +351,7 @@ equalizeVerboseWorker
     :: [[String]] -> Int -> Int -> Double -> [District] -> ([[String]], [District])
 equalizeVerboseWorker record n maxIter maxToleranceRatio districts
     | n > maxIter = (record, districts)
-    | currentRatio <= maxToleranceRatio = (record, districts)
+    | currentRatio districts <= maxToleranceRatio = (record, districts)
     | otherwise =
         let quota = hare (tvp districts) (length districts)
             thisStep = distributeSurpluses quota districts
@@ -359,10 +362,6 @@ equalizeVerboseWorker record n maxIter maxToleranceRatio districts
                 maxIter
                 maxToleranceRatio
                 thisStep
-  where
-    currentRatio =
-        fromIntegral (maximum $ map populationD districts)
-            / fromIntegral (minimum $ map populationD districts)
 
 -- | thenEqualizeVerbose maxIter maxToleranceRatio $ reduceVerbose noDistricts districts
 thenEqualizeVerbose
@@ -372,3 +371,9 @@ thenEqualizeVerbose maxIter maxToleranceRatio (reductionRecord, districts) =
      in ( reductionRecord ++ equalizationRecord
         , equalizedDistricts
         )
+
+-- Print to journal and expose
+currentRatio :: [District] -> Double
+currentRatio districts =
+    fromIntegral (maximum $ map populationD districts)
+        / fromIntegral (minimum $ map populationD districts)
