@@ -33,7 +33,7 @@ module Psephology.Redistricting.Utilitarian
     , thenEqualizeVerbose
     ) where
 
-import Data.List (delete, deleteBy, find, foldl', sortOn, transpose)
+import Data.List (delete, deleteBy, foldl', sortOn, transpose)
 import qualified Data.Map.Strict as M
 import Data.List.Extras (argmax, argmin)
 
@@ -71,7 +71,9 @@ utilityPD precinct district =
 
 instance Ord Precinct where
     compare lhs rhs =
-        compare (head $ point lhs) (head $ point rhs)
+        case compare (head $ point lhs) (head $ point rhs) of
+            EQ -> compare (Precinct 0 (tail $ point lhs)) (Precinct 0 (tail $ point rhs))
+            a -> a
 
 -- Districts
 
