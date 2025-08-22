@@ -34,6 +34,7 @@ module Psephology.Redistricting.Utilitarian
     ) where
 
 import Data.List (delete, deleteBy, find, foldl', sortOn, transpose)
+import qualified Data.Map.Strict as M
 import Data.List.Extras (argmax, argmin)
 
 import Psephology.Efficiency (utilityV)
@@ -69,7 +70,7 @@ utilityPD precinct district =
     utilityV (point precinct) (centerD district)
 
 instance Ord Precinct where
-    compare lhs rhs = 
+    compare lhs rhs =
         compare (head $ point lhs) (head $ point rhs)
 
 -- Districts
@@ -203,25 +204,27 @@ reduceStep x districts
 -- | to csv
 recordStep :: Phase -> Int -> Int -> [District] -> [District] -> [[String]]
 recordStep phase n quota lastIter districts =
-    map
+    let lastMap = M.fromList [(idD, district) | district@(District idD _ _) <- lastIter]
+    in map
         ( \district@(District idD precincts status) ->
-            case find (\(District id' _ _) -> id' == idD) lastIter of
-                Just lastDistrict@(District _ _ lastStatus) ->
-                    [ show n
+            case M.lookup idD lastMap of
+                Just (District _ _ lastStatus) ->
+                    [ show phase
+                    , show n
                     , show idD
                     , show $ noNonDissolved districts
                     , show $ show $ centerD district
                     , show $ length precincts
                     , show $ populationD district
-                    , show $ populationD district - populationD lastDistrict
+                    , show $ populationD district - populationD district
                     , show quota
                     , show $ surplus quota district
                     , show status
                     , show $ lastStatus /= status
-                    -- , show phase
                     ]
                 Nothing ->
-                    [ show n
+                    [ show phase
+                    , show n
                     , show idD
                     , show $ noNonDissolved districts
                     , show $ show $ centerD district
@@ -232,7 +235,6 @@ recordStep phase n quota lastIter districts =
                     , show $ surplus quota district
                     , show status
                     , "N/A" -- Could not compare status
-                    , show phase
                     ]
         )
         districts
