@@ -266,16 +266,16 @@ distributeSurplus quota districts district@(District idD precincts _)
                     )
                     precincts
             precinctsToTransfer = sort $ selectPrecinctsToTransfer surplusSize precinctsSorted
-         in distributeSurplusWorker idD districts precinctsToTransfer
+         in distributeSurplusWorker quota idD districts precinctsToTransfer
     | otherwise = districts
   where
     surplusSize = surplus quota district
 
-distributeSurplusWorker :: Int -> [District] -> [Precinct] -> [District]
-distributeSurplusWorker _ districts [] = districts
-distributeSurplusWorker idD districts (x : xs) =
-    let id' = transferTo idD districts x
-     in distributeSurplusWorker idD (transfer districts id' x) xs
+distributeSurplusWorker :: Int -> Int -> [District] -> [Precinct] -> [District]
+distributeSurplusWorker _ _ districts [] = districts
+distributeSurplusWorker quota idD districts (x : xs) =
+    let id' = transferTo quota idD districts x
+     in distributeSurplusWorker quota idD (transfer districts id' x) xs
 
 {- | @'mergeSmallest' districts@ dissolves the non-established member of @districts@ with the smallest population and merges it with the other member of @district@ that provides the most utility for a
 voter at it's central point.
@@ -304,16 +304,16 @@ selectPrecinctsToTransfer surplusSize (x : xs)
   where
     surplusWithout = surplusSize - population x
 
--- | @'transferTo' idD districts precinct@ determines which member of @districts@ provides maximum utility for @precinct@, other than @idD@.
-transferTo :: Int -> [District] -> Precinct -> Int
-transferTo idD districts precinct
+-- | @'transferTo' quota idD districts precinct@ determines which member of @districts@ provides maximum utility for @precinct@, other than @idD@.
+transferTo :: Int -> Int -> [District] -> Precinct -> Int
+transferTo quota idD districts precinct
     | null deficitDistricts =
         districtID $ argmax (utilityPD precinct) otherDistricts
     | otherwise =
         districtID $ argmax (utilityPD precinct) deficitDistricts
   where
     otherDistricts = filter (\(District id' _ _) -> id' /= idD) districts
-    deficitDistricts = filter (\district' -> surplus 20 district' < 0) otherDistricts
+    deficitDistricts = filter (\district' -> surplus quota district' < 0) otherDistricts
 
 -- | @'transfer' districts idD precinct@  transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
 transfer :: [District] -> Int -> Precinct -> [District]
