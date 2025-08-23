@@ -31,6 +31,7 @@ systems =
     , ("Copeland-Llull", copelandLlull)
     , ("Black", black traditionalBordaWeight)
     , ("Ranked pairs", rankedPairs)
+    , ("Schulze", schulze)
     , ("Approval", approvalVoting)
     , ("Highest median", highestMedian 0 10)
     , ("Score", scoreVoting 0 10)

@@ -6,6 +6,7 @@ module Psephology.ElectoralSystems.Condorcet
     , copelandLlull
     , black
     , rankedPairs
+    , schulze
     ) where
 
 import Data.List
@@ -97,3 +98,39 @@ rankedPairs candidates voters =
     findWinner :: [(Int, Int)] -> Maybe Int
     findWinner l' =
         find (\c -> not $ any (\(_, j'') -> j'' == c) l') (map fst l')
+
+-- Schulze method
+
+-- | [Schulze](https://en.wikipedia.org/wiki/Schulze_method)
+schulze :: Voter a => [Candidate] -> [a] -> Int
+schulze candidates voters =
+    beatpathWinner $
+        foldl' schulzeStep (condorcetMatrix pairwiseMaj candidates voters) $
+            [ (k, i, j)
+            | k <- [0 .. length candidates - 1]
+            , i <- [0 .. length candidates - 1]
+            , i /= k
+            , j <- [0 .. length candidates - 1]
+            , j /= k && j /= i
+            ]
+
+schulzeStep :: [[Int]] -> (Int, Int, Int) -> [[Int]]
+schulzeStep p (k, i, j) =
+    let pij = max (p !! i !! j) (min (p !! i !! k) (p !! k !! j))
+     in replace p (replace (p !! i) pij j) i
+
+beatpathWinner :: [[Int]] -> Int
+beatpathWinner [] = -1
+beatpathWinner p =
+    let n = length p
+        strength i j = p !! i !! j
+        isSchulzeWinner i =
+            all (\j -> i == j || strength i j >= strength j i) [0 .. n - 1]
+    in case find isSchulzeWinner [0 .. n - 1] of
+           Just i  -> i
+           Nothing -> -1 -- deterministic fallback on full tie/cycle
+           
+replace :: [a] -> a -> Int -> [a]
+replace [] _ _ = []
+replace (_ : ls) x 0 = x : ls
+replace (l : ls) x i = l : replace ls x (i - 1)

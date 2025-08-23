@@ -65,6 +65,7 @@ testTennesseeCapitalElection =
             , "Nashville" -- Copeland-Llull
             , "Nashville" -- Black
             , "Nashville" -- Ranked pairs
+            , "Nashville" -- Schulze
             ]
         , testCondorcetWinner candidates voters "Nashville"
         , testSmithSet candidates voters ["Nashville"]
@@ -104,6 +105,7 @@ testTennesseeCapitalElection =
             , [] -- Copeland-Llull
             , [] -- Black
             , [] -- Ranked pairs
+            , [] -- Schulze
             ]
         , testProxies
             candidates
@@ -123,6 +125,7 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Copeland-Llull
             , [("Nashville", "Chattanooga")] -- Black
             , [("Nashville", "Chattanooga")] -- Ranked pairs
+            , [("Nashville", "Chattanooga")] -- Schulze
             ]
         , testForPathologies
             candidates
@@ -142,6 +145,7 @@ testTennesseeCapitalElection =
             , [False, False, False] -- Copeland-Llull
             , [False, False, False] -- Black
             , [False, False, False] -- Ranked pairs
+            , [False, False, False] -- Schulze
             ]
         ]
   where
