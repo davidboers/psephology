@@ -4,6 +4,7 @@ module Psephology.ElectoralSystems.Condorcet
     , tidemanAlternative
     , minimax
     , copelandLlull
+    , black
     , rankedPairs
     ) where
 
@@ -14,11 +15,6 @@ import qualified Data.Ord
 
 import Psephology.Candidate
 import Psephology.Condorcet
-    ( copelandScore
-    , numPreferOver
-    , pairwiseMaj
-    , smithSet
-    )
 import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
 import Psephology.Voter
@@ -63,6 +59,13 @@ minimax candidates voters =
 copelandLlull :: Voter a => [Candidate] -> [a] -> Int
 copelandLlull candidates voters =
     argmax (copelandScore candidates voters) [0 .. length candidates - 1]
+
+-- | [Black](https://en.wikipedia.org/wiki/Black%27s_method). First argument is a Borda weight formula.
+black :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
+black weightFormula candidates voters =
+    case condorcetWinner candidates voters of
+        Just cw -> cw
+        Nothing -> bordaCountWFormula weightFormula candidates voters
 
 -- | [Ranked pairs](https://en.wikipedia.org/wiki/Ranked_pairs)
 rankedPairs :: Voter a => [Candidate] -> [a] -> Int

@@ -29,6 +29,7 @@ systems =
     , ("Tideman alternative", tidemanAlternative)
     , ("Minimax", minimax)
     , ("Copeland-Llull", copelandLlull)
+    , ("Black", black traditionalBordaWeight)
     , ("Ranked pairs", rankedPairs)
     , ("Approval", approvalVoting)
     , ("Highest median", highestMedian 0 10)

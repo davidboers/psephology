@@ -63,6 +63,7 @@ testTennesseeCapitalElection =
             , "Nashville" -- Tideman alternative
             , "Nashville" -- Minimax
             , "Nashville" -- Copeland-Llull
+            , "Nashville" -- Black
             , "Nashville" -- Ranked pairs
             ]
         , testCondorcetWinner candidates voters "Nashville"
@@ -101,6 +102,7 @@ testTennesseeCapitalElection =
             , [] -- Tideman alternative
             , [] -- Minimax
             , [] -- Copeland-Llull
+            , [] -- Black
             , [] -- Ranked pairs
             ]
         , testProxies
@@ -119,6 +121,7 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Tideman alternative
             , [("Nashville", "Chattanooga")] -- Minimax
             , [("Nashville", "Chattanooga")] -- Copeland-Llull
+            , [("Nashville", "Chattanooga")] -- Black
             , [("Nashville", "Chattanooga")] -- Ranked pairs
             ]
         , testForPathologies
@@ -137,6 +140,7 @@ testTennesseeCapitalElection =
             , [False, False, False] -- Tideman alternative
             , [False, False, False] -- Minimax
             , [False, False, False] -- Copeland-Llull
+            , [False, False, False] -- Black
             , [False, False, False] -- Ranked pairs
             ]
         ]
