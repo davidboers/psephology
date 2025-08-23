@@ -1,13 +1,19 @@
-module Psephology.ElectoralSystems.Borda (
-    traditionalBordaWeight,
-    dowdallWeight,
-    icelandicWeight,
-    bordaCount,
-    weights,
-    bordaTally,
-    dowdallSystem,
-    icelandicBorda,
-) where
+module Psephology.ElectoralSystems.Borda
+    ( -- * Weight formulae
+      traditionalBordaWeight
+    , dowdallWeight
+    , icelandicWeight
+
+      -- * Counting
+    , weights
+    , bordaTally
+
+      -- * Count triggers
+    , bordaCountWFormula
+    , bordaCount
+    , dowdallSystem
+    , icelandicBorda
+    ) where
 
 import Data.List.Extras (argmax)
 
@@ -34,30 +40,34 @@ icelandicWeight n r =
     fromIntegral (n - r + 1) / fromIntegral n
 
 -- | @'weights' weightFormula candidates v@ returns a list of the weight given to each candidate by voter @v@.
-weights :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> a -> [Double]
+weights :: Voter a => (Int -> Int -> Double) -> [Candidate] -> a -> [Double]
 weights weightFormula candidates v =
     let n = length candidates
      in map (weightFormula n . rank candidates v) candidates
 
 -- | @'bordaTally' weightFormula candidates voters@ returns the Borda tally for each candidate.
-bordaTally :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> [a] -> [Double]
+bordaTally
+    :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> [Double]
 bordaTally weightFormula candidates =
-    foldl (\t -> zipWith (+) t . weights weightFormula candidates) (replicate (length candidates) 0)
+    foldl
+        (\t -> zipWith (+) t . weights weightFormula candidates)
+        (replicate (length candidates) 0)
 
 -- | @'bordaCountWFormula' weightFormula candidates voters@ returns the index of the candidate that wins a Borda count using @weightFormula@.
-bordaCountWFormula :: (Voter a) => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
+bordaCountWFormula
+    :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
 bordaCountWFormula weightFormula candidates voters =
     let points = bordaTally weightFormula candidates voters
      in argmax (points !!) [0 .. length candidates - 1]
 
 -- | Shortcut for 'bordaCountWFormula'
-bordaCount :: (Voter a) => [Candidate] -> [a] -> Int
+bordaCount :: Voter a => [Candidate] -> [a] -> Int
 bordaCount = bordaCountWFormula traditionalBordaWeight
 
 -- | Shortcut for 'bordaCountWFormula'
-dowdallSystem :: (Voter a) => [Candidate] -> [a] -> Int
+dowdallSystem :: Voter a => [Candidate] -> [a] -> Int
 dowdallSystem = bordaCountWFormula dowdallWeight
 
 -- | Shortcut for 'bordaCountWFormula'
-icelandicBorda :: (Voter a) => [Candidate] -> [a] -> Int
+icelandicBorda :: Voter a => [Candidate] -> [a] -> Int
 icelandicBorda = bordaCountWFormula icelandicWeight
