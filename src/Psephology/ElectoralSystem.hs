@@ -1,7 +1,7 @@
-module Psephology.ElectoralSystem (
-    ElectoralSystem,
-    systems,
-) where
+module Psephology.ElectoralSystem
+    ( ElectoralSystem
+    , systems
+    ) where
 
 import Psephology.Candidate
 import Psephology.Voter
@@ -14,7 +14,7 @@ import Psephology.ElectoralSystems.Runoff
 
 type ElectoralSystem a = [Candidate] -> [a] -> Int
 
-systems :: (Voter a) => [(String, ElectoralSystem a)]
+systems :: Voter a => [(String, ElectoralSystem a)]
 systems =
     [ ("FPTP", firstPastThePost)
     , ("Anti-plurality", antiPlurality)
@@ -25,8 +25,9 @@ systems =
     , ("Dowdall", dowdallSystem)
     , ("Icelandic Borda", icelandicBorda)
     , ("Nanson", nansonsMethod)
-    , ("Copeland-Llull", copelandLlull)
     , ("Baldwin", baldwinsMethod)
+    , ("Copeland-Llull", copelandLlull)
+    , ("Tideman alternative", tidemanAlternative)
     , ("Ranked pairs", rankedPairs)
     , ("Approval", approvalVoting)
     , ("Highest median", highestMedian 0 10)

@@ -1,4 +1,4 @@
-module Psephology.ElectoralSystems.Condorcet (nansonsMethod, baldwinsMethod, copelandLlull, rankedPairs) where
+module Psephology.ElectoralSystems.Condorcet (nansonsMethod, baldwinsMethod, tidemanAlternative, copelandLlull, rankedPairs) where
 
 import Data.List
 import Data.List.Extras (argmax)
@@ -6,12 +6,13 @@ import Data.Maybe
 import qualified Data.Ord
 
 import Psephology.Candidate
-import Psephology.Condorcet (copelandScore, pairwiseMaj)
+import Psephology.Condorcet (copelandScore, pairwiseMaj, smithSet)
 import Psephology.ElectoralSystems.Borda
+import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
 import Psephology.Voter
 
 -- | [Nanson](https://en.wikipedia.org/wiki/Nanson%27s_method#Nanson_method)
-nansonsMethod :: (Voter a) => [Candidate] -> [a] -> Int
+nansonsMethod :: Voter a => [Candidate] -> [a] -> Int
 nansonsMethod [_] _ = 0
 nansonsMethod candidates voters =
     let tally = bordaTally traditionalBordaWeight candidates voters
@@ -22,7 +23,7 @@ nansonsMethod candidates voters =
             else keeping !! nansonsMethod (map (candidates !!) keeping) voters
 
 -- | [Baldwin](https://en.wikipedia.org/wiki/Nanson%27s_method#Baldwin_method)
-baldwinsMethod :: (Voter a) => [Candidate] -> [a] -> Int
+baldwinsMethod :: Voter a => [Candidate] -> [a] -> Int
 baldwinsMethod [_] _ = 0
 baldwinsMethod candidates voters =
     let tally = bordaTally traditionalBordaWeight candidates voters
@@ -32,13 +33,19 @@ baldwinsMethod candidates voters =
             then argmax (tally !!) [0 .. length candidates - 1]
             else keeping !! baldwinsMethod (map (candidates !!) keeping) voters
 
+-- | [Tideman alternative](https://en.wikipedia.org/wiki/Tideman_alternative_method)
+tidemanAlternative :: Voter a => [Candidate] -> [a] -> Int
+tidemanAlternative candidates voters =
+    let smith = smithSet candidates voters
+     in smith !! instantRunoffVoting (map (candidates !!) smith) voters
+
 -- | [Copeland-Llull](https://en.wikipedia.org/wiki/Copeland%27s_method)
-copelandLlull :: (Voter a) => [Candidate] -> [a] -> Int
+copelandLlull :: Voter a => [Candidate] -> [a] -> Int
 copelandLlull candidates voters =
     argmax (copelandScore candidates voters) [0 .. length candidates - 1]
 
 -- | [Ranked pairs](https://en.wikipedia.org/wiki/Ranked_pairs)
-rankedPairs :: (Voter a) => [Candidate] -> [a] -> Int
+rankedPairs :: Voter a => [Candidate] -> [a] -> Int
 rankedPairs candidates voters =
     fromJust
         $ findWinner
