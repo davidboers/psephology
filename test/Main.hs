@@ -60,10 +60,12 @@ testTennesseeCapitalElection =
             , "Nashville" -- Icelandic Borda
             , "Nashville" -- Nanson
             , "Nashville" -- Baldwin
+            , "Nashville" -- Tideman alternative
             , "Nashville" -- Copeland-Llull
             , "Nashville" -- Ranked pairs
             ]
         , testCondorcetWinner candidates voters "Nashville"
+        , testSmithSet candidates voters ["Nashville"]
         , testCase "(pairwise scores)" $
             condorcetMatrix numPreferOver candidates voters
                 @?= [ [100, 58, 58, 58]
@@ -95,6 +97,7 @@ testTennesseeCapitalElection =
             , [] -- Icelandic Borda
             , [] -- Nanson
             , [] -- Baldwin
+            , [] -- Tideman alternative
             , [] -- Copeland-Llull
             , [] -- Ranked pairs
             ]
@@ -111,6 +114,7 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Icelandic Borda
             , [("Nashville", "Chattanooga")] -- Nanson
             , [("Nashville", "Chattanooga")] -- Baldwin
+            , [("Nashville", "Chattanooga")] -- Tideman alternative
             , [("Nashville", "Chattanooga")] -- Copeland-Llull
             , [("Nashville", "Chattanooga")] -- Ranked pairs
             ]
@@ -127,6 +131,7 @@ testTennesseeCapitalElection =
             , [False, False, False] -- Icelandic Borda
             , [False, False, False] -- Nanson
             , [False, False, False] -- Baldwin
+            , [False, False, False] -- Tideman alternative
             , [False, False, False] -- Copeland-Llull
             , [False, False, False] -- Ranked pairs
             ]
@@ -452,6 +457,12 @@ testCondorcetWinner :: Voter a => [Candidate] -> [a] -> String -> TestTree
 testCondorcetWinner candidates voters correctAnswer =
     testCase "(Condorcet winner)" $
         namer candidates (fromJust (condorcetWinner candidates voters))
+            @?= correctAnswer
+
+testSmithSet :: Voter a => [Candidate] -> [a] -> [String] -> TestTree
+testSmithSet candidates voters correctAnswer =
+    testCase "(Smith set)" $
+        namer1 candidates (smithSet candidates voters)
             @?= correctAnswer
 
 testClones :: Voter a => [Candidate] -> [a] -> [[String]] -> TestTree
