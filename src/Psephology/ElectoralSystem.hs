@@ -30,6 +30,7 @@ systems =
     , ("Minimax", minimax)
     , ("Copeland-Llull", copelandLlull)
     , ("Black", black traditionalBordaWeight)
+    , ("Kemeny", kemeny)
     , ("Ranked pairs", rankedPairs)
     , ("Schulze", schulze)
     , ("Approval", approvalVoting)

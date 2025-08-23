@@ -14,6 +14,7 @@ import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
+import Psephology.ElectoralSystems.Condorcet (kemenyOverallRanking)
 import Psephology.ElectoralSystems.Runoff
 import Psephology.McKelveySchofield
 import Psephology.Parliament
@@ -65,11 +66,15 @@ testTennesseeCapitalElection =
             , "Nashville" -- Minimax
             , "Nashville" -- Copeland-Llull
             , "Nashville" -- Black
+            , "Nashville" -- Kemeny
             , "Nashville" -- Ranked pairs
             , "Nashville" -- Schulze
             ]
         , testCondorcetWinner candidates voters "Nashville"
         , testSmithSet candidates voters ["Nashville"]
+        , testCase "(Kemeny: overall ranking)" $
+            namer1 candidates (kemenyOverallRanking candidates voters)
+                @?= ["Nashville", "Chattanooga", "Knoxville", "Memphis"]
         , testCase "(pairwise scores)" $
             condorcetMatrix numPreferOver candidates voters
                 @?= [[100, 42, 42, 42], [58, 100, 68, 68], [58, 32, 100, 83], [58, 32, 17, 100]]
@@ -101,6 +106,7 @@ testTennesseeCapitalElection =
             , [] -- Minimax
             , [] -- Copeland-Llull
             , [] -- Black
+            , [] -- Kemeny
             , [] -- Ranked pairs
             , [] -- Schulze
             ]
@@ -121,6 +127,7 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Minimax
             , [("Nashville", "Chattanooga")] -- Copeland-Llull
             , [("Nashville", "Chattanooga")] -- Black
+            , [("Nashville", "Chattanooga")] -- Kemeny
             , [("Nashville", "Chattanooga")] -- Ranked pairs
             , [("Nashville", "Chattanooga")] -- Schulze
             ]
@@ -141,6 +148,7 @@ testTennesseeCapitalElection =
             , [False, False, False] -- Minimax
             , [False, False, False] -- Copeland-Llull
             , [False, False, False] -- Black
+            , [False, False, False] -- Kemeny
             , [False, False, False] -- Ranked pairs
             , [False, False, False] -- Schulze
             ]

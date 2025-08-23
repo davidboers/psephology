@@ -5,8 +5,13 @@ module Psephology.ElectoralSystems.Condorcet
     , minimax
     , copelandLlull
     , black
+    , kemeny
     , rankedPairs
     , schulze
+
+      -- * Helpers
+    , kemenyOverallRanking
+    , kemenyScore
     ) where
 
 import Data.List
@@ -68,6 +73,31 @@ black weightFormula candidates voters =
         Just cw -> cw
         Nothing -> bordaCountWFormula weightFormula candidates voters
 
+-- Kemeny
+
+-- | \(\mathcal{O}(n!)\). [Kemeny](https://en.wikipedia.org/wiki/Kemeny_method). Computationally difficult with greater than ~10-12 candidates.
+kemeny :: Voter a => [Candidate] -> [a] -> Int
+kemeny candidates voters =
+    head $ kemenyOverallRanking candidates voters
+
+{- | \(\mathcal{O}(n!)\). Returns the ranking with the largest Kemeny score, as a list of candidate indexes.
+The winner of the Kemeny system is the candidate ranked first. Computationally difficult with greater than ~10-12 candidates.
+-}
+kemenyOverallRanking :: Voter a => [Candidate] -> [a] -> [Int]
+kemenyOverallRanking candidates voters =
+    argmax (kemenyScore candidates voters) $
+        permutations [0 .. length candidates - 1]
+
+-- | @'kemenyScore' candidates voters ordering@ is the sum of the number of voters that prefer X over Y for every X \(\succ\) Y in @ordering@.
+kemenyScore :: Voter a => [Candidate] -> [a] -> [Int] -> Int
+kemenyScore candidates voters ordering =
+    let pairs =
+            [ (candidates !! (ordering !! i), candidates !! (ordering !! j))
+            | i <- [0 .. length ordering - 1]
+            , j <- [i + 1 .. length ordering - 1]
+            ]
+     in sum $ map (uncurry (numPreferOver voters)) pairs
+
 -- | [Ranked pairs](https://en.wikipedia.org/wiki/Ranked_pairs)
 rankedPairs :: Voter a => [Candidate] -> [a] -> Int
 rankedPairs candidates voters =
@@ -126,10 +156,10 @@ beatpathWinner p =
         strength i j = p !! i !! j
         isSchulzeWinner i =
             all (\j -> i == j || strength i j >= strength j i) [0 .. n - 1]
-    in case find isSchulzeWinner [0 .. n - 1] of
-           Just i  -> i
-           Nothing -> -1 -- deterministic fallback on full tie/cycle
-           
+     in case find isSchulzeWinner [0 .. n - 1] of
+            Just i -> i
+            Nothing -> -1 -- deterministic fallback on full tie/cycle
+
 replace :: [a] -> a -> Int -> [a]
 replace [] _ _ = []
 replace (_ : ls) x 0 = x : ls
