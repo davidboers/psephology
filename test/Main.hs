@@ -61,6 +61,7 @@ testTennesseeCapitalElection =
             , "Nashville" -- Nanson
             , "Nashville" -- Baldwin
             , "Nashville" -- Tideman alternative
+            , "Nashville" -- Minimax
             , "Nashville" -- Copeland-Llull
             , "Nashville" -- Ranked pairs
             ]
@@ -98,6 +99,7 @@ testTennesseeCapitalElection =
             , [] -- Nanson
             , [] -- Baldwin
             , [] -- Tideman alternative
+            , [] -- Minimax
             , [] -- Copeland-Llull
             , [] -- Ranked pairs
             ]
@@ -115,6 +117,7 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Nanson
             , [("Nashville", "Chattanooga")] -- Baldwin
             , [("Nashville", "Chattanooga")] -- Tideman alternative
+            , [("Nashville", "Chattanooga")] -- Minimax
             , [("Nashville", "Chattanooga")] -- Copeland-Llull
             , [("Nashville", "Chattanooga")] -- Ranked pairs
             ]
@@ -132,6 +135,7 @@ testTennesseeCapitalElection =
             , [False, False, False] -- Nanson
             , [False, False, False] -- Baldwin
             , [False, False, False] -- Tideman alternative
+            , [False, False, False] -- Minimax
             , [False, False, False] -- Copeland-Llull
             , [False, False, False] -- Ranked pairs
             ]

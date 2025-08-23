@@ -1,4 +1,11 @@
-module Psephology.ElectoralSystems.Condorcet (nansonsMethod, baldwinsMethod, tidemanAlternative, copelandLlull, rankedPairs) where
+module Psephology.ElectoralSystems.Condorcet
+    ( nansonsMethod
+    , baldwinsMethod
+    , tidemanAlternative
+    , minimax
+    , copelandLlull
+    , rankedPairs
+    ) where
 
 import Data.List
 import Data.List.Extras (argmax)
@@ -6,7 +13,12 @@ import Data.Maybe
 import qualified Data.Ord
 
 import Psephology.Candidate
-import Psephology.Condorcet (copelandScore, pairwiseMaj, smithSet)
+import Psephology.Condorcet
+    ( copelandScore
+    , numPreferOver
+    , pairwiseMaj
+    , smithSet
+    )
 import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
 import Psephology.Voter
@@ -38,6 +50,14 @@ tidemanAlternative :: Voter a => [Candidate] -> [a] -> Int
 tidemanAlternative candidates voters =
     let smith = smithSet candidates voters
      in smith !! instantRunoffVoting (map (candidates !!) smith) voters
+
+-- | [Minimax Condorcet](https://en.wikipedia.org/wiki/Minimax_Condorcet_method)
+minimax :: Voter a => [Candidate] -> [a] -> Int
+minimax candidates voters =
+    argminC
+        ( \x -> maximum $ map (\y -> max 0 $ numPreferOver voters y x) $ delete x candidates
+        )
+        candidates
 
 -- | [Copeland-Llull](https://en.wikipedia.org/wiki/Copeland%27s_method)
 copelandLlull :: Voter a => [Candidate] -> [a] -> Int
