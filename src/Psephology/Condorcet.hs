@@ -43,9 +43,9 @@ condorcetMatrix
     -> [[Int]]
 condorcetMatrix f candidates voters =
     [ [ f voters a b
-      | a <- candidates
+      | b <- candidates
       ]
-    | b <- candidates
+    | a <- candidates
     ]
 
 {- | @'copelandScore' candidates voters c@ returns the number of other @candidates@ that @c@ beats in pairwise competitions. It's a 'Double' because

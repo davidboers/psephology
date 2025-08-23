@@ -55,6 +55,7 @@ testTennesseeCapitalElection =
             , "Nashville" -- (Or Chattanooga) Anti-plurality
             , "Nashville" -- TRS
             , "Knoxville" -- IRV
+            , "Nashville" -- Coombs
             , "Nashville" -- Borda
             , "Nashville" -- Dowdall
             , "Nashville" -- Icelandic Borda
@@ -71,11 +72,7 @@ testTennesseeCapitalElection =
         , testSmithSet candidates voters ["Nashville"]
         , testCase "(pairwise scores)" $
             condorcetMatrix numPreferOver candidates voters
-                @?= [ [100, 58, 58, 58]
-                    , [42, 100, 32, 32]
-                    , [42, 68, 100, 17]
-                    , [42, 68, 83, 100]
-                    ]
+                @?= [[100, 42, 42, 42], [58, 100, 68, 68], [58, 32, 100, 83], [58, 32, 17, 100]]
         , testCase "(.blt export)" $
             export candidates voters "Tennessee capital election"
                 @?= "4 1\n42 1 2 3 4 0\n26 2 3 4 1 0\n15 3 4 2 1 0\n17 4 3 2 1 0\n0\n\"Memphis\"\n\"Nashville\"\n\"Chattanooga\"\n\"Knoxville\"\n\"Tennessee capital election\"\n"
