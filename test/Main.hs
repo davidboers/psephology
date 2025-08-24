@@ -14,7 +14,10 @@ import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
-import Psephology.ElectoralSystems.Condorcet (kemenyOverallRanking)
+import Psephology.ElectoralSystems.Condorcet
+    ( dodgsonScore
+    , kemenyOverallRanking
+    )
 import Psephology.ElectoralSystems.Runoff
 import Psephology.McKelveySchofield
 import Psephology.Parliament
@@ -41,6 +44,7 @@ tests _ =
         [ testTennesseeCapitalElection
         , testMcKelveySchofield
         , testRedistricting
+        , testDodgsonScores
         -- Enable as you wish
         -- , testGeneratedParliament parliament
         ]
@@ -67,6 +71,7 @@ testTennesseeCapitalElection =
             , "Nashville" -- Copeland-Llull
             , "Nashville" -- Black
             , "Nashville" -- Kemeny
+            --, "Nashville" -- Dodgson
             , "Nashville" -- Ranked pairs
             , "Nashville" -- Schulze
             ]
@@ -107,6 +112,7 @@ testTennesseeCapitalElection =
             , [] -- Copeland-Llull
             , [] -- Black
             , [] -- Kemeny
+            -- , [] -- Dodgson
             , [] -- Ranked pairs
             , [] -- Schulze
             ]
@@ -128,6 +134,7 @@ testTennesseeCapitalElection =
             , [("Nashville", "Chattanooga")] -- Copeland-Llull
             , [("Nashville", "Chattanooga")] -- Black
             , [("Nashville", "Chattanooga")] -- Kemeny
+            -- , [("Nashville", "Chattanooga")] -- Dodgson
             , [("Nashville", "Chattanooga")] -- Ranked pairs
             , [("Nashville", "Chattanooga")] -- Schulze
             ]
@@ -149,6 +156,7 @@ testTennesseeCapitalElection =
             , [False, False, False] -- Copeland-Llull
             , [False, False, False] -- Black
             , [False, False, False] -- Kemeny
+            -- , [False, False, False] -- Dodgson
             , [False, False, False] -- Ranked pairs
             , [False, False, False] -- Schulze
             ]
@@ -439,6 +447,23 @@ testGeneratedParliament parliament =
                 writeFile "test/pathologies.csv" csv
                 True @?= True
         ]
+
+testDodgsonScores :: TestTree
+testDodgsonScores =
+    testGroup "Dodgson scores" $
+        zipWith
+            ( \c correctAnswer ->
+                testCase (show c) $
+                    dodgsonScore candidates voters c @?= correctAnswer
+            )
+            candidates
+            [ 6 -- A
+            , 3 -- B
+            , 4 -- C
+            ]
+  where
+    candidates = condorcetCycleCandidates
+    voters = condorcetCycle
 
 -- Helpers
 

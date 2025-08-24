@@ -14,6 +14,7 @@ import Psephology.ElectoralSystems.Runoff
 
 type ElectoralSystem a = [Candidate] -> [a] -> Int
 
+-- | Excludes Dodgson due to runtime
 systems :: Voter a => [(String, ElectoralSystem a)]
 systems =
     [ ("FPTP", firstPastThePost)
@@ -31,6 +32,7 @@ systems =
     , ("Copeland-Llull", copelandLlull)
     , ("Black", black traditionalBordaWeight)
     , ("Kemeny", kemeny)
+    --, ("Dodgson", dodgson)
     , ("Ranked pairs", rankedPairs)
     , ("Schulze", schulze)
     , ("Approval", approvalVoting)
