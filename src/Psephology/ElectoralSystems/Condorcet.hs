@@ -1,44 +1,43 @@
-{- | This module contains algorithms for 10 Condorcet methods. Condorcet methods are a
-family of voting systems defined by their adherence to the [Condorcet criterion](https://en.wikipedia.org/wiki/Condorcet_winner_criterion).
-These voting systems will always elect the Condorcet winner, if one exists. The Condorcet
-winner is the candidate preferred to every other in pairwise competitions.
-
-In almost every case, the same winner is produced by all Condorcet methods. They diverge
-only in how they deal with Condorcet paradoxes, or cases without a Condorcet winner. The
-following is a brief description of how each system resolves a Condorcet paradox.
-
-    * __Nanson's method__ conducts a Borda count of the candidates, and iteratively excludes
-    the candidates that receive less than the average Borda score, until a single candidate
-    remains.
-    * __Baldwin's method__ is similar to Nanson's method, except it only excludes one
-    candidate at a time; that which has the lowest Borda score.
-    * The __Tideman alternative__ defaults to Instant Runoff Voting. First, all candidates not
-    in the [Smith set](https://en.wikipedia.org/wiki/Smith_set) are bulk excluded.
-    * The __Minimax__ method picks the candidate with the smallest pairwise margin of defeat
-    in the pairwise competition by which they lost the most.
-    * The __Copeland__ method, sometimes called __Llull's method__, is the simplest method.
-    It simply elects the candidate with the most pairwise wins against other candidates (highest
-    Copeland score).
-    * __Black's method__ defaults to a Borda count.
-    * The __Kemeny__ method, also called the __Kemeny-Young method__, selects the permutation
-    of candidates most representative of the results of the pairwise competitions. The winning
-    candidate is the candidate that ranks highest on this ordering. Computationally difficult
-    due to the analysis of every possible permutation, which increases by factorial.
-    * __Dodgson's method__ picks the winner by swapping voter preferences on individual ballots
-    until each candidate is a Condorcet winner. The candidate for whom the fewest swaps is
-    needed wins the election. The method is notable because it was invented by Lewis Carroll,
-    the author of Alice in Wonderland. Its extreme time-complexity means it is impractical
-    for large elections, making it a real Jabberwocky of a method (ba-dum-tiss).
-    * __Ranked pairs__ picks the winner by iteratively disregarding the pairwise competition
-    with the smallest margin of victory, until all Condorcet cycles have disappeared. It is
-    the method vulnerable to the least number of pathologies.
-    * The __Schulze__ method counts indirect victories using the transitive property.
-
-The implementing algorithms in this module are not designed for optimal time efficiency.
-
-This module is not to be confused with 'Psephology.Condorcet', which contains several functions
-helpful for analyzing the compliance of a voting system with the Condorcet criterion.
--}
+-- | This module contains algorithms for 10 Condorcet methods. Condorcet methods are a
+-- family of voting systems defined by their adherence to the [Condorcet criterion](https://en.wikipedia.org/wiki/Condorcet_winner_criterion).
+-- These voting systems will always elect the Condorcet winner, if one exists. The Condorcet
+-- winner is the candidate preferred to every other in pairwise competitions.
+--
+-- In almost every case, the same winner is produced by all Condorcet methods. They diverge
+-- only in how they deal with Condorcet paradoxes, or cases without a Condorcet winner. The
+-- following is a brief description of how each system resolves a Condorcet paradox.
+--
+--     * __Nanson's method__ conducts a Borda count of the candidates, and iteratively excludes
+--     the candidates that receive less than the average Borda score, until a single candidate
+--     remains.
+--     * __Baldwin's method__ is similar to Nanson's method, except it only excludes one
+--     candidate at a time; that which has the lowest Borda score.
+--     * The __Tideman alternative__ defaults to Instant Runoff Voting. First, all candidates not
+--     in the [Smith set](https://en.wikipedia.org/wiki/Smith_set) are bulk excluded.
+--     * The __Minimax__ method picks the candidate with the smallest pairwise margin of defeat
+--     in the pairwise competition by which they lost the most.
+--     * The __Copeland__ method, sometimes called __Llull's method__, is the simplest method.
+--     It simply elects the candidate with the most pairwise wins against other candidates (highest
+--     Copeland score).
+--     * __Black's method__ defaults to a Borda count.
+--     * The __Kemeny__ method, also called the __Kemeny-Young method__, selects the permutation
+--     of candidates most representative of the results of the pairwise competitions. The winning
+--     candidate is the candidate that ranks highest on this ordering. Computationally difficult
+--     due to the analysis of every possible permutation, which increases by factorial.
+--     * __Dodgson's method__ picks the winner by swapping voter preferences on individual ballots
+--     until each candidate is a Condorcet winner. The candidate for whom the fewest swaps is
+--     needed wins the election. The method is notable because it was invented by Lewis Carroll,
+--     the author of Alice in Wonderland. Its extreme time-complexity means it is impractical
+--     for large elections, making it a real Jabberwocky of a method (ba-dum-tiss).
+--     * __Ranked pairs__ picks the winner by iteratively disregarding the pairwise competition
+--     with the smallest margin of victory, until all Condorcet cycles have disappeared. It is
+--     the method vulnerable to the least number of pathologies.
+--     * The __Schulze__ method counts indirect victories using the transitive property.
+--
+-- The implementing algorithms in this module are not designed for optimal time efficiency.
+--
+-- This module is not to be confused with 'Psephology.Condorcet', which contains several functions
+-- helpful for analyzing the compliance of a voting system with the Condorcet criterion.
 module Psephology.ElectoralSystems.Condorcet
     ( nansonsMethod
     , baldwinsMethod
@@ -124,9 +123,8 @@ kemeny :: Voter a => [Candidate] -> [a] -> Int
 kemeny candidates voters =
     head $ kemenyOverallRanking candidates voters
 
-{- | \(\mathcal{O}(n!)\). Returns the ranking with the largest Kemeny score, as a list of candidate indexes.
-The winner of the Kemeny system is the candidate ranked first. Computationally difficult with greater than ~10-12 candidates.
--}
+-- | \(\mathcal{O}(n!)\). Returns the ranking with the largest Kemeny score, as a list of candidate indexes.
+-- The winner of the Kemeny system is the candidate ranked first. Computationally difficult with greater than ~10-12 candidates.
 kemenyOverallRanking :: Voter a => [Candidate] -> [a] -> [Int]
 kemenyOverallRanking candidates voters =
     argmax (kemenyScore candidates voters) $
@@ -144,74 +142,71 @@ kemenyScore candidates voters ordering =
 
 -- Dodgson
 
-{- | [Dodgson](https://en.wikipedia.org/wiki/Dodgson%27s_method). Thanks to [Betzler et al.](https://www.sciencedirect.com/science/article/pii/S089054010900203X) for the algorithm.
-
-    +WARNING: This method has [exponential worst-case complexity](https://en.wikipedia.org/wiki/NP-hardness) and may become impractical with more than ~10 candidates.
--}
+-- | [Dodgson](https://en.wikipedia.org/wiki/Dodgson%27s_method). Thanks to [Betzler et al.](https://www.sciencedirect.com/science/article/pii/S089054010900203X) for the algorithm.
+--
+--     +WARNING: This method has [exponential worst-case complexity](https://en.wikipedia.org/wiki/NP-hardness) and may become impractical with more than ~10 candidates.
 dodgson :: Voter a => [Candidate] -> [a] -> Int
 dodgson candidates voters =
     argminC (dodgsonScore candidates voters) candidates
 
-{- | Avoids Dodgson's outrageous runtime, if possible, by catching Condorcet winners early:
-
-    @
-        case 'condorcetWinner' candidates voters of
-            Just cw -> cw
-            Nothing -> dodgson candidates voters
-    @
--}
+-- | Avoids Dodgson's outrageous runtime, if possible, by catching Condorcet winners early:
+--
+--     @
+--         case 'condorcetWinner' candidates voters of
+--             Just cw -> cw
+--             Nothing -> dodgson candidates voters
+--     @
 safeDodgson :: Voter a => [Candidate] -> [a] -> Int
 safeDodgson candidates voters =
     case condorcetWinner candidates voters of
         Just cw -> cw
         Nothing -> dodgson candidates voters
 
-{- | @'dodgsonScore' candidates voters c@ is the minimum number of pairwise swaps in voting profile @voters@ needed to make @c@ a Condorcet winner.
-Calculation of Dodgson score for a single candidate is itself [NP-hard](https://en.wikipedia.org/wiki/NP-hardness): runs in \(\mathcal{O}(2^k * nk+nm)\) where k is the Dodgson score,
-n is the number of voters, and m is the number of candidates.
--}
+-- | @'dodgsonScore' candidates voters c@ is the minimum number of pairwise swaps in voting profile @voters@ needed to make @c@ a Condorcet winner.
+-- Calculation of Dodgson score for a single candidate is itself [NP-hard](https://en.wikipedia.org/wiki/NP-hardness): runs in \(\mathcal{O}(2^k * nk+nm)\) where k is the Dodgson score,
+-- n is the number of voters, and m is the number of candidates.
 dodgsonScore :: Voter a => [Candidate] -> [a] -> Candidate -> Int
 dodgsonScore candidates voters c =
     fromJust $ swapTable voters d
-  where
-    switch :: Voter a => a -> Candidate -> Int
-    switch vi cj
-        | preference [c, cj] vi == 0 = 0
-        | otherwise = rank candidates vi c - rank candidates vi cj
+    where
+        switch :: Voter a => a -> Candidate -> Int
+        switch vi cj
+            | preference [c, cj] vi == 0 = 0
+            | otherwise = rank candidates vi c - rank candidates vi cj
 
-    best :: Voter a => [Candidate] -> a -> Candidate
-    best s vi = s !! preference s vi
+        best :: Voter a => [Candidate] -> a -> Candidate
+        best s vi = s !! preference s vi
 
-    d = map deficit cd
-    deficit ci = (pairwiseMaj voters ci c `div` 2) + 1
-    p = length cd
-    cd = filter (\ci -> ci /= c && deficit ci > 0) candidates
+        d = map deficit cd
+        deficit ci = pairwiseMaj voters ci c + 1
+        p = length cd
+        cd = filter (\ci -> ci /= c && deficit ci > 0) candidates
 
-    lastD' :: [Int] -> [Candidate] -> [Int]
-    lastD' d' s =
-        [ if (cd !! i) `elem` s then max 0 (d' !! i - 1) else d' !! i
-        | i <- [0 .. p - 1]
-        ]
+        lastD' :: [Int] -> [Candidate] -> [Int]
+        lastD' d' s =
+            [ if (cd !! i) `elem` s then max 0 (d' !! i - 1) else d' !! i
+            | i <- [0 .. p - 1]
+            ]
 
-    swapTable :: Voter a => [a] -> [Int] -> Maybe Int
-    swapTable [] d'
-        | all (== 0) d' = Just 0
-        | otherwise = Nothing
-    swapTable (vi : vs) d' =
-        let step sq s = do
-                tlast <- swapTable vs (lastD' d' s)
-                let new = tlast + switch vi (best s vi)
-                minM sq $ Just new
+        swapTable :: Voter a => [a] -> [Int] -> Maybe Int
+        swapTable [] d'
+            | all (== 0) d' = Just 0
+            | otherwise = Nothing
+        swapTable (vi : vs) d' =
+            let step sq s = do
+                    tlast <- swapTable vs (lastD' d' s)
+                    let new = tlast + switch vi (best s vi)
+                    minM sq $ Just new
 
-            passable = [cd !! j | j <- [0 .. p - 1], d' !! j > 0, preference [cd !! j, c] vi == 0]
-            subsets = filter (not . null) (subsequences passable)
-         in foldl' step (swapTable vs d') subsets
+                passable = [cd !! j | j <- [0 .. p - 1], d' !! j > 0, preference [cd !! j, c] vi == 0]
+                subsets = filter (not . null) (subsequences passable)
+             in foldl' step (swapTable vs d') subsets
 
-    minM :: Maybe Int -> Maybe Int -> Maybe Int
-    minM Nothing Nothing = Nothing
-    minM Nothing rhs = rhs
-    minM lhs Nothing = lhs
-    minM (Just rhs) (Just lhs) = Just $ min rhs lhs
+        minM :: Maybe Int -> Maybe Int -> Maybe Int
+        minM Nothing Nothing = Nothing
+        minM Nothing rhs = rhs
+        minM lhs Nothing = lhs
+        minM (Just rhs) (Just lhs) = Just $ min rhs lhs
 
 -- | [Ranked pairs](https://en.wikipedia.org/wiki/Ranked_pairs)
 rankedPairs :: Voter a => [Candidate] -> [a] -> Int
@@ -226,23 +221,23 @@ rankedPairs candidates voters =
             )
             []
         $ sortOn (Data.Ord.Down . (\(_, _, maj) -> maj)) pairs
-  where
-    pairs =
-        [ let maj = pairwiseMaj voters (candidates !! i) (candidates !! j)
-           in if maj >= 0
-                then (i, j, maj)
-                else (j, i, -maj)
-        | i <- [0 .. length candidates - 1]
-        , j <- [0 .. length candidates - 1]
-        , i /= j
-        ]
+    where
+        pairs =
+            [ let maj = pairwiseMaj voters (candidates !! i) (candidates !! j)
+               in if maj >= 0
+                    then (i, j, maj)
+                    else (j, i, -maj)
+            | i <- [0 .. length candidates - 1]
+            , j <- [0 .. length candidates - 1]
+            , i /= j
+            ]
 
-    createsParadox :: [(Int, Int)] -> Bool
-    createsParadox l' = isNothing (findWinner l')
+        createsParadox :: [(Int, Int)] -> Bool
+        createsParadox l' = isNothing (findWinner l')
 
-    findWinner :: [(Int, Int)] -> Maybe Int
-    findWinner l' =
-        find (\c -> not $ any (\(_, j'') -> j'' == c) l') (map fst l')
+        findWinner :: [(Int, Int)] -> Maybe Int
+        findWinner l' =
+            find (\c -> not $ any (\(_, j'') -> j'' == c) l') (map fst l')
 
 -- Schulze method
 

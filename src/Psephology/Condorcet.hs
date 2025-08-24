@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
-{- | This module is not to be confused with 'Psephology.ElectoralSystems.Condorcet',
-which contains the implementing algorithms of the various Condorcet methods. This
-module merely contains several helper functions.
--}
+-- | This module is not to be confused with 'Psephology.ElectoralSystems.Condorcet',
+-- which contains the implementing algorithms of the various Condorcet methods. This
+-- module merely contains several helper functions.
 module Psephology.Condorcet
     ( numPreferOver
     , pairwiseMaj
+    , relativeMaj
     , condorcetWinner
     , condorcetMatrix
     , copelandScore
@@ -16,6 +16,7 @@ module Psephology.Condorcet
 
 import Psephology.Candidate
 import Psephology.Counting
+import Psephology.Quotas (majority)
 import Psephology.Voter
 
 import Data.List
@@ -33,19 +34,26 @@ numPreferOver :: Voter a => [a] -> Candidate -> Candidate -> Int
 numPreferOver voters a b =
     head $ votes [a, b] voters
 
--- | @'pairwiseMaj' voters a b@ returns the number of voters that prefer @a@ minus the number of voters that prefer @b@.
+-- | @'pairwiseMaj' voters a b@ returns the number of voters that prefer @a@ (over @b@) minus the absolute majority mark, plus 1.
 pairwiseMaj :: Voter a => [a] -> Candidate -> Candidate -> Int
 pairwiseMaj voters a b =
+    let [pa, _] = votes [a, b] voters
+        maj = majority voters
+     in pa - maj + 1
+
+-- | @'relativeMaj' voters a b@ returns the number of voters that prefer @a@ minus the number of voters that prefer @b@.
+relativeMaj :: Voter a => [a] -> Candidate -> Candidate -> Int
+relativeMaj voters a b =
     let [pa, pb] = votes [a, b] voters
      in pa - pb
 
 -- | A map function used to analyze Condorcet pairs.
-condorcetMatrix
-    :: Voter a
-    => ([a] -> Candidate -> Candidate -> Int)
-    -> [Candidate]
-    -> [a]
-    -> [[Int]]
+condorcetMatrix ::
+    Voter a =>
+    ([a] -> Candidate -> Candidate -> Int) ->
+    [Candidate] ->
+    [a] ->
+    [[Int]]
 condorcetMatrix f candidates voters =
     [ [ f voters a b
       | b <- candidates
@@ -53,9 +61,8 @@ condorcetMatrix f candidates voters =
     | a <- candidates
     ]
 
-{- | @'copelandScore' candidates voters c@ returns the number of other @candidates@ that @c@ beats in pairwise competitions. It's a 'Double' because
-the [Copeland score](https://en.wikipedia.org/wiki/Copeland%27s_method#Computation) is 0.5 for tied pairs.
--}
+-- | @'copelandScore' candidates voters c@ returns the number of other @candidates@ that @c@ beats in pairwise competitions. It's a 'Double' because
+-- the [Copeland score](https://en.wikipedia.org/wiki/Copeland%27s_method#Computation) is 0.5 for tied pairs.
 copelandScore :: Voter a => [Candidate] -> [a] -> Int -> Double
 copelandScore candidates voters c =
     sum
@@ -93,5 +100,5 @@ smithSetStep candidates voters set i
     | i `elem` set = set
     | any (\i' -> pairwiseMaj voters c (candidates !! i') >= 0) set = i : set
     | otherwise = set
-  where
-    c = candidates !! i
+    where
+        c = candidates !! i
