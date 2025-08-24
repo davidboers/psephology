@@ -149,25 +149,35 @@ dodgson :: Voter a => [Candidate] -> [a] -> Int
 dodgson candidates voters =
     argminC (dodgsonScore candidates voters) candidates
 
--- | Avoids Dodgson's outrageous runtime, if possible, by catching Condorcet winners early:
+-- | Avoids Dodgson's outrageous runtime, if possible, by:
 --
---     @
---         case 'condorcetWinner' candidates voters of
---             Just cw -> cw
---             Nothing -> dodgson candidates voters
---     @
+-- * Catching Condorcet winners early, and only defaulting to the swap algorithm in case of a paradox.
+-- * If a paradox is present, simplifying the count by limiting the search for each candidate Dodgson score to the running minimum.
 safeDodgson :: Voter a => [Candidate] -> [a] -> Int
 safeDodgson candidates voters =
     case condorcetWinner candidates voters of
         Just cw -> cw
-        Nothing -> dodgson candidates voters
+        Nothing ->
+            case candidates of
+                [] -> -1 -- defensive fallback; unreachable in valid elections
+                (c0 : cs) ->
+                    let s0 = fromJust (dodgsonScoreWorker Nothing candidates voters c0)
+                        step (bestS, bestI) (idx, ci) =
+                            case dodgsonScoreWorker (Just bestS) candidates voters ci of
+                                Just dscore | dscore < bestS -> (dscore, idx)
+                                _ -> (bestS, bestI)
+                     in snd $ foldl' step (s0, 0) (zip [1 .. length cs - 1] cs)
 
 -- | @'dodgsonScore' candidates voters c@ is the minimum number of pairwise swaps in voting profile @voters@ needed to make @c@ a Condorcet winner.
 -- Calculation of Dodgson score for a single candidate is itself [NP-hard](https://en.wikipedia.org/wiki/NP-hardness): runs in \(\mathcal{O}(2^k * nk+nm)\) where k is the Dodgson score,
 -- n is the number of voters, and m is the number of candidates.
 dodgsonScore :: Voter a => [Candidate] -> [a] -> Candidate -> Int
 dodgsonScore candidates voters c =
-    fromJust $ swapTable voters d
+    fromJust $ dodgsonScoreWorker Nothing candidates voters c
+
+dodgsonScoreWorker :: Voter a => Maybe Int -> [Candidate] -> [a] -> Candidate -> Maybe Int
+dodgsonScoreWorker k candidates voters c =
+    swapTable voters d
     where
         switch :: Voter a => a -> Candidate -> Int
         switch vi cj
@@ -196,7 +206,9 @@ dodgsonScore candidates voters c =
             let step sq s = do
                     tlast <- swapTable vs (lastD' d' s)
                     let new = tlast + switch vi (best s vi)
-                    minM sq $ Just new
+                    if new > fromMaybe new k
+                        then Nothing
+                        else minM sq $ Just new
 
                 passable = [cd !! j | j <- [0 .. p - 1], d' !! j > 0, preference [cd !! j, c] vi == 0]
                 subsets = filter (not . null) (subsequences passable)
