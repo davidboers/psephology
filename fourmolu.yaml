@@ -1,51 +1,30 @@
-# Number of spaces per indentation step
 indentation: 4
-
-# Max line length for automatic line breaking
-column-limit: 80
-
-# Styling of arrows in type signatures (choices: trailing, leading, or leading-args)
-function-arrows: leading
-
-# How to place commas in multi-line lists, records, etc. (choices: leading or trailing)
+column-limit: none
+function-arrows: trailing
 comma-style: leading
-
-# Styling of import/export lists (choices: leading, trailing, or diff-friendly)
 import-export-style: leading
-
-# Whether to full-indent or half-indent 'where' bindings past the preceding body
-indent-wheres: false
-
-# Whether to leave a space before an opening record brace
-record-brace-space: false
-
-# Number of spaces between top-level declarations
+indent-wheres: true
+record-brace-space: true
 newlines-between-decls: 1
-
-# How to print Haddock comments (choices: single-line, multi-line, or multi-line-compact)
-haddock-style: multi-line
-
-# How to print module docstring
+haddock-style: single-line
 haddock-style-module: null
-
-# Styling of let blocks (choices: auto, inline, newline, or mixed)
 let-style: inline
-
-# How to align the 'in' keyword with respect to the 'let' keyword (choices: left-align, right-align, or no-space)
 in-style: right-align
-
-# Whether to put parentheses around a single constraint (choices: auto, always, or never)
 single-constraint-parens: never
-
-# Output Unicode syntax (choices: detect, always, or never)
 unicode: never
-
-# Give the programmer more choice on where to insert blank lines
 respectful: true
-
-# Fixity information for operators
-fixities: []
-
-sort-constraints: true
-sort-derived-classes: true
-sort-deriving-clauses: true
+fixities:
+  - infixr 9 .
+  - infixr 8 .:, .:., .=
+  - infixr 6 <>
+  - infixr 5 ++
+  - infixl 4 <$>, <$, $>,  <$$>, <$?>
+  - infixl 4 <*>, <*, *>, <**>
+  - infix 4 ==, /=
+  - infixr 3 &&
+  - infixl 3 <|>
+  - infixr 2 ||
+  - infixl 1 >>, >>=
+  - infixr 1 =<<, >=>, <=<
+  - infixr 0 $, $!
+reexports: []
