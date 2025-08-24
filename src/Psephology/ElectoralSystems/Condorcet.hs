@@ -1,3 +1,44 @@
+{- | This module contains algorithms for 10 Condorcet methods. Condorcet methods are a
+family of voting systems defined by their adherence to the [Condorcet criterion](https://en.wikipedia.org/wiki/Condorcet_winner_criterion).
+These voting systems will always elect the Condorcet winner, if one exists. The Condorcet
+winner is the candidate preferred to every other in pairwise competitions.
+
+In almost every case, the same winner is produced by all Condorcet methods. They diverge
+only in how they deal with Condorcet paradoxes, or cases without a Condorcet winner. The
+following is a brief description of how each system resolves a Condorcet paradox.
+
+    * __Nanson's method__ conducts a Borda count of the candidates, and iteratively excludes
+    the candidates that receive less than the average Borda score, until a single candidate
+    remains.
+    * __Baldwin's method__ is similar to Nanson's method, except it only excludes one
+    candidate at a time; that which has the lowest Borda score.
+    * The __Tideman alternative__ defaults to Instant Runoff Voting. First, all candidates not
+    in the [Smith set](https://en.wikipedia.org/wiki/Smith_set) are bulk excluded.
+    * The __Minimax__ method picks the candidate with the smallest pairwise margin of defeat
+    in the pairwise competition by which they lost the most.
+    * The __Copeland__ method, sometimes called __Llull's method__, is the simplest method.
+    It simply elects the candidate with the most pairwise wins against other candidates (highest
+    Copeland score).
+    * __Black's method__ defaults to a Borda count.
+    * The __Kemeny__ method, also called the __Kemeny-Young method__, selects the permutation
+    of candidates most representative of the results of the pairwise competitions. The winning
+    candidate is the candidate that ranks highest on this ordering. Computationally difficult
+    due to the analysis of every possible permutation, which increases by factorial.
+    * __Dodgson's method__ picks the winner by swapping voter preferences on individual ballots
+    until each candidate is a Condorcet winner. The candidate for whom the fewest swaps is
+    needed wins the election. The method is notable because it was invented by Lewis Carroll,
+    the author of Alice in Wonderland. Its extreme time-complexity means it is impractical
+    for large elections, making it a real Jabberwocky of a method (ba-dum-tiss).
+    * __Ranked pairs__ picks the winner by iteratively disregarding the pairwise competition
+    with the smallest margin of victory, until all Condorcet cycles have disappeared. It is
+    the method vulnerable to the least number of pathologies.
+    * The __Schulze__ method counts indirect victories using the transitive property.
+
+The implementing algorithms in this module are not designed for optimal time efficiency.
+
+This module is not to be confused with 'Psephology.Condorcet', which contains several functions
+helpful for analyzing the compliance of a voting system with the Condorcet criterion.
+-}
 module Psephology.ElectoralSystems.Condorcet
     ( nansonsMethod
     , baldwinsMethod

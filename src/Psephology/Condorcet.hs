@@ -1,5 +1,9 @@
 {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 
+{- | This module is not to be confused with 'Psephology.ElectoralSystems.Condorcet',
+which contains the implementing algorithms of the various Condorcet methods. This
+module merely contains several helper functions.
+-}
 module Psephology.Condorcet
     ( numPreferOver
     , pairwiseMaj
@@ -35,6 +39,7 @@ pairwiseMaj voters a b =
     let [pa, pb] = votes [a, b] voters
      in pa - pb
 
+-- | A map function used to analyze Condorcet pairs.
 condorcetMatrix
     :: Voter a
     => ([a] -> Candidate -> Candidate -> Int)

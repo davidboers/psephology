@@ -1,3 +1,4 @@
+-- | This module contains helpers, and nothing substantive.
 module Psephology.ElectoralSystem
     ( ElectoralSystem
     , systems
@@ -12,9 +13,10 @@ import Psephology.ElectoralSystems.Plurality
 import Psephology.ElectoralSystems.Rated
 import Psephology.ElectoralSystems.Runoff
 
+-- | All single-winner electoral systems in this library have the following type signature.
 type ElectoralSystem a = [Candidate] -> [a] -> Int
 
--- | Excludes Dodgson due to runtime
+-- | List of all single-winner electoral systems provided by the library. Excludes Dodgson due to runtime.
 systems :: Voter a => [(String, ElectoralSystem a)]
 systems =
     [ ("FPTP", firstPastThePost)
@@ -32,8 +34,8 @@ systems =
     , ("Copeland-Llull", copelandLlull)
     , ("Black", black traditionalBordaWeight)
     , ("Kemeny", kemeny)
-    --, ("Dodgson", dodgson)
-    , ("Ranked pairs", rankedPairs)
+    , -- , ("Dodgson", dodgson)
+      ("Ranked pairs", rankedPairs)
     , ("Schulze", schulze)
     , ("Approval", approvalVoting)
     , ("Highest median", highestMedian 0 10)

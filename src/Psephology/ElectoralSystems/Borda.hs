@@ -1,3 +1,31 @@
+{- | Named after the Marquis de Borda, a contemporary of Condorcet, the [Borda count](https://en.wikipedia.org/wiki/Borda_count) is
+a simple, pragmatic voting method. It has some technical advantages over other ordinal methods, such as being easier to count. It
+also has a high probability of choosing the Condorcet winner, empirically the highest of any non-Condorcet ordinal voting method.
+However, it is often derided for its vulnerability to manipulation. Although less prone to *exhibiting* pathological behavior, 
+its vulnerable to a greater *number* of them than Condorcet methods, Instant Runoff Voting, or plurality systems.
+
+The different Borda variants are procedurally identical. They differ only in the formula used to determine the number of points
+awarded for each ranking. The 'bordaCountWFormula' function is the general algorithm entry point, and can be specialized by passing
+'traditionalBordaWeight', 'dowdallWeight', or 'icelandicWeight' as its first argument. There also exist shortcut aliases for each.
+
++--------------------------+------------------+-----------------------+-------------------------------------+
+| Weight method            | Shortcut alias   | Weight formula        | Usage/notes                         |
++==========================+==================+=======================+=====================================+
+| 'traditionalBordaWeight' | 'bordaCount'     | \[ n-r \]             | Borda's original proposal           |
++--------------------------+------------------+-----------------------+-------------------------------------+
+| 'dowdallWeight'          | 'dowdallSystem'  | \[ \frac{1}{r} \]     | Used in Nauru                       |
++--------------------------+------------------+-----------------------+-------------------------------------+
+| 'icelandicWeight'        | 'icelandicBorda' | \[ \frac{n-r-1}{n} \] | Used to order Icelandic party lists |
++--------------------------+------------------+-----------------------+-------------------------------------+
+
+where @n@ is the number of candidates (in total, not just that are ranked by the voter) and @r@ is the numerical rank (1..).
+
+@
+    bordaCountWFormula traditionalBordaWeight candidates voters = bordaCount candidates voters
+    bordaCountWFormula dowdallWeight candidates voters          = dowdallSystem candidates voters
+    bordaCountWFormula icelandicWeight candidates voters        = icelandicBorda candidates voters
+@
+-}
 module Psephology.ElectoralSystems.Borda
     ( -- * Weight formulae
       traditionalBordaWeight
@@ -8,7 +36,7 @@ module Psephology.ElectoralSystems.Borda
     , weights
     , bordaTally
 
-      -- * Count triggers
+      -- * Entry points
     , bordaCountWFormula
     , bordaCount
     , dowdallSystem
