@@ -33,13 +33,14 @@ majorityFailure :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Bool
 majorityFailure candidates voters es =
     isPathology candidates voters es (majorityWinner candidates voters)
 
--- | Returns True if the winning candidate falls outside all majority coalitions (i.e., no majority coalition contains the winner).
+-- | Returns True if the winning candidate falls outside any majority coalition. Excludes majority coalitions that are proper subsets of other majority coalitions.
 mutualMajorityFailure :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Bool
 mutualMajorityFailure candidates voters es =
     let coalitions = majorityCoalitions candidates voters
-        winner     = es candidates voters
-    in all (winner `notElem`) coalitions
-    
+        nonSubsets = filter (\coalition -> not $ any (isProperSubset coalition) coalitions) coalitions
+        winner = es candidates voters
+     in not $ all (winner `elem`) nonSubsets
+
 -- | Returns True if the winning candidate is not a member of the [Smith set](https://en.wikipedia.org/wiki/Smith_set).
 smithFailure :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Bool
 smithFailure candidates voters es =
@@ -92,5 +93,10 @@ isPrefersSet candidates l v =
             | otherwise = anti_l !! pref
             where
                 pref = preference (map (candidates !!) anti_l) v
-     in ((preferred_anti_l == -1) 
-         || (preference [candidates !! least_preferred_l, candidates !! preferred_anti_l] v == 0))
+     in ( (preferred_anti_l == -1)
+            || (preference [candidates !! least_preferred_l, candidates !! preferred_anti_l] v == 0)
+        )
+
+isProperSubset :: Eq a => [a] -> [a] -> Bool
+isProperSubset rhs lhs =
+    isSubsequenceOf rhs lhs && rhs /= lhs
