@@ -39,6 +39,7 @@ pathologies parliament =
     , "Cond. fail"
     , "Maj. failu"
     , "MM failure"
+    , "Smith fail"
     ]
         : [ [ systemName
             , show no_paradoxes
@@ -47,6 +48,7 @@ pathologies parliament =
             , show $ length $ filter (\(Election candidates voters) -> condorcetFailure candidates voters es) parliament
             , show $ length $ filter (\(Election candidates voters) -> majorityFailure candidates voters es) parliament
             , show $ length $ filter (\(Election candidates voters) -> mutualMajorityFailure candidates voters es) parliament
+            , show $ length $ filter (\(Election candidates voters) -> smithFailure candidates voters es) parliament
             ]
           | (systemName, es) <- systems :: (Voter a) => [(String, ElectoralSystem a)]
           ]
