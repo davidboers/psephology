@@ -35,7 +35,7 @@ isClones voters candidates =
         )
         voters
 
--- | @'isContinuous' l@ returns whether the list @l@ runs in sequence without skipping a number.
+-- @'isContinuous' l@ returns whether the list @l@ runs in sequence without skipping a number.
 isContinuous :: [Int] -> Bool
 isContinuous l =
     sort l == [minimum l .. maximum l]
