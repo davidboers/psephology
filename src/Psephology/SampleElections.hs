@@ -1,4 +1,4 @@
--- | Contains two example elections for experimentation.
+-- | Contains two example elections and a small referendum for experimentation.
 module Psephology.SampleElections
     ( -- * Tennessee capital
       tennesseeCapital
@@ -7,6 +7,10 @@ module Psephology.SampleElections
       -- * Condorcet cycle
     , condorcetCycle
     , condorcetCycleCandidates
+
+      -- * Referendum
+    , smallReferendum
+    , yesOrNo
     ) where
 
 import Psephology.Candidate
@@ -62,3 +66,14 @@ condorcetCycle =
 -- | Categorical Candidate instances of the three candidates.
 condorcetCycleCandidates :: [Candidate]
 condorcetCycleCandidates = map Categorical ["A", "B", "C"]
+
+-- Referendum
+
+-- | 10 voters, 2 options (Yes/No)
+smallReferendum :: [[Candidate]]
+smallReferendum =
+    replicate 6 (map Categorical ["Yes", "No"])
+        ++ replicate 4 (map Categorical ["No", "Yes"])
+
+yesOrNo :: [Candidate]
+yesOrNo = map Categorical ["Yes", "No"]
