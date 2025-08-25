@@ -15,7 +15,6 @@ module Psephology.Pathologies
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.Counting
-import Psephology.ElectoralSystem
 import Psephology.Quotas
 import Psephology.Voter
 
@@ -23,37 +22,42 @@ import Data.List
 
 -- Pathologies
 
--- | @'condorcetFailure' candidates voters es@ returns True if there is a Condorcet failure (system @es@ elects someone who is not the Condorcet winner, assuming there is one).
-condorcetFailure :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Bool
-condorcetFailure candidates voters es =
-    isPathology candidates voters es (condorcetWinner candidates voters)
-
--- | @'majorityFailure' candidates voters es@ returns True if the 'majorityWinner' (assuming there is one) does not win the election under @es@.
-majorityFailure :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Bool
-majorityFailure candidates voters es =
-    isPathology candidates voters es (majorityWinner candidates voters)
-
+-- | @'condorcetFailure' winner candidates voters@ returns @True@ if @winner@ is not a Condorcet winner. If there is no Condorcet winner, returns @False@.
+condorcetFailure :: Voter a => Int -> [Candidate] -> [a] -> Bool
+condorcetFailure winner candidates voters =
+    maybe False (winner /=) $ condorcetWinner candidates voters
+    
+-- | @'majorityFailure' winner candidates voters@ returns @True@ if @winner@ is not the 'majorityWinner'. If there is no majority winner, returns @False@.
+majorityFailure :: Voter a => Int -> [Candidate] -> [a] -> Bool
+majorityFailure winner candidates voters =
+    maybe False (winner /=) $ majorityWinner candidates voters
+    
 -- | Returns True if the winning candidate falls outside any majority coalition. Excludes majority coalitions that are proper subsets of other majority coalitions.
-mutualMajorityFailure :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Bool
-mutualMajorityFailure candidates voters es =
+mutualMajorityFailure
+    :: Voter a
+    => Int
+    -- ^ Index of winning candidate.
+    -> [Candidate]
+    -> [a]
+    -> Bool
+mutualMajorityFailure winner candidates voters =
     let coalitions = majorityCoalitions candidates voters
         nonSubsets = filter (\coalition -> not $ any (isProperSubset coalition) coalitions) coalitions
-        winner = es candidates voters
      in not $ all (winner `elem`) nonSubsets
 
 -- | Returns True if the winning candidate is not a member of the [Smith set](https://en.wikipedia.org/wiki/Smith_set).
-smithFailure :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Bool
-smithFailure candidates voters es =
+smithFailure
+    :: Voter a
+    => Int
+    -- ^ Index of winning candidate.
+    -> [Candidate]
+    -> [a]
+    -> Bool
+smithFailure winner candidates voters =
     let smith = smithSet candidates voters
-        winner = es candidates voters
      in winner `notElem` smith
 
 -- Helpers
-
-isPathology :: Voter a => [Candidate] -> [a] -> ElectoralSystem a -> Maybe Int -> Bool
-isPathology candidates voters es i =
-    let winner = es candidates voters
-     in maybe False (winner /=) i
 
 findMajority :: Voter a => [Candidate] -> [a] -> [Int] -> Maybe Int
 findMajority candidates voters tally =
