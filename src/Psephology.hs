@@ -13,6 +13,7 @@ module Psephology
     , module Psephology.ElectoralSystems.Plurality
     , module Psephology.ElectoralSystems.Rated
     , module Psephology.ElectoralSystems.Runoff
+    , module Psephology.ElectoralSystems.Sortition
     , module Psephology.McKelveySchofield
     , module Psephology.Parliament
     , module Psephology.Pathologies
@@ -35,6 +36,7 @@ import Psephology.ElectoralSystems.Condorcet
 import Psephology.ElectoralSystems.Plurality
 import Psephology.ElectoralSystems.Rated
 import Psephology.ElectoralSystems.Runoff
+import Psephology.ElectoralSystems.Sortition
 import Psephology.McKelveySchofield
 import Psephology.Parliament
 import Psephology.Pathologies

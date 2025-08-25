@@ -12,6 +12,9 @@ import Psephology.ElectoralSystems.Condorcet
 import Psephology.ElectoralSystems.Plurality
 import Psephology.ElectoralSystems.Rated
 import Psephology.ElectoralSystems.Runoff
+import Psephology.ElectoralSystems.Sortition
+
+import System.Random (mkStdGen)
 
 -- | All single-winner electoral systems in this library have the following type signature.
 type ElectoralSystem a = [Candidate] -> [a] -> Int
@@ -41,4 +44,8 @@ systems =
     , ("Highest median", highestMedian 0 10)
     , ("Score", scoreVoting 0 10)
     , ("STAR", starVoting 0 10)
+    , ("Sortition", sortition g)
+    , ("Random ballot", randomBallot g)
     ]
+    where
+        g = mkStdGen 0
