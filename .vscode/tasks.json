@@ -4,8 +4,7 @@
     {
       "type": "shell",
       "label": "Make documentation",
-      "command": "cabal",
-      "args": ["haddock-project", "--out=docs"]
+      "command": "bash docs.sh"
     },
     {
       "type": "shell",
