@@ -474,13 +474,14 @@ testStrategy =
     testGroup
         "Strategy"
         [ testCase "Borda, burying" $
-            bury condorcetCycleCandidates condorcetCycle bordaCount 2 @?= Nothing
+            bury condorcetCycleCandidates condorcetCycle bordaCount 2 @?= Just bordaStrategy
         , testCase "Small referendum, abstaining" $
             abstain yesOrNo smallReferendum referendumFunc 1 @?= Just referendumStrategy
         ]
     where
         referendumFunc candidates voters = fromMaybe 1 $ turnoutRequirement 0.3 27 firstPastThePost candidates voters
-        referendumStrategy = Strategy [[Categorical "No", Categorical "Yes"], [Categorical "No", Categorical "Yes"]] 1
+        bordaStrategy = Strategy (replicate 2 [Categorical "B", Categorical "C", Categorical "A"]) 1
+        referendumStrategy = Strategy (replicate 2 [Categorical "No", Categorical "Yes"]) 1
 
 -- Helpers
 
