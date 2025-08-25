@@ -50,6 +50,8 @@ library
                       Psephology.Spoilers
                       Psephology.Spoilers.Clones
                       Psephology.Spoilers.Proxies
+                      Psephology.Strategy
+                      Psephology.Strategy.Burying
                       Psephology.Voter
 
     -- Modules included in this library but not exported.
