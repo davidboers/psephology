@@ -480,7 +480,7 @@ testStrategy =
         ]
     where
         referendumFunc candidates voters = fromMaybe 1 $ turnoutRequirement 0.3 27 firstPastThePost candidates voters
-        bordaStrategy = Strategy (replicate 2 [Categorical "B", Categorical "C", Categorical "A"]) 1
+        bordaStrategy = Strategy [[Categorical "B", Categorical "C", Categorical "A"]] 1
         referendumStrategy = Strategy (replicate 2 [Categorical "No", Categorical "Yes"]) 1
 
 -- Helpers
