@@ -25,5 +25,5 @@ bury candidates voters es y = do
     let nonYVoters' sub = map (\i -> if i `elem` sub then bury_v $ possibleParticipants !! i else possibleParticipants !! i) [0 .. length possibleParticipants - 1]
     participantsi <- find (\sub -> y /= es candidates (nonYVoters' sub ++ yvoters)) subs
     let participantsi' = map (possibleParticipants !!) participantsi
-    let newWinneri = es candidates participantsi'
+    let newWinneri = es candidates (nonYVoters' participantsi ++ yvoters)
     return $ Strategy participantsi' newWinneri
