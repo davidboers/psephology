@@ -10,6 +10,7 @@ import Data.Bifunctor qualified
 import Data.List (find, intercalate, sort)
 import Data.Maybe
 
+import Psephology (Strategy (Strategy), bordaCount, firstPastThePost)
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
@@ -25,6 +26,8 @@ import Psephology.Pathologies
 import Psephology.Redistricting.Utilitarian
 import Psephology.SampleElections
 import Psephology.Spoilers
+import Psephology.Strategy.Abstention (abstain)
+import Psephology.Strategy.Burying (bury)
 import Psephology.Voter
 
 useTAP :: Bool
@@ -45,6 +48,7 @@ tests _ =
         , testMcKelveySchofield
         , testRedistricting
         , testDodgsonScores
+        , testStrategy
         -- Enable as you wish
         -- , testGeneratedParliament parliament
         ]
@@ -464,6 +468,19 @@ testDodgsonScores =
     where
         candidates = condorcetCycleCandidates
         voters = condorcetCycle
+
+testStrategy :: TestTree
+testStrategy =
+    testGroup
+        "Strategy"
+        [ testCase "Borda, burying" $
+            bury condorcetCycleCandidates condorcetCycle bordaCount 2 @?= Nothing
+        , testCase "Small referendum, abstaining" $
+            abstain yesOrNo smallReferendum referendumFunc 1 @?= Just referendumStrategy
+        ]
+    where
+        referendumFunc candidates voters = fromMaybe 1 $ turnoutRequirement 0.3 27 firstPastThePost candidates voters
+        referendumStrategy = Strategy [[Categorical "No", Categorical "Yes"], [Categorical "No", Categorical "Yes"]] 1
 
 -- Helpers
 

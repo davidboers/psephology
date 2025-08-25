@@ -22,6 +22,7 @@ module Psephology
     , module Psephology.SampleElections
     , module Psephology.SinglePeakedPreferences
     , module Psephology.Strategy
+    , module Psephology.Strategy.Abstention
     , module Psephology.Strategy.Burying
     , module Psephology.Voter
     ) where
@@ -45,5 +46,6 @@ import Psephology.Redistricting.Utilitarian
 import Psephology.SampleElections
 import Psephology.SinglePeakedPreferences
 import Psephology.Strategy
+import Psephology.Strategy.Abstention
 import Psephology.Strategy.Burying
 import Psephology.Voter

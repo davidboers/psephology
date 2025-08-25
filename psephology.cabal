@@ -52,6 +52,7 @@ library
                       Psephology.Spoilers.Clones
                       Psephology.Spoilers.Proxies
                       Psephology.Strategy
+                      Psephology.Strategy.Abstention
                       Psephology.Strategy.Burying
                       Psephology.Voter
 
