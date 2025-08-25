@@ -15,7 +15,7 @@ awarded for each ranking. The 'bordaCountWFormula' function is the general algor
 +--------------------------+------------------+-----------------------+-------------------------------------+
 | 'dowdallWeight'          | 'dowdallSystem'  | \[ \frac{1}{r} \]     | Used in Nauru                       |
 +--------------------------+------------------+-----------------------+-------------------------------------+
-| 'icelandicWeight'        | 'icelandicBorda' | \[ \frac{n-r-1}{n} \] | Used to order Icelandic party lists |
+| 'icelandicWeight'        | 'icelandicBorda' | \[ \frac{n-r+1}{n} \] | Used to order Icelandic party lists |
 +--------------------------+------------------+-----------------------+-------------------------------------+
 
 where @n@ is the number of candidates (in total, not just that are ranked by the voter) and @r@ is the numerical rank (1..).
@@ -62,7 +62,7 @@ dowdallWeight _ (-1) = 0
 dowdallWeight _ r =
     1 / fromIntegral r
 
--- | @'icelandicWeight' n r@ returns (@n@ - @r@ - 1) / @n@ where @n@ is the total number of candidates and @r@ is the candidate rank.
+-- | @'icelandicWeight' n r@ returns (@n@ - @r@ + 1) / @n@ where @n@ is the total number of candidates and @r@ is the candidate rank.
 icelandicWeight :: Int -> Int -> Double
 icelandicWeight n r =
     fromIntegral (n - r + 1) / fromIntegral n
