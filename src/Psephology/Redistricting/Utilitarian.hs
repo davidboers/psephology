@@ -132,7 +132,7 @@ populationD (District _ precincts _) =
 surplus :: Int -> District -> Int
 surplus quota district = populationD district - quota
 
--- | @'centerD' district@ returns the center point of @district@. 
+-- | @'centerD' district@ returns the center point of @district@, weighed by population. 
 centerD :: District -> [Double]
 centerD (District _ precincts _) =
     map xbar $ transpose $ map (\p -> map (fromIntegral (population p) *) $ point p) precincts
