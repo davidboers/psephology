@@ -84,11 +84,11 @@ utilityP lhs rhs =
     fromIntegral (population lhs + population rhs)
         * utilityV (point lhs) (point rhs)
 
--- | @'utilityPD' precinct district@ returns the utility between @precinct@ and the center of @district@.
+-- | @'utilityPD' precinct district@ returns the utility between @precinct@ and the center of @district@. \(phi\) normalizes around
+-- the district center, not the precinct.
 utilityPD :: Precinct -> District -> Double
 utilityPD precinct district =
-    -- Multiply by population of precinct? should't matter as far as transferTo goes.
-    utilityV (point precinct) (centerD district)
+    utilityV (centerD district) (point precinct)
 
 instance Ord Precinct where
     compare lhs rhs =
