@@ -21,6 +21,12 @@
       "label": "Build library",
       "command": "cabal",
       "args": ["build"]
+    },
+    {
+      "type": "shell",
+      "label": "Build distribution tarball",
+      "command": "cabal",
+      "args": ["sdist"]
     }
   ]
 }
