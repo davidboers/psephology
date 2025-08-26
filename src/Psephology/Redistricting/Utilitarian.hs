@@ -132,15 +132,14 @@ populationD (District _ precincts _) =
 surplus :: Int -> District -> Int
 surplus quota district = populationD district - quota
 
--- | Returns the average of a list, or 0.0 for an empty list.
-average :: [Double] -> Double
-average [] = 0.0
-average l = sum l / fromIntegral (length l)
-
--- | @'centerD' district@ returns the center point of @district@.
+-- | @'centerD' district@ returns the center point of @district@. 
 centerD :: District -> [Double]
 centerD (District _ precincts _) =
-    map average $ transpose $ map point precincts
+    map xbar $ transpose $ map (\p -> map (fromIntegral (population p) *) $ point p) precincts
+    where
+        xbar :: [Double] -> Double
+        xbar xs = sum xs / totalPopulation
+        totalPopulation = fromIntegral $ sum (map population precincts)
 
 -- | The number of non-dissolved districts.
 noNonDissolved :: [District] -> Int
