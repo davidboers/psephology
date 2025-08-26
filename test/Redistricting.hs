@@ -1,3 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Redistricting where
 
 import Test.Tasty
@@ -5,6 +8,8 @@ import Test.Tasty.HUnit
 
 import Psephology.Redistricting.Utilitarian
 
+import Control.Monad (MonadPlus (mzero))
+import Data.Aeson
 import Data.List (find, intercalate)
 
 testRedistricting :: TestTree
@@ -210,17 +215,38 @@ testRedistricting =
             thenEqualizeVerbose 100 1.07 $
                 reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
 
-        districtsCSV precincts districts' =
-            unlines $
-                map
-                    ( \precinct ->
-                        intercalate
-                            ","
-                            [ nameP precinct
-                            , maybe "none" (show . districtID) $
-                                find
-                                    (\(District _ precincts' _) -> nameP precinct `elem` map nameP precincts')
-                                    districts'
-                            ]
-                    )
-                    precincts
+districtsCSV :: Foldable t => [Precinct] -> t District -> String
+districtsCSV precincts districts' =
+    unlines $
+        map
+            ( \precinct ->
+                let district =
+                        find
+                            (\(District _ precincts' _) -> nameP precinct `elem` map nameP precincts')
+                            districts'
+                 in intercalate
+                        ","
+                        [ nameP precinct
+                        , maybe "none" (show . districtID) district
+                        , maybe "0" (show . utilityPD precinct) district
+                        ]
+            )
+            precincts
+
+utilitarianStatewide :: IO ()
+utilitarianStatewide = do
+    jsonContent <- decodeFileStrict "test/redistricting/georgia.json"
+    case jsonContent :: Maybe [Precinct] of
+        Just precincts -> writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts $ equalize 100 1 $ reduce 14 (precinctsToDistricts precincts)
+        Nothing -> putStrLn "Failed to parse JSON."
+
+instance FromJSON Precinct where
+    parseJSON (Object v) = do
+        meta <-
+            Precinct
+                <$> v .: "GEOID20"
+                <*> v .: "TOTPOP"
+        x <- v .: "INTPTLON20"
+        y <- v .: "INTPTLAT20"
+        return $ meta [x, y]
+    parseJSON _ = mzero

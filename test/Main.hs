@@ -36,6 +36,7 @@ useTAP = False
 
 main :: IO ()
 main = do
+    _ <- utilitarianStatewide
     parliament <- generate 1000 2 100 5 100
     if useTAP
         then defaultMainWithIngredients [tapRunner] (tests parliament)
