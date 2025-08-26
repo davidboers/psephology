@@ -19,6 +19,9 @@ module Psephology.Redistricting.Utilitarian
     , precinctsToDistricts
     , utilityP
     , utilityPD
+    , utilityDP
+    , utilityDPNorm
+    , netUtility
 
       -- * Districts
     , District (..)
@@ -84,11 +87,32 @@ utilityP lhs rhs =
     fromIntegral (population lhs + population rhs)
         * utilityV (point lhs) (point rhs)
 
--- | @'utilityPD' precinct district@ returns the utility between @precinct@ and the center of @district@. \(phi\) normalizes around
--- the district center, not the precinct.
+-- | @'utilityPD' precinct district@ returns the utility between @precinct@ and the center of @district@. Differs from 'utilityDP' in that
+-- \(phi\) reflects relativity to the precinct, rather than the district center.
 utilityPD :: Precinct -> District -> Double
 utilityPD precinct district =
+    utilityV (point precinct) (centerD district)
+
+-- | @'utilityDP' district precinct@ returns the utility between the center of @district@ and @precinct@. Differs from 'utilityPD' in that
+-- \(phi\) reflects relativity to the district center, rather than the precinct.
+utilityDP :: District -> Precinct -> Double
+utilityDP district precinct =
     utilityV (centerD district) (point precinct)
+
+-- | @'utilityDPNorm' district precinct@ returns the normalized version of 'utilityDP', which reflects a proportion of the maximum utility
+-- that can be obtained by @district@.
+utilityDPNorm :: District -> Precinct -> Double
+utilityDPNorm district precinct =
+    utilityDP district precinct / sqrt (sum $ map (** 2) $ centerD district)
+
+-- | @'netUtility' districts precinct district@ returns the net increase in normalized utility obtained by @precinct@ being allocated to
+-- @district@, in comparison to the member of @districts@ that is the highest opportunity cost. The full formula is:
+--
+-- \[ U_{np}(d) = \frac{\phi_p\circ\|d-p\|}{\|d\|} - \max_{d_i \in D, d_i \neq d} \frac{\phi_p\circ\|d_j-p\|}{\|d_j\|} \]
+netUtility :: [District] -> Precinct -> District -> Double
+netUtility districts precinct district =
+    let otherDistricts = filter (\district' -> districtID district /= districtID district') districts
+     in utilityDPNorm district precinct - maximum (map (`utilityDPNorm` precinct) otherDistricts)
 
 instance Ord Precinct where
     compare lhs rhs =
@@ -132,7 +156,7 @@ populationD (District _ precincts _) =
 surplus :: Int -> District -> Int
 surplus quota district = populationD district - quota
 
--- | @'centerD' district@ returns the center point of @district@, weighed by population. 
+-- | @'centerD' district@ returns the center point of @district@, weighed by population.
 centerD :: District -> [Double]
 centerD (District _ precincts _) =
     map xbar $ transpose $ map (\p -> map (fromIntegral (population p) *) $ point p) precincts
@@ -305,7 +329,7 @@ distributeSurplus quota districts district@(District idD precincts _)
                 sortOn
                     ( \precinct ->
                         if isEqualizing
-                            then utilityPD precinct district - maximum (map (utilityPD precinct) districts)
+                            then netUtility districts precinct district
                             else utilityPD precinct district
                     )
                     precincts
