@@ -1,9 +1,8 @@
 cabal-version:      3.0
 name:               psephology
 
--- The package version.
--- See the Haskell package versioning policy (PVP) for standards
--- guiding when and how versions should be incremented.
+-- An API change is non-breaking if it makes no amendment to any existing function's type signature.
+-- The changes may only involve new functions, bindings, types, classes, non-orphan instances, etc.
 -- https://pvp.haskell.org
 -- PVP summary:     +-+------- breaking API changes
 --                  | | +----- non-breaking API additions
@@ -53,7 +52,10 @@ library
                       Psephology.Spoilers.Proxies
                       Psephology.Strategy
                       Psephology.Strategy.Abstention
+                      Psephology.Strategy.Betrayal
                       Psephology.Strategy.Burying
+                      Psephology.Strategy.Compression
+                      Psephology.Strategy.Turkeys
                       Psephology.Voter
 
     -- Modules included in this library but not exported.

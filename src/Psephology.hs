@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-dodgy-exports #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
 -- |
 --
 -- Importing this module is not recommended. Users should instead import one or more of
@@ -23,7 +26,10 @@ module Psephology
     , module Psephology.SinglePeakedPreferences
     , module Psephology.Strategy
     , module Psephology.Strategy.Abstention
+    , module Psephology.Strategy.Betrayal
     , module Psephology.Strategy.Burying
+    , module Psephology.Strategy.Compression
+    , module Psephology.Strategy.Turkeys
     , module Psephology.Voter
     ) where
 
@@ -47,5 +53,8 @@ import Psephology.SampleElections
 import Psephology.SinglePeakedPreferences
 import Psephology.Strategy
 import Psephology.Strategy.Abstention
+import Psephology.Strategy.Betrayal
 import Psephology.Strategy.Burying
+import Psephology.Strategy.Compression
+import Psephology.Strategy.Turkeys
 import Psephology.Voter
