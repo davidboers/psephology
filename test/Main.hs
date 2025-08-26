@@ -7,7 +7,7 @@ import Test.Tasty.HUnit
 import Test.Tasty.Runners.TAP
 
 import Data.Bifunctor qualified
-import Data.List (find, intercalate, sort)
+import Data.List (find, intercalate)
 import Data.Maybe
 
 import Psephology (Strategy (Strategy), bordaCount, firstPastThePost)
@@ -210,45 +210,16 @@ testRedistricting =
                         map (concatMap (++ ",")) csv2
                 True @?= True
         , testCase "(export districts)" $
-            do
-                writeFile "test/redistricting/test1.csv" $
-                    unlines $
-                        map
-                            ( \d@(District idD precincts _) ->
-                                concatMap (++ ",") $
-                                    show idD
-                                        : show (populationD d)
-                                        : map (show . show . point) (sort precincts)
-                            )
-                            districts1
-                True @?= True
+            writeFile "test/redistricting/test1.csv" $
+                districtsCSV testPrecincts districts1
         , testCase "(Gwinnett css)" $
-            do
-                writeFile "test/redistricting/gwinnett.css" $
-                    unlines $
-                        map
-                            ( \precinct ->
-                                "."
-                                    ++ nameP precinct
-                                    ++ "{ fill: "
-                                    ++ ( case find
-                                            (\(District _ precincts' _) -> nameP precinct `elem` map nameP precincts')
-                                            districts2 of
-                                            Just (District 2 _ _) -> "#3333ff"
-                                            Just (District 51 _ _) -> "#f0ed4f"
-                                            Just (District 74 _ _) -> "#0fb454"
-                                            Just (District 95 _ _) -> "#33ff33"
-                                            Just (District 124 _ _) -> "#be269e"
-                                            _ -> "#dddddd"
-                                       )
-                                    ++ "; }"
-                            )
-                            gwinnettPrecincts
+            writeFile "test/redistricting/gwinnett.csv" $
+                districtsCSV gwinnettPrecincts districts2
         ]
     where
         testPrecincts :: [Precinct]
         testPrecincts =
-            [ Precinct "Unnamed" 1 [x, y]
+            [ Precinct (show $ show (x, y)) 1 [x, y]
             | x <- [0.5, 1.5 .. 9.5]
             , y <- [0.5, 1.5 .. 9.5]
             ]
@@ -422,6 +393,21 @@ testRedistricting =
         (csv2, districts2) =
             thenEqualizeVerbose 100 1.07 $
                 reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
+
+        districtsCSV precincts districts' =
+            unlines $
+                map
+                    ( \precinct ->
+                        intercalate
+                            ","
+                            [ nameP precinct
+                            , maybe "none" (show . districtID) $
+                                find
+                                    (\(District _ precincts' _) -> nameP precinct `elem` map nameP precincts')
+                                    districts'
+                            ]
+                    )
+                    precincts
 
 testGeneratedParliament :: Parliament [Double] -> TestTree
 testGeneratedParliament parliament =
