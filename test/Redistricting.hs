@@ -215,7 +215,7 @@ testRedistricting =
             thenEqualizeVerbose 100 1.07 $
                 reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
 
-districtsCSV :: Foldable t => [Precinct] -> t District -> String
+districtsCSV :: [Precinct] -> [District] -> String
 districtsCSV precincts districts' =
     unlines $
         map
@@ -228,7 +228,9 @@ districtsCSV precincts districts' =
                         ","
                         [ nameP precinct
                         , maybe "none" (show . districtID) district
-                        , maybe "0" (show . utilityPD precinct) district
+                        , maybe "0" (show . flip utilityDP precinct) district
+                        , maybe "0" (show . flip utilityDPNorm precinct) district
+                        , maybe "0" (show . netUtility districts' precinct) district
                         ]
             )
             precincts
