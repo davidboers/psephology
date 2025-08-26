@@ -22,6 +22,7 @@ module Psephology.Redistricting.Utilitarian
 
       -- * Districts
     , District (..)
+    , districtID
     , isEstablished
     , isDissolved
     , populationD
@@ -101,13 +102,14 @@ instance Ord Precinct where
 -- | Represents a district.
 data District
     = District
-        -- | A numerical value representing the district's id.
         Int
-        -- | A non-empty list of precincts included in the district.
+        -- ^ A numerical value representing the district's id.
         [Precinct]
-        -- | The district's 'Status'.
+        -- ^ A non-empty list of precincts included in the district.
         Status
+        -- ^ The district's 'Status'.
 
+-- | District id.
 districtID :: District -> Int
 districtID (District idD _ _) = idD
 
@@ -203,13 +205,13 @@ reduceVerbose x districts =
             ]
         record = header : recordStep Reduction 0 quota districts districts
 
-reduceVerboseWorker ::
-    Int ->
-    [[String]] ->
-    Int ->
-    Int ->
-    [District] ->
-    ([[String]], [District])
+reduceVerboseWorker
+    :: Int
+    -> [[String]]
+    -> Int
+    -> Int
+    -> [District]
+    -> ([[String]], [District])
 reduceVerboseWorker quota record n x districts
     | n > 157 = (record ++ [["Automatic break"]], districts)
     | noNonDissolved districts <= x = (record, establishRest districts)
@@ -386,8 +388,8 @@ equalizeVerbose maxIter maxToleranceRatio districts
             maxToleranceRatio
             (filter (not . isDissolved) districts)
 
-equalizeVerboseWorker ::
-    [[String]] -> Int -> Int -> Double -> [District] -> ([[String]], [District])
+equalizeVerboseWorker
+    :: [[String]] -> Int -> Int -> Double -> [District] -> ([[String]], [District])
 equalizeVerboseWorker record n maxIter maxToleranceRatio districts
     | n > maxIter = (record, districts)
     | currentRatio districts <= maxToleranceRatio = (record, districts)
@@ -403,8 +405,8 @@ equalizeVerboseWorker record n maxIter maxToleranceRatio districts
                 thisStep
 
 -- | thenEqualizeVerbose maxIter maxToleranceRatio $ reduceVerbose noDistricts districts
-thenEqualizeVerbose ::
-    Int -> Double -> ([[String]], [District]) -> ([[String]], [District])
+thenEqualizeVerbose
+    :: Int -> Double -> ([[String]], [District]) -> ([[String]], [District])
 thenEqualizeVerbose maxIter maxToleranceRatio (reductionRecord, districts) =
     let (equalizationRecord, equalizedDistricts) = equalizeVerbose maxIter maxToleranceRatio districts
      in ( reductionRecord ++ equalizationRecord
