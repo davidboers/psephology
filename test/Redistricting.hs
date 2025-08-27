@@ -33,7 +33,7 @@ testRedistricting =
         , testCase "(export districts)" $
             writeFile "test/redistricting/test1.csv" $
                 districtsCSV testPrecincts districts1
-        , testCase "(Gwinnett css)" $
+        , testCase "(Gwinnett csv)" $
             writeFile "test/redistricting/gwinnett.csv" $
                 districtsCSV gwinnettPrecincts districts2
         ]
@@ -208,12 +208,14 @@ testRedistricting =
         noDistricts = 5
 
         (csv1, districts1) =
-            thenEqualizeVerbose 100 1 $
-                reduceVerbose noDistricts (precinctsToDistricts testPrecincts)
+            thenOptimizeVerbose $
+                thenEqualizeVerbose 100 1 $
+                    reduceVerbose noDistricts (precinctsToDistricts testPrecincts)
 
         (csv2, districts2) =
-            thenEqualizeVerbose 100 1.07 $
-                reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
+            thenOptimizeVerbose $
+                thenEqualizeVerbose 100 1.07 $
+                    reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
 
 districtsCSV :: [Precinct] -> [District] -> String
 districtsCSV precincts districts' =
@@ -239,7 +241,12 @@ utilitarianStatewide :: IO ()
 utilitarianStatewide = do
     jsonContent <- decodeFileStrict "test/redistricting/georgia.json"
     case jsonContent :: Maybe [Precinct] of
-        Just precincts -> writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts $ equalize 100 1 $ reduce 14 (precinctsToDistricts precincts)
+        Just precincts -> do
+            let reduced = reduce 14 (precinctsToDistricts precincts)
+            let equalized = equalize 100 1 reduced
+            let optimized = optimize equalized
+            writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts optimized
+        -- writeFile "test/redistricting/georgia.csv" $ unlines $ map (concatMap (++ ",")) $ fst $ thenEqualizeVerbose 100 1 $ thenOptimizeVerbose $ reduceVerbose 14 (precinctsToDistricts precincts)
         Nothing -> putStrLn "Failed to parse JSON."
 
 instance FromJSON Precinct where

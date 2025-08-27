@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 -- | Uses a utilitarian algorithm to reapportion election districts. The user inputs a list of precincts and a number of districts (@x@),
 -- and the algorithm reduces the precincts to @x@, and ensures they are all of the same population. Below is a basic outline of the procedure:
 --
@@ -45,6 +47,11 @@ module Psephology.Redistricting.Utilitarian
     , distributeSurpluses
     , distributeSurplus
     , mergeSmallest
+
+      -- * Optimizer
+    , optimize
+    , optimizeVerbose
+    , thenOptimizeVerbose
 
       -- * Equalizer
     , equalize
@@ -191,6 +198,7 @@ data Status
 
 data Phase
     = Reduction
+    | Optimization
     | Equalization
     deriving (Show)
 
@@ -237,7 +245,6 @@ reduceVerboseWorker
     -> [District]
     -> ([[String]], [District])
 reduceVerboseWorker quota record n x districts
-    | n > 157 = (record ++ [["Automatic break"]], districts)
     | noNonDissolved districts <= x = (record, establishRest districts)
     | otherwise =
         reduceVerboseWorker
@@ -275,7 +282,7 @@ reduceStep x districts
             | null precincts = District idD precincts Dissolved
             | otherwise = district
 
--- | to csv
+-- | To csv. @'recordStep' phase n quota lastIter districts@
 recordStep :: Phase -> Int -> Int -> [District] -> [District] -> [[String]]
 recordStep phase n quota lastIter districts =
     let lastMap = M.fromList [(idD, district) | district@(District idD _ _) <- lastIter]
@@ -395,6 +402,48 @@ transfer (d@(District id' precincts' status') : ds) idD precinct
         District id' (delete precinct precincts') status' : transfer ds idD precinct
     | otherwise = d : transfer ds idD precinct
 
+-- Optimize
+
+optimize :: [District] -> [District]
+optimize = snd . optimizeVerbose
+
+-- | Analogous to 'reduceVerbose'.
+optimizeVerbose :: [District] -> ([[String]], [District])
+optimizeVerbose districts = optimizeVerboseWorker [] 1 quota districts
+    where
+        quota = hare (tvp districts) (length districts)
+
+optimizeVerboseWorker :: [[String]] -> Int -> Int -> [District] -> ([[String]], [District])
+optimizeVerboseWorker record 50 _ districts = (record, districts)
+optimizeVerboseWorker record n quota districts
+    | null netNegativePrecincts = (record, districts)
+    | otherwise =
+        let districts' = foldl' (optimizationStep quota) nonDissolved netNegativePrecincts
+            record' = record ++ recordStep Optimization n quota districts districts'
+         in optimizeVerboseWorker record' (n + 1) quota districts'
+    where
+        nonDissolved = filter (not . isDissolved) districts
+        netNegativePrecincts =
+            concatMap
+                ( \district'@(District idD precincts _) ->
+                    map (idD,) $
+                        filter (\precinct -> netUtility nonDissolved precinct district' < 0) precincts
+                )
+                nonDissolved
+
+optimizationStep :: Int -> [District] -> (Int, Precinct) -> [District]
+optimizationStep quota districts (idD, precinct) =
+    let newDistrictID = transferTo quota idD districts precinct
+     in transfer districts newDistrictID precinct
+
+-- | thenOptimizeVerbose $ reduceVerbose noDistricts districts
+thenOptimizeVerbose :: ([[String]], [District]) -> ([[String]], [District])
+thenOptimizeVerbose (record, districts) =
+    let (optimizationRecord, optimizedDistricts) = optimizeVerbose districts
+     in ( record ++ optimizationRecord
+        , optimizedDistricts
+        )
+
 -- Equalizer
 
 -- | @'equalize' maxIter maxToleranceRatio districts@ returns @districts@ with populations brought within the bounds of @maxToleranceRatio@. The ratio is equal to the maximum district population divided
@@ -422,9 +471,9 @@ equalizeVerboseWorker record n maxIter maxToleranceRatio districts
     | otherwise =
         let quota = hare (tvp districts) (length districts)
             thisStep = distributeSurpluses quota districts
-            newRecord = record ++ recordStep Equalization n quota districts thisStep
+            record' = record ++ recordStep Equalization n quota districts thisStep
          in equalizeVerboseWorker
-                newRecord
+                record'
                 (n + 1)
                 maxIter
                 maxToleranceRatio
