@@ -225,6 +225,7 @@ reduceVerbose x districts =
             , "Surplus"
             , "Status"
             , "Changed"
+            , "Population ratio"
             ]
         record = header : recordStep Reduction 0 quota districts districts
 
@@ -294,6 +295,7 @@ recordStep phase n quota lastIter districts =
                         , show $ surplus quota district
                         , show status
                         , show $ lastStatus /= status
+                        , show $ currentRatio districts
                         ]
                     Nothing ->
                         [ show phase
@@ -308,6 +310,7 @@ recordStep phase n quota lastIter districts =
                         , show $ surplus quota district
                         , show status
                         , "N/A" -- Could not compare status
+                        , show $ currentRatio districts
                         ]
             )
             districts
@@ -439,5 +442,6 @@ thenEqualizeVerbose maxIter maxToleranceRatio (reductionRecord, districts) =
 -- Print to journal and expose
 currentRatio :: [District] -> Double
 currentRatio districts =
-    fromIntegral (maximum $ map populationD districts)
-        / fromIntegral (minimum $ map populationD districts)
+    let nonDissolved = filter (not . isDissolved) districts
+     in fromIntegral (maximum $ map populationD nonDissolved)
+            / fromIntegral (minimum $ map populationD nonDissolved)
