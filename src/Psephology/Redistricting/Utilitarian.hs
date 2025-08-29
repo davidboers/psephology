@@ -47,11 +47,7 @@ module Psephology.Redistricting.Utilitarian
     , distributeSurpluses
     , distributeSurplus
     , mergeSmallest
-
-      -- * Optimizer
-    , optimize
-    , optimizeVerbose
-    , thenOptimizeVerbose
+    , splitSmallest
 
       -- * Equalizer
     , equalize
@@ -205,7 +201,6 @@ data Status
 
 data Phase
     = Reduction
-    | Optimization
     | Equalization
     deriving (Show)
 
@@ -273,8 +268,8 @@ reduceVerboseWorker quota record n x districts
 reduceStep :: Int -> [District] -> [District]
 reduceStep x districts
     | total_surplus_of_established > 0 =
-        updateStatuses $ mergeSmallest $ distributeSurpluses quota districts
-    | otherwise = updateStatuses $ mergeSmallest districts
+        updateStatuses $ splitSmallest $ distributeSurpluses quota districts
+    | otherwise = updateStatuses $ splitSmallest districts
     where
         quota = hare (tvp districts) x
         total_surplus_of_established = sum $ map (surplus quota) $ filter isEstablished districts
@@ -341,32 +336,30 @@ distributeSurpluses quota districts =
 distributeSurplus :: Int -> [District] -> District -> [District]
 distributeSurplus quota districts district@(District idD precincts _)
     | surplusSize > 0 =
-        let isEqualizing = all isEstablished districts
-            precinctsSorted =
+        let precinctsSorted =
                 sortOn
                     ( \precinct ->
-                        if isEqualizing
-                            then netUtility districts precinct district
-                            else utilityPD precinct district
+                        netUtility districts precinct district
                     )
                     precincts
             precinctsToTransfer = sort $ selectPrecinctsToTransfer surplusSize precinctsSorted
-         in distributeSurplusWorker quota idD districts precinctsToTransfer
+         in distributeSurplusWorker idD districts precinctsToTransfer
     | otherwise = districts
     where
         surplusSize = surplus quota district
 
-distributeSurplusWorker :: Int -> Int -> [District] -> [Precinct] -> [District]
-distributeSurplusWorker _ _ districts [] = districts
-distributeSurplusWorker quota idD districts (x : xs) =
-    let id' = transferTo quota idD districts x
-     in distributeSurplusWorker quota idD (transfer districts id' x) xs
+distributeSurplusWorker :: Int -> [District] -> [Precinct] -> [District]
+distributeSurplusWorker _ districts [] = districts
+distributeSurplusWorker idD districts (x : xs) =
+    let id' = transferTo idD districts x
+     in distributeSurplusWorker idD (transfer districts id' x) xs
 
--- | @'mergeSmallest' districts@ dissolves the non-established member of @districts@ with the smallest population and merges it with the other member of @district@ that provides the most utility for a
+-- | @'mergeSmallest' districts@ dissolves the non-established member of @districts@ with the smallest
+-- population and merges it with the other member of @district@ that provides the most utility for a
 -- voter at it's central point.
 mergeSmallest :: [District] -> [District]
 mergeSmallest districts =
-    let smallest@(District _ precincts _) = argmin populationD $ filter (not . isEstablished) districts
+    let smallest@(District _ precincts _) = findSmallest districts
         (District mergeInto _ _) =
             argmax
                 (utilityD smallest)
@@ -376,6 +369,24 @@ mergeSmallest districts =
                     districts
                 )
      in foldl' (`transfer` mergeInto) districts precincts
+
+-- | @'splitSmallest' districts@ dissolves the non-established member of @districts@ with the smallest
+-- population, and re-assigns its precincts to the district that maximizes utility.
+splitSmallest :: [District] -> [District]
+splitSmallest districts =
+    let smallest@(District idSmallest precincts _) = findSmallest districts
+     in foldl'
+            ( \districts' precinct ->
+                -- District centers shouldn't update until district has been entirely dissolved.
+                let idD = transferTo idSmallest districts' precinct
+                 in transfer districts' idD precinct
+            )
+            districts
+            (sortOn (`utilityPD` smallest) precincts)
+
+findSmallest :: [District] -> District
+findSmallest districts =
+    argmin populationD $ filter (not . isEstablished) districts
 
 -- Transfers
 
@@ -388,18 +399,14 @@ selectPrecinctsToTransfer surplusSize (x : xs)
     where
         surplusWithout = surplusSize - population x
 
--- @'transferTo' quota idD districts precinct@ determines which member of @districts@ provides maximum utility for @precinct@, other than @idD@.
-transferTo :: Int -> Int -> [District] -> Precinct -> Int
-transferTo quota idD districts precinct
-    | null deficitDistricts || all isEstablished districts =
-        districtID $ argmax (utilityPD precinct) otherDistricts
-    | otherwise =
-        districtID $ argmax (utilityPD precinct) deficitDistricts
+-- | @'transferTo' idD districts precinct@ determines which member of @districts@ provides maximum utility for @precinct@, other than @idD@.
+transferTo :: Int -> [District] -> Precinct -> Int
+transferTo idD districts precinct =
+    districtID $ argmax (utilityPD precinct) otherDistricts
     where
         otherDistricts = filter (\(District id' _ _) -> id' /= idD) districts
-        deficitDistricts = filter (\district' -> surplus quota district' < 0) otherDistricts
 
--- @'transfer' districts idD precinct@  transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
+-- | @'transfer' districts idD precinct@  transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
 transfer :: [District] -> Int -> Precinct -> [District]
 transfer [] _ _ = []
 transfer (d@(District id' precincts' status') : ds) idD precinct
@@ -408,48 +415,6 @@ transfer (d@(District id' precincts' status') : ds) idD precinct
     | precinct `elem` precincts' =
         District id' (delete precinct precincts') status' : transfer ds idD precinct
     | otherwise = d : transfer ds idD precinct
-
--- Optimize
-
-optimize :: [District] -> [District]
-optimize = snd . optimizeVerbose
-
--- | Analogous to 'reduceVerbose'.
-optimizeVerbose :: [District] -> ([[String]], [District])
-optimizeVerbose districts = optimizeVerboseWorker [] 1 quota districts
-    where
-        quota = hare (tvp districts) (length districts)
-
-optimizeVerboseWorker :: [[String]] -> Int -> Int -> [District] -> ([[String]], [District])
-optimizeVerboseWorker record 10 _ districts = (record, districts)
-optimizeVerboseWorker record n quota districts
-    | null netNegativePrecincts = (record, districts)
-    | otherwise =
-        let districts' = foldl' (optimizationStep quota) nonDissolved netNegativePrecincts
-            record' = record ++ recordStep Optimization n quota districts districts'
-         in optimizeVerboseWorker record' (n + 1) quota districts'
-    where
-        nonDissolved = filter (not . isDissolved) districts
-        netNegativePrecincts =
-            concatMap
-                ( \district'@(District idD precincts _) ->
-                    map (idD,) $
-                        filter (\precinct -> netUtility nonDissolved precinct district' <= -0.01) precincts
-                )
-                nonDissolved
-
-optimizationStep :: Int -> [District] -> (Int, Precinct) -> [District]
-optimizationStep quota districts (idD, precinct) =
-    let newDistrictID = transferTo quota idD districts precinct
-     in transfer districts newDistrictID precinct
-
--- | thenOptimizeVerbose $ reduceVerbose noDistricts districts
-thenOptimizeVerbose :: ([[String]], [District]) -> ([[String]], [District])
-thenOptimizeVerbose (record, districts) =
-    let (optimizationRecord, optimizedDistricts) = optimizeVerbose districts
-     in ( record ++ optimizationRecord
-        , optimizedDistricts
-        )
 
 -- Equalizer
 

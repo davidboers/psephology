@@ -208,14 +208,12 @@ testRedistricting =
         noDistricts = 5
 
         (csv1, districts1) =
-            thenOptimizeVerbose $
-                thenEqualizeVerbose 100 1 $
-                    reduceVerbose noDistricts (precinctsToDistricts testPrecincts)
+            thenEqualizeVerbose 100 1 $
+                reduceVerbose noDistricts (precinctsToDistricts testPrecincts)
 
         (csv2, districts2) =
-            thenOptimizeVerbose $
-                thenEqualizeVerbose 100 1.07 $
-                    reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
+            thenEqualizeVerbose 100 1.07 $
+                reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
 
 districtsCSV :: [Precinct] -> [District] -> String
 districtsCSV precincts districts' =
@@ -243,10 +241,8 @@ utilitarianStatewide = do
     case jsonContent :: Maybe [Precinct] of
         Just precincts -> do
             let reduced = reduce 14 (precinctsToDistricts precincts)
-            let equalized = equalize 100 1 reduced
-            let optimized = optimize equalized
-            writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts optimized
-        -- writeFile "test/redistricting/georgia.csv" $ unlines $ map (concatMap (++ ",")) $ fst $ thenEqualizeVerbose 100 1 $ thenOptimizeVerbose $ reduceVerbose 14 (precinctsToDistricts precincts)
+            --let equalized = equalize 100 1.1 reduced
+            writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts reduced
         Nothing -> putStrLn "Failed to parse JSON."
 
 instance FromJSON Precinct where
