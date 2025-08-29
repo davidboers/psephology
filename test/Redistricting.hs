@@ -241,8 +241,8 @@ utilitarianStatewide = do
     case jsonContent :: Maybe [Precinct] of
         Just precincts -> do
             let reduced = reduce 14 (precinctsToDistricts precincts)
-            --let equalized = equalize 100 1.1 reduced
-            writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts reduced
+            let equalized = equalize 100 1 reduced
+            writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts equalized
         Nothing -> putStrLn "Failed to parse JSON."
 
 instance FromJSON Precinct where

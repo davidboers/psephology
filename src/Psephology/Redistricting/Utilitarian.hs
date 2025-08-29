@@ -155,6 +155,11 @@ populationD :: District -> Int
 populationD (District _ precincts _) =
     sum $ map population precincts
 
+-- | Returns true if the two district instances are composed of the same precincts.
+isSamePrecincts :: District -> District -> Bool
+isSamePrecincts (District _ lhs _) (District _ rhs _) =
+    lhs == rhs
+
 -- | @'surplus' quota district@ is the amount by which @district@'s population exceeds @quota@.
 surplus :: Int -> District -> Int
 surplus quota district = populationD district - quota
@@ -377,7 +382,6 @@ splitSmallest districts =
     let smallest@(District idSmallest precincts _) = findSmallest districts
      in foldl'
             ( \districts' precinct ->
-                -- District centers shouldn't update until district has been entirely dissolved.
                 let idD = transferTo idSmallest districts' precinct
                  in transfer districts' idD precinct
             )
@@ -444,12 +448,16 @@ equalizeVerboseWorker record n maxIter maxToleranceRatio districts
         let quota = hare (tvp districts) (length districts)
             thisStep = distributeSurpluses quota districts
             record' = record ++ recordStep Equalization n quota districts thisStep
-         in equalizeVerboseWorker
-                record'
-                (n + 1)
-                maxIter
-                maxToleranceRatio
-                thisStep
+            nextStep =
+                equalizeVerboseWorker
+                    record'
+                    (n + 1)
+                    maxIter
+                    maxToleranceRatio
+                    thisStep
+         in if all (uncurry isSamePrecincts) $ zip (snd nextStep) districts
+                then (record', thisStep)
+                else nextStep
 
 -- | thenEqualizeVerbose maxIter maxToleranceRatio $ reduceVerbose noDistricts districts
 thenEqualizeVerbose
