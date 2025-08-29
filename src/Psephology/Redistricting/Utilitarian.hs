@@ -163,14 +163,21 @@ populationD (District _ precincts _) =
 surplus :: Int -> District -> Int
 surplus quota district = populationD district - quota
 
--- | @'centerD' district@ returns the center point of @district@, weighed by population.
+-- | @'centerD' district@ returns the median point of @district@, weighed by population.
 centerD :: District -> [Double]
 centerD (District _ precincts _) =
-    map xbar $ transpose $ map (\p -> map (fromIntegral (population p) *) $ point p) precincts
-    where
-        xbar :: [Double] -> Double
-        xbar xs = sum xs / totalPopulation
-        totalPopulation = fromIntegral $ sum (map population precincts)
+    map weightedMedian $ transpose $ map (\p -> map (population p,) $ point p) precincts
+
+weightedMedian :: (Real w, Ord a) => [(w, a)] -> a
+weightedMedian xs =
+    let ys = sortOn snd xs -- sort by value
+        total = sum (map (realToFrac . fst) ys) :: Double
+        half = total / 2
+        go _ [] = error "weightedMedian: empty list"
+        go acc ((w, v) : rest) =
+            let acc' = acc + realToFrac w
+             in if acc' >= half then v else go acc' rest
+     in go 0 ys
 
 -- | The number of non-dissolved districts.
 noNonDissolved :: [District] -> Int
@@ -414,7 +421,7 @@ optimizeVerbose districts = optimizeVerboseWorker [] 1 quota districts
         quota = hare (tvp districts) (length districts)
 
 optimizeVerboseWorker :: [[String]] -> Int -> Int -> [District] -> ([[String]], [District])
-optimizeVerboseWorker record 50 _ districts = (record, districts)
+optimizeVerboseWorker record 10 _ districts = (record, districts)
 optimizeVerboseWorker record n quota districts
     | null netNegativePrecincts = (record, districts)
     | otherwise =
@@ -427,7 +434,7 @@ optimizeVerboseWorker record n quota districts
             concatMap
                 ( \district'@(District idD precincts _) ->
                     map (idD,) $
-                        filter (\precinct -> netUtility nonDissolved precinct district' < 0) precincts
+                        filter (\precinct -> netUtility nonDissolved precinct district' <= -0.01) precincts
                 )
                 nonDissolved
 
