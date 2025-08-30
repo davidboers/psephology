@@ -12,7 +12,7 @@ import Data.Bifunctor qualified
 import Data.List (intercalate)
 import Data.Maybe
 
-import Psephology (Strategy (Strategy), bordaCount, firstPastThePost)
+import Psephology (Strategy (Strategy), bordaCount, bordaTally, dowdallWeight, firstPastThePost, traditionalBordaWeight, icelandicWeight)
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
@@ -36,7 +36,7 @@ useTAP = False
 
 main :: IO ()
 main = do
-    --_ <- utilitarianStatewide
+    -- _ <- utilitarianStatewide
     parliament <- generate 1000 2 100 5 100
     if useTAP
         then defaultMainWithIngredients [tapRunner] (tests parliament)
@@ -89,6 +89,12 @@ testTennesseeCapitalElection =
         , testCase "(pairwise scores)" $
             condorcetMatrix numPreferOver candidates voters
                 @?= [[100, 42, 42, 42], [58, 100, 68, 68], [58, 32, 100, 83], [58, 32, 17, 100]]
+        , testCase "(Borda tally)" $
+            bordaTally traditionalBordaWeight candidates voters @?= [126, 194, 173, 107]
+        , testCase "(Dowdall tally)" $
+            bordaTally dowdallWeight candidates voters @?= [56.5, 57.66666666666674, 50.50000000000001, 43.666666666666664]
+        , testCase "(Icelandic Borda tally)" $
+            bordaTally icelandicWeight candidates voters @?= [56.5, 73.5, 68.25, 51.75]
         , testCase "(.blt export)" $
             export candidates voters "Tennessee capital election"
                 @?= "4 1\n42 1 2 3 4 0\n26 2 3 4 1 0\n15 3 4 2 1 0\n17 4 3 2 1 0\n0\n\"Memphis\"\n\"Nashville\"\n\"Chattanooga\"\n\"Knoxville\"\n\"Tennessee capital election\"\n"
