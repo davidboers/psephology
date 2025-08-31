@@ -28,6 +28,7 @@ module Psephology.Redistricting.Utilitarian
       -- * Districts
     , District (..)
     , districtID
+    , precinctsD
     , isEstablished
     , isDissolved
     , populationD
@@ -55,7 +56,7 @@ module Psephology.Redistricting.Utilitarian
     , thenEqualizeVerbose
     ) where
 
-import Data.List (delete, deleteBy, foldl', sort, sortOn, transpose)
+import Data.List (delete, deleteBy, foldl', sort, sortOn, subsequences, transpose)
 import Data.List.Extras (argmax, argmin)
 import qualified Data.Map.Strict as M
 
@@ -140,6 +141,11 @@ data District
 districtID :: District -> Int
 districtID (District idD _ _) = idD
 
+-- | List of precincts in the district.
+precinctsD :: District -> [Precinct]
+precinctsD (District _ precincts _) =
+    precincts
+
 -- | Simple way to check whether a district has been established.
 isEstablished :: District -> Bool
 isEstablished (District _ _ Established) = True
@@ -152,8 +158,8 @@ isDissolved _ = False
 
 -- | Sum of the population in all of the district's precincts.
 populationD :: District -> Int
-populationD (District _ precincts _) =
-    sum $ map population precincts
+populationD =
+    sum . map population . precinctsD
 
 -- | Returns true if the two district instances are composed of the same precincts.
 isSamePrecincts :: District -> District -> Bool
@@ -189,6 +195,12 @@ noNonDissolved =
 utilityD :: District -> District -> Double
 utilityD xi x =
     utilityV (centerD xi) (centerD x)
+
+updateDistrict :: [District] -> District -> [District]
+updateDistrict [] _ = []
+updateDistrict (x : xs) d
+    | districtID x == districtID d = d : xs
+    | otherwise = x : updateDistrict xs d
 
 -- Statuses
 
@@ -396,6 +408,7 @@ findSmallest districts =
 
 selectPrecinctsToTransfer :: Int -> [Precinct] -> [Precinct]
 selectPrecinctsToTransfer _ [] = [] -- fallback
+selectPrecinctsToTransfer 0 _ = []
 selectPrecinctsToTransfer surplusSize (x : xs)
     | surplusWithout > 0 = x : selectPrecinctsToTransfer surplusWithout xs
     | surplusSize > abs surplusWithout = [x]
@@ -410,7 +423,7 @@ transferTo idD districts precinct =
     where
         otherDistricts = filter (\(District id' _ _) -> id' /= idD) districts
 
--- | @'transfer' districts idD precinct@  transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
+-- | @'transfer' districts idD precinct@ transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
 transfer :: [District] -> Int -> Precinct -> [District]
 transfer [] _ _ = []
 transfer (d@(District id' precincts' status') : ds) idD precinct
@@ -443,10 +456,9 @@ equalizeVerboseWorker
     :: [[String]] -> Int -> Int -> Double -> [District] -> ([[String]], [District])
 equalizeVerboseWorker record n maxIter maxToleranceRatio districts
     | n > maxIter = (record, districts)
-    | currentRatio districts <= maxToleranceRatio = (record, districts)
     | otherwise =
         let quota = hare (tvp districts) (length districts)
-            thisStep = distributeSurpluses quota districts
+            thisStep = equalizePairs districts
             record' = record ++ recordStep Equalization n quota districts thisStep
             nextStep =
                 equalizeVerboseWorker
@@ -458,6 +470,22 @@ equalizeVerboseWorker record n maxIter maxToleranceRatio districts
          in if all (uncurry isSamePrecincts) $ zip (snd nextStep) districts
                 then (record', thisStep)
                 else nextStep
+
+equalizePairs :: [District] -> [District]
+equalizePairs districts =
+    let established = [i | i <- [0 .. length districts - 1], isEstablished (districts !! i)]
+        pairs = sortOn (\(i, j) -> negate $ abs $ populationD (districts !! i) - populationD (districts !! j)) $ [(i, j) | i <- established, j <- established, i /= j]
+     in foldl' equalizePair districts pairs
+
+equalizePair :: [District] -> (Int, Int) -> [District]
+equalizePair districts (i, j)
+    | populationD di < populationD dj = equalizePair districts (j, i)
+    | otherwise = distributeSurplusWorker (districtID di) districts precincts
+    where
+        di = districts !! i
+        dj = districts !! j
+        relativeSurplus = populationD di - hare (tvp [di, dj]) 2
+        precincts = selectPrecinctsToTransfer relativeSurplus $ sortOn (\px -> utilityPD px di - utilityPD px dj) (precinctsD di)
 
 -- | thenEqualizeVerbose maxIter maxToleranceRatio $ reduceVerbose noDistricts districts
 thenEqualizeVerbose
