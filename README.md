@@ -8,3 +8,4 @@
 - Convert a list of formal voters into a list of theoretical voters
 - System-wise efficiency
 - Properties list in `ElectoralSystems`
+- Finish weak orderings

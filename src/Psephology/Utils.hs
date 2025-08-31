@@ -1,8 +1,10 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, integrate, median, medianI) where
+module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, integrate, median, medianI, split) where
 
-factorial :: (Integral a) => a -> a
+import Data.List (elemIndex)
+
+factorial :: Integral a => a -> a
 factorial n = product [1 .. n]
 
 -- Simple trapezoid rule implementation
@@ -12,6 +14,15 @@ integrate f a b n =
         xs = [a + fromIntegral i * h | i <- [1 .. (n - 1)]]
         sumMiddle = sum (map f xs)
      in h * ((f a + f b) / 2 + sumMiddle)
+
+split :: Eq a => a -> [a] -> [[a]]
+split _ [] = []
+split a l =
+    case elemIndex a l of
+        Just i ->
+            let (before, after) = splitAt i l
+             in before : split a (drop 1 after)
+        Nothing -> [l]
 
 -- Permutations
 
@@ -25,7 +36,7 @@ optionalPreferentialPermutations n = sum [factorial n `div` factorial (n - i) | 
 
 -- Median
 
-median :: (Fractional a) => [a] -> a
+median :: Fractional a => [a] -> a
 median [] = 0
 median [a] = a
 median [a, b] = (a + b) / 2

@@ -12,7 +12,7 @@ import Data.Bifunctor qualified
 import Data.List (intercalate)
 import Data.Maybe
 
-import Psephology (Strategy (Strategy), bordaCount, bordaTally, dowdallWeight, firstPastThePost, traditionalBordaWeight, icelandicWeight)
+import Psephology (Strategy (Strategy), bordaCount, bordaTally, dowdallWeight, firstPastThePost, icelandicWeight, traditionalBordaWeight)
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
@@ -37,7 +37,8 @@ useTAP = False
 main :: IO ()
 main = do
     _ <- utilitarianStatewide
-    parliament <- generate 1000 2 100 5 100
+    -- 10 minutes
+    parliament <- generate 1000 2 100 10 100
     if useTAP
         then defaultMainWithIngredients [tapRunner] (tests parliament)
         else defaultMain $ tests parliament
