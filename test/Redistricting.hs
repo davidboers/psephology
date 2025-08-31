@@ -229,7 +229,7 @@ districtsCSV precincts districts' =
                         [ nameP precinct
                         , maybe "none" (show . districtID) district
                         , maybe "0" (show . flip utilityDP precinct) district
-                        , maybe "0" (show . flip utilityDPNorm precinct) district
+                        , maybe "0" (show . utilityPDNorm precinct) district
                         , maybe "0" (show . netUtility districts' precinct) district
                         ]
             )
@@ -253,7 +253,7 @@ instance FromJSON Precinct where
                 <*> v .: "TOTPOP"
         x <- v .: "INTPTLON20"
         y <- v .: "INTPTLAT20"
-        --z <- v .: "BVAP"
-        --tvap <- v .: "VAP"
+        -- z <- v .: "BVAP"
+        -- tvap <- v .: "VAP"
         return $ meta [x, y]
     parseJSON _ = mzero

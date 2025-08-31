@@ -22,7 +22,7 @@ module Psephology.Redistricting.Utilitarian
     , utilityP
     , utilityPD
     , utilityDP
-    , utilityDPNorm
+    , utilityPDNorm
     , netUtility
 
       -- * Districts
@@ -56,7 +56,7 @@ module Psephology.Redistricting.Utilitarian
     , thenEqualizeVerbose
     ) where
 
-import Data.List (delete, deleteBy, foldl', sort, sortOn, subsequences, transpose)
+import Data.List (delete, deleteBy, foldl', sort, sortOn, transpose)
 import Data.List.Extras (argmax, argmin)
 import qualified Data.Map.Strict as M
 
@@ -73,10 +73,13 @@ tvp = sum . map populationD
 data Precinct = Precinct
     { nameP :: String
     , population :: Int
-    , point :: [Double]
+    , pointZ :: [Double]
     -- ^ Point in a Euclidean space. Ideally the geographic center of a precinct.
     }
     deriving (Eq)
+
+point :: Precinct -> [Double]
+point precinct = take 2 $ pointZ precinct
 
 -- | Converts a list of precincts to a list of districts, each containing one precinct. Used at the start of the algorithm.
 precinctsToDistricts :: [Precinct] -> [District]
@@ -103,20 +106,20 @@ utilityDP :: District -> Precinct -> Double
 utilityDP district precinct =
     utilityV (centerD district) (point precinct)
 
--- | @'utilityDPNorm' district precinct@ returns the normalized version of 'utilityDP', which reflects a proportion of the maximum utility
--- that can be obtained by @district@.
-utilityDPNorm :: District -> Precinct -> Double
-utilityDPNorm district precinct =
-    utilityDP district precinct / sqrt (sum $ map (** 2) $ centerD district)
+-- | @'utilityPDNorm' precinct district@ returns the normalized version of 'utilityPD', which reflects a proportion of the maximum utility
+-- that can be obtained by @precinct@.
+utilityPDNorm :: Precinct -> District -> Double
+utilityPDNorm precinct district =
+    utilityPD precinct district / sqrt (sum $ map (** 2) $ point precinct)
 
 -- | @'netUtility' districts precinct district@ returns the net increase in normalized utility obtained by @precinct@ being allocated to
 -- @district@, in comparison to the member of @districts@ that is the highest opportunity cost. The full formula is:
 --
--- \[ U_{np}(d) = \frac{\phi_p\circ\|d-p\|}{\|d\|} - \max_{d_i \in D, d_i \neq d} \frac{\phi_p\circ\|d_j-p\|}{\|d_j\|} \]
+-- \[ U_{np}(d) = \frac{\phi_p\circ\|d-p\|}{\|p\|} - \max_{d_i \in D, d_i \neq d} \frac{\phi_p\circ\|d_i-p\|}{\|p\|} \]
 netUtility :: [District] -> Precinct -> District -> Double
 netUtility districts precinct district =
     let otherDistricts = filter (\district' -> districtID district /= districtID district') districts
-     in utilityDPNorm district precinct - maximum (map (`utilityDPNorm` precinct) otherDistricts)
+     in utilityPDNorm precinct district - maximum (map (utilityPDNorm precinct) otherDistricts)
 
 instance Ord Precinct where
     compare lhs rhs =
@@ -195,12 +198,6 @@ noNonDissolved =
 utilityD :: District -> District -> Double
 utilityD xi x =
     utilityV (centerD xi) (centerD x)
-
-updateDistrict :: [District] -> District -> [District]
-updateDistrict [] _ = []
-updateDistrict (x : xs) d
-    | districtID x == districtID d = d : xs
-    | otherwise = x : updateDistrict xs d
 
 -- Statuses
 
