@@ -222,7 +222,7 @@ districtsCSV precincts districts' =
             ( \precinct ->
                 let district =
                         find
-                            (\(District _ precincts' _) -> nameP precinct `elem` map nameP precincts')
+                            (\di -> nameP precinct `elem` map nameP (precinctsD di))
                             districts'
                  in intercalate
                         ","

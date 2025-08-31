@@ -84,7 +84,7 @@ point precinct = take 2 $ pointZ precinct
 -- | Converts a list of precincts to a list of districts, each containing one precinct. Used at the start of the algorithm.
 precinctsToDistricts :: [Precinct] -> [District]
 precinctsToDistricts precincts =
-    [ District idD [precincts !! (idD - 1)] Continuing
+    [ District idD [precincts !! (idD - 1)] Continuing (point $ precincts !! (idD - 1))
     | idD <- [1 .. length precincts]
     ]
 
@@ -139,44 +139,60 @@ data District
         -- ^ A non-empty list of precincts included in the district.
         Status
         -- ^ The district's 'Status'.
+        [Double]
+        -- ^ Cached center point, recalculated only when precincts change.
 
 -- | District id.
 districtID :: District -> Int
-districtID (District idD _ _) = idD
+districtID (District idD _ _ _) = idD
 
 -- | List of precincts in the district.
 precinctsD :: District -> [Precinct]
-precinctsD (District _ precincts _) =
-    precincts
+precinctsD (District _ precincts _ _) = precincts
+
+-- | The district's 'Status'.
+statusD :: District -> Status
+statusD (District _ _ status _) = status
+
+-- | @'centerD' district@ returns the median point of @district@, weighed by population.
+centerD :: District -> [Double]
+centerD (District _ _ _ cachedCenter) =
+    cachedCenter
+
+-- | Construct a new District, recalculating center.
+mkDistrict :: Int -> [Precinct] -> Status -> District
+mkDistrict idD precincts status =
+    District idD precincts status (calcCenter precincts)
+    where
+        calcCenter ps =
+            map weightedMedian $ transpose $ map (\p -> map (population p,) $ point p) ps
+
+-- | Update precincts in a District, recalculating center.
+updatePrecincts :: District -> [Precinct] -> District
+updatePrecincts (District idD _ status _) precincts =
+    mkDistrict idD precincts status
 
 -- | Simple way to check whether a district has been established.
 isEstablished :: District -> Bool
-isEstablished (District _ _ Established) = True
+isEstablished (District _ _ Established _) = True
 isEstablished _ = False
 
 -- | Simple way to check whether a district has been dissolved.
 isDissolved :: District -> Bool
-isDissolved (District _ _ Dissolved) = True
+isDissolved (District _ _ Dissolved _) = True
 isDissolved _ = False
 
 -- | Sum of the population in all of the district's precincts.
 populationD :: District -> Int
-populationD =
-    sum . map population . precinctsD
+populationD = sum . map population . precinctsD
 
 -- | Returns true if the two district instances are composed of the same precincts.
 isSamePrecincts :: District -> District -> Bool
-isSamePrecincts (District _ lhs _) (District _ rhs _) =
-    lhs == rhs
+isSamePrecincts (District _ lhs _ _) (District _ rhs _ _) = lhs == rhs
 
 -- | @'surplus' quota district@ is the amount by which @district@'s population exceeds @quota@.
 surplus :: Int -> District -> Int
 surplus quota district = populationD district - quota
-
--- | @'centerD' district@ returns the median point of @district@, weighed by population.
-centerD :: District -> [Double]
-centerD (District _ precincts _) =
-    map weightedMedian $ transpose $ map (\p -> map (population p,) $ point p) precincts
 
 weightedMedian :: (Real w, Ord a) => [(w, a)] -> a
 weightedMedian xs =
@@ -198,6 +214,11 @@ noNonDissolved =
 utilityD :: District -> District -> Double
 utilityD xi x =
     utilityV (centerD xi) (centerD x)
+
+-- | Update status in a District, preserving center.
+updateStatus :: District -> Status -> District
+updateStatus (District idD precincts _ cachedCenter) status =
+    District idD precincts status cachedCenter
 
 -- Statuses
 
@@ -274,7 +295,7 @@ reduceVerboseWorker quota record n x districts
 
         establishRest :: [District] -> [District]
         establishRest [] = []
-        establishRest ((District idD precincts Continuing) : ds) = District idD precincts Established : establishRest ds
+        establishRest (d@(District _ _ Continuing _) : ds) = updateStatus d Established : establishRest ds
         establishRest (d : ds) = d : establishRest ds
 
 -- Algorithm steps
@@ -289,49 +310,49 @@ reduceStep x districts
         total_surplus_of_established = sum $ map (surplus quota) $ filter isEstablished districts
 
         updateStatuses :: [District] -> [District]
-        updateStatuses = map updateStatus
+        updateStatuses = map updateStatus'
 
-        updateStatus :: District -> District
-        updateStatus district@(District idD precincts status)
-            | status == Established = district
-            | populationD district >= quota = District idD precincts Established
-            | null precincts = District idD precincts Dissolved
+        updateStatus' :: District -> District
+        updateStatus' district
+            | statusD district == Established = district
+            | populationD district >= quota = updateStatus district Established
+            | null (precinctsD district) = updateStatus district Dissolved
             | otherwise = district
 
 -- | To csv. @'recordStep' phase n quota lastIter districts@
 recordStep :: Phase -> Int -> Int -> [District] -> [District] -> [[String]]
 recordStep phase n quota lastIter districts =
-    let lastMap = M.fromList [(idD, district) | district@(District idD _ _) <- lastIter]
+    let lastMap = M.fromList [(districtID district, district) | district <- lastIter]
      in map
-            ( \district@(District idD precincts status) ->
-                case M.lookup idD lastMap of
-                    Just lastDistrict@(District _ _ lastStatus) ->
+            ( \district ->
+                case M.lookup (districtID district) lastMap of
+                    Just lastDistrict@(District _ _ lastStatus _) ->
                         [ show phase
                         , show n
-                        , show idD
+                        , show $ districtID district
                         , show $ noNonDissolved districts
                         , show $ show $ centerD district
-                        , show $ length precincts
+                        , show $ length $ precinctsD district
                         , show $ populationD district
                         , show $ populationD district - populationD lastDistrict -- Population change
                         , show quota
                         , show $ surplus quota district
-                        , show status
-                        , show $ lastStatus /= status
+                        , show $ statusD district
+                        , show $ lastStatus /= statusD district
                         , show $ currentRatio districts
                         ]
                     Nothing ->
                         [ show phase
                         , show n
-                        , show idD
+                        , show $ districtID district
                         , show $ noNonDissolved districts
                         , show $ show $ centerD district
-                        , show $ length precincts
+                        , show $ length $ precinctsD district
                         , show $ populationD district
                         , "N/A" -- Could not find lastIterD
                         , show quota
                         , show $ surplus quota district
-                        , show status
+                        , show $ statusD district
                         , "N/A" -- Could not compare status
                         , show $ currentRatio districts
                         ]
@@ -348,7 +369,7 @@ distributeSurpluses quota districts =
 
 -- | @'distributeSurplus' quota districts district@ distributes the surplus of @district@, given @quota@. @districts@ contains all districts, not just established ones.
 distributeSurplus :: Int -> [District] -> District -> [District]
-distributeSurplus quota districts district@(District idD precincts _)
+distributeSurplus quota districts district@(District idD precincts _ _)
     | surplusSize > 0 =
         let precinctsSorted =
                 sortOn
@@ -373,12 +394,12 @@ distributeSurplusWorker idD districts (x : xs) =
 -- voter at it's central point.
 mergeSmallest :: [District] -> [District]
 mergeSmallest districts =
-    let smallest@(District _ precincts _) = findSmallest districts
-        (District mergeInto _ _) =
+    let smallest@(District _ precincts _ _) = findSmallest districts
+        (District mergeInto _ _ _) =
             argmax
                 (utilityD smallest)
                 ( deleteBy
-                    (\(District lhs _ _) (District rhs _ _) -> lhs == rhs)
+                    (\(District lhs _ _ _) (District rhs _ _ _) -> lhs == rhs)
                     smallest
                     districts
                 )
@@ -388,7 +409,7 @@ mergeSmallest districts =
 -- population, and re-assigns its precincts to the district that maximizes utility.
 splitSmallest :: [District] -> [District]
 splitSmallest districts =
-    let smallest@(District idSmallest precincts _) = findSmallest districts
+    let smallest@(District idSmallest precincts _ _) = findSmallest districts
      in foldl'
             ( \districts' precinct ->
                 let idD = transferTo idSmallest districts' precinct
@@ -418,16 +439,16 @@ transferTo :: Int -> [District] -> Precinct -> Int
 transferTo idD districts precinct =
     districtID $ argmax (utilityPD precinct) otherDistricts
     where
-        otherDistricts = filter (\(District id' _ _) -> id' /= idD) districts
+        otherDistricts = filter (\(District id' _ _ _) -> id' /= idD) districts
 
 -- | @'transfer' districts idD precinct@ transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
 transfer :: [District] -> Int -> Precinct -> [District]
 transfer [] _ _ = []
-transfer (d@(District id' precincts' status') : ds) idD precinct
+transfer (d@(District id' precincts' _ _) : ds) idD precinct
     | id' == idD =
-        District id' (precinct : precincts') status' : transfer ds idD precinct
+        updatePrecincts d (precinct : precincts') : transfer ds idD precinct
     | precinct `elem` precincts' =
-        District id' (delete precinct precincts') status' : transfer ds idD precinct
+        updatePrecincts d (delete precinct precincts') : transfer ds idD precinct
     | otherwise = d : transfer ds idD precinct
 
 -- Equalizer
