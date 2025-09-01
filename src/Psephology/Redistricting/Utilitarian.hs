@@ -15,6 +15,21 @@
 -- The algorithm is similar to the counting process of the [single transferable vote](https://en.wikipedia.org/wiki/Single_transferable_vote) (STV).
 -- While other redistricting algorithms focus on brute force, this algorithm is much more direct and efficient. Rather than wandering towards
 -- the best possible map, it seeks it out via the utility function.
+--
+-- The distance function generally uses 2D geographic data to analyze the precincts. Additional parameters may be imposed by adding third
+-- dimensions. This allows for factors such as race to be taken into account when comparing precincts. In order to ensure geographic contiguity
+-- is respected, the distance function reflects [Pareto dominance](https://en.wikipedia.org/wiki/Pareto_efficiency), rather than Euclidean
+-- distance. The function for n-dimensional points is below, 2D points still use Euclidean distance.
+--
+-- \[ d(A,B) = \max\{\Delta_x,\Delta_y\} + \lambda(\Delta_x + \Delta_y) + \sum_{i=3}^{n}\varepsilon\Delta_i \]
+--
+-- where \(\Delta_k=|A_k - B_k|\), between points \(A,B\) on \(n\) dimensions.
+--
+-- \[ \lambda = \frac{1}{2B+1} \]
+-- \[ \varepsilon = \frac{1}{(2B+1)(B_z+1)} \]
+--
+-- \(B\) is the bounds for \(\Delta_x,\Delta_y\) and \(B_z=1\) for third dimensions representing proportions, which is the recommended method for
+-- handling racial data.
 module Psephology.Redistricting.Utilitarian
     ( -- * Precincts
       Precinct (..)
