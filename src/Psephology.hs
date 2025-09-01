@@ -20,6 +20,8 @@ module Psephology
     , module Psephology.McKelveySchofield
     , module Psephology.Parliament
     , module Psephology.Pathologies
+    , module Psephology.ProportionalRepresentation.HighestAverages
+    , module Psephology.ProportionalRepresentation.LargestRemainder
     , module Psephology.Quotas
     , module Psephology.Redistricting.Utilitarian
     , module Psephology.SampleElections
@@ -47,6 +49,8 @@ import Psephology.ElectoralSystems.Sortition
 import Psephology.McKelveySchofield
 import Psephology.Parliament
 import Psephology.Pathologies
+import Psephology.ProportionalRepresentation.HighestAverages
+import Psephology.ProportionalRepresentation.LargestRemainder
 import Psephology.Quotas
 import Psephology.Redistricting.Utilitarian
 import Psephology.SampleElections
