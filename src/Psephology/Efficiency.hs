@@ -4,6 +4,7 @@ module Psephology.Efficiency (
     efficiency,
 
     -- * Helpers
+    distance,
     phi,
 
     -- * Utility functions

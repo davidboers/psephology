@@ -60,11 +60,34 @@ import Data.List (delete, deleteBy, foldl', sort, sortOn, transpose)
 import Data.List.Extras (argmax, argmin)
 import qualified Data.Map.Strict as M
 
-import Psephology.Efficiency (utilityV)
+import Psephology.Efficiency (distance, phi)
 import Psephology.Quotas (hare)
 
 tvp :: [District] -> Int
 tvp = sum . map populationD
+
+-- Utility
+
+distance' :: [Double] -> [Double] -> Double
+distance' (x1 : y1 : zs1) (x2 : y2 : zs2)
+    | null zs1 || null zs2 = distance [x1, y1] [x2, y2]
+    | otherwise = primary + secondary + epsilonTerm
+    where
+        deltaX = abs (x2 - x1)
+        deltaY = abs (y2 - y1)
+        deltaZs = map abs $ zipWith (-) zs2 zs1
+        primary = max deltaX deltaY
+        secondary = lambda * (deltaX + deltaY)
+        lambda = 1 / (2 * b + 1)
+        epsilon = 1 / ((2 * b + 1) * (bz + 1))
+        b = 1
+        bz = 1
+        epsilonTerm = sum $ map (* epsilon) deltaZs
+distance' lhs rhs = distance lhs rhs
+
+utility :: [Double] -> [Double] -> Double
+utility p1 p2 =
+    phi p1 $ distance' p1 p2
 
 -- Precincts
 
@@ -79,7 +102,7 @@ data Precinct = Precinct
     deriving (Eq)
 
 point :: Precinct -> [Double]
-point precinct = take 2 $ pointZ precinct
+point = pointZ
 
 -- | Converts a list of precincts to a list of districts, each containing one precinct. Used at the start of the algorithm.
 precinctsToDistricts :: [Precinct] -> [District]
@@ -92,25 +115,25 @@ precinctsToDistricts precincts =
 utilityP :: Precinct -> Precinct -> Double
 utilityP lhs rhs =
     fromIntegral (population lhs + population rhs)
-        * utilityV (point lhs) (point rhs)
+        * utility (point lhs) (point rhs)
 
 -- | @'utilityPD' precinct district@ returns the utility between @precinct@ and the center of @district@. Differs from 'utilityDP' in that
 -- \(phi\) reflects relativity to the precinct, rather than the district center.
 utilityPD :: Precinct -> District -> Double
 utilityPD precinct district =
-    utilityV (point precinct) (centerD district)
+    utility (point precinct) (centerD district)
 
 -- | @'utilityDP' district precinct@ returns the utility between the center of @district@ and @precinct@. Differs from 'utilityPD' in that
 -- \(phi\) reflects relativity to the district center, rather than the precinct.
 utilityDP :: District -> Precinct -> Double
 utilityDP district precinct =
-    utilityV (centerD district) (point precinct)
+    utility (centerD district) (point precinct)
 
 -- | @'utilityPDNorm' precinct district@ returns the normalized version of 'utilityPD', which reflects a proportion of the maximum utility
 -- that can be obtained by @precinct@.
 utilityPDNorm :: Precinct -> District -> Double
 utilityPDNorm precinct district =
-    utilityPD precinct district / sqrt (sum $ map (** 2) $ point precinct)
+    utilityPD precinct district / distance (replicate (length (point precinct)) 0) (point precinct)
 
 -- | @'netUtility' districts precinct district@ returns the net increase in normalized utility obtained by @precinct@ being allocated to
 -- @district@, in comparison to the member of @districts@ that is the highest opportunity cost. The full formula is:
@@ -213,7 +236,7 @@ noNonDissolved =
 -- | The utility between two districts, based on their center points.
 utilityD :: District -> District -> Double
 utilityD xi x =
-    utilityV (centerD xi) (centerD x)
+    utility (centerD xi) (centerD x)
 
 -- | Update status in a District, preserving center.
 updateStatus :: District -> Status -> District
@@ -498,6 +521,7 @@ equalizePairs districts =
 equalizePair :: [District] -> (Int, Int) -> [District]
 equalizePair districts (i, j)
     | populationD di < populationD dj = equalizePair districts (j, i)
+    -- \| null precincts =
     | otherwise = distributeSurplusWorker (districtID di) districts precincts
     where
         di = districts !! i
