@@ -19,7 +19,7 @@ hare totalValidPoll seats =
 
 {- | Returns the [Droop quota](https://en.wikipedia.org/wiki/Droop_quota).
 
-\[ Q_d = \lfloor \frac{\text{total valid poll}}{\text{seats}+1} \rfloor +1 \]
+\[ Q_d = \left\lfloor \frac{\text{total valid poll}}{\text{seats}+1} \right\rfloor +1 \]
 -}
 droop :: Int -> Int -> Int
 droop totalValidPoll seats =
@@ -27,7 +27,7 @@ droop totalValidPoll seats =
 
 {- | Returns the [Hagenbach-Bischoff quota](https://en.wikipedia.org/wiki/D%27Hondt_method).
 
-\[ Q_hb = \lfloor \frac{\text{total valid poll}}{\text{seats}+1} \rfloor \]
+\[ Q_{hb} = \left\lfloor \frac{\text{total valid poll}}{\text{seats}+1} \right\rfloor \]
 -}
 hagenbachBischoff :: Int -> Int -> Int
 hagenbachBischoff totalValidPoll seats =
@@ -35,7 +35,7 @@ hagenbachBischoff totalValidPoll seats =
 
 {- | Returns the [Imperiali quota](https://en.wikipedia.org/wiki/Imperiali_quota).
 
-\[ Q_I = \lfloor \frac{\text{total valid poll}}{\text{seats}+2} \rfloor \]
+\[ Q_I = \left\lfloor \frac{\text{total valid poll}}{\text{seats}+2} \right\rfloor \]
 -}
 imperiali :: Int -> Int -> Int
 imperiali totalValidPoll seats =
