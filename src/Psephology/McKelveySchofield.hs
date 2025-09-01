@@ -119,13 +119,13 @@ of the existing @voters@) that would beat @p1@. The formula for a 2D space:
 
 \[s(x, y) =
     \begin{cases}
-        1 & \sum_{n=1}^{i} \{ d((x,y),V_n) < d(p_1,V_n) : 1 , 0 \} > M \}\\
+        1 & \sum_{n=1}^{i} \{ \|((x,y)-V_n\| < \|p_1-V_n\| : 1 , 0 \} > M \}\\
         0 & \text{otherwise}\\
     \end{cases}
 \]
 
 \[
-M = floor(\frac{i}{2})
+M = floor\left(\frac{i}{2}\right)
 \]
 
 Where \(V_i\) is a list of \(i\) voters and \(d\) is a Euclidean distance function.
