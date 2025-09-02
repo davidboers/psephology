@@ -7,7 +7,7 @@ import Data.List (foldl')
 import Data.Maybe (isNothing)
 
 import Psephology.Candidate
-import Psephology.Condorcet (condorcetWinner)
+import Psephology.Condorcet (condorcetWinner, smithSet)
 import Psephology.ElectoralSystem
 import Psephology.Pathologies
 import Psephology.SinglePeakedPreferences
@@ -34,16 +34,18 @@ pathologies :: Voter a => Parliament a -> [[String]]
 pathologies parliament = do
     let header =
             [ ""
-            , "# paradoxs"
-            , "# spoiled "
-            , "# proxies*"
-            , "Cond. fail"
-            , "Maj. failu"
-            , "MM failure"
-            , "Smith fail"
+            , "# paradoxes"
+            , "# w/clones"
+            , "# spoiled"
+            , "# spoiled by non-Smith candidates"
+            , "# w/non-winning proxy pairs"
+            , "# Condorcet failures"
+            , "# Majority failures"
+            , "# Mutual majority failures"
+            , "# Smith failures"
             ]
     let systems' = systems :: [(String, ElectoralSystem [Double])]
-    let t0 = replicate (length systems') $ replicate 7 0
+    let t0 = replicate (length systems') $ replicate 9 0
     let t = foldl' pathologiesElection t0 parliament
     let tstrings = map (map show) t
     let withRowLabels = zipWith (:) (map fst systems') tstrings
@@ -52,15 +54,19 @@ pathologies parliament = do
 pathologiesElection :: Voter a => [[Int]] -> Election a -> [[Int]]
 pathologiesElection t e@(Election candidates voters) =
     let isParadox = fromEnum $ isNothing $ condorcetWinner candidates voters
-     in zipWith (zipWith (+)) t $ map (\(_, es) -> isParadox : pathologiesElectionES e es) systems
+        hasClones = fromEnum $ length (clones candidates voters) > 1
+     in zipWith (zipWith (+)) t $ map (\(_, es) -> isParadox : hasClones : pathologiesElectionES e es) systems
 
 pathologiesElectionES :: Voter a => Election a -> ElectoralSystem a -> [Int]
 pathologiesElectionES (Election candidates voters) es =
     let actualWinner = es candidates voters
+        listSpoilers = spoilers candidates voters es
+        smith = smithSet candidates voters
      in map
             fromEnum
-            [ not $ null $ spoilers candidates voters es
+            [ not $ null listSpoilers
             , length (proxies candidates voters es) > 1
+            , not $ any (`elem` smith) listSpoilers
             , condorcetFailure actualWinner candidates voters
             , majorityFailure actualWinner candidates voters
             , mutualMajorityFailure actualWinner candidates voters
