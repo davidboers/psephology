@@ -1,4 +1,40 @@
--- | [Highest averages method](https://en.wikipedia.org/wiki/Highest_averages_method)
+-- | Given a tally list of \(k\) competitors (parties, alliances, constituencies, etc.)
+-- \(V=\{v_1,\ldots,v_k\}\), the algorithm returns a new list \(S(k)\) indicating the number of
+-- seats allocated to each competitor. The algorithm also takes in a number of seats to allocate
+-- \(x\) and a divisor function \(f(n)\).
+--
+-- * Highest averages procedure
+--
+-- The following procedure is repeated until \(\sum_{i=1}^{k} S(i) = x\).
+--
+-- \[ \text{average}_i := \frac{v_i}{f \circ S(i)}\\
+--    S(i) := S(i) +
+--      \begin{cases}
+--          1 & \text{if }i\text{ maximizes average}\\
+--          0 & \text{otherwise}\\
+--      \end{cases}
+-- \]
+--
+-- \(S\) is preset to 0 for every \(i\).
+--
+-- * Properties
+--
+-- Note that for some divisor functions \(f(0) = 0\), meaning the averages blow up to infinity.
+-- Because infinity is always the highest average, every party is destined to win a seat. This
+-- applies to 'adams', 'dean', and 'huntingtonHill'.
+--
+-- \[ \text{average}_i = +\infty, \text{if} f \circ S(i)=0\\
+--    S(i) \geq 1, \text{if }i \leq \min\{k,x\}\\
+-- \]
+--
+-- If it is not desirable to give every competitor a free seat, an electoral threshold should be
+-- set to exclude low-performing competitors.
+--
+-- The choice of divisor function determines whether smaller or larger parties will win marginal
+-- seats. Smaller parties will benefit if the derivative of the divisor function is at least 1 at
+-- any point on the relevant interval.
+--
+-- \[ \lim_{n \to x} f^\prime(n) \geq 1 \]
 module Psephology.ProportionalRepresentation.HighestAverages
     ( -- * Entry point
       highestAverages
@@ -13,11 +49,12 @@ module Psephology.ProportionalRepresentation.HighestAverages
     ) where
 
 import Data.Foldable (Foldable (foldl'))
-import Data.List.Extras (argmax, argmin)
+import Data.List.Extras (argmax)
 
-highestAverages :: (Int -> Double) -> [Double] -> Int -> [Int]
+-- | @'highestAverages' divisor votes x@ returns the number of seats allocated to each party.
+highestAverages :: (Int -> Double) -> [Int] -> Int -> [Int]
 highestAverages divisor votes x =
-    foldl' (\seats _ -> incrementAt divisor seats $ winnerIndex divisor votes seats) (replicate (length votes) 0) [0 .. x - 1]
+    foldl' (\seats _ -> incrementAt divisor seats $ winnerIndex divisor votes seats) (replicate (length votes) 0) [1 .. x]
 
 incrementAt :: Num a => (Int -> Double) -> [a] -> Int -> [a]
 incrementAt _ [] _ = []
@@ -25,61 +62,55 @@ incrementAt divisor (x : xs) i
     | i == 0 = x + 1 : xs
     | otherwise = x : incrementAt divisor xs (i - 1)
 
-winnerIndex :: (Int -> Double) -> [Double] -> [Int] -> Int
+winnerIndex :: (Int -> Double) -> [Int] -> [Int] -> Int
 winnerIndex divisor votes seats =
-    argmax (\i -> votes !! i / divisor (seats !! i)) [0 .. length votes - 1]
+    argmax (\i -> fromIntegral (votes !! i) / divisor (seats !! i)) [0 .. length votes - 1]
 
 -- | Rounding up of seats.
 --
--- \[ A_n = n
---    A_0 = \infty
--- \]
+-- \[ f(n) = n \]
 --
--- Benefits lower-vote-getters because \(f(0) = \infty\).
+-- Benefits lower-vote-getters because \(f(0) = 0\).
 adams :: Int -> Double
-adams = n
+adams = fromIntegral
 
 -- | Harmonic progression.
 --
--- \[ A_n = \frac{2}{\frac{1}{n} + \frac{1}{n+1}}
---    A_0 = \infty
--- \]
+-- \[ f(n) = \frac{2}{\frac{1}{n} + \frac{1}{n+1}} \]
 --
--- Complex \(f\prime(n) = 1 + \frac{1}{4(n+\frac{1}{2})^2}\).
+-- Complex \(f^\prime(n) = 1 + \frac{1}{4(n+\frac{1}{2})^2}\).
 dean :: Int -> Double
 dean n = 2 / ((1 / fromIntegral n) + (1 / (fromIntegral n + 1)))
 
 -- | Rounding down of seats.
 --
--- \[ A_n = n + 1 \]
+-- \[ f(n) = n + 1 \]
 --
--- Benefits higher-vote-getters because \(f\prime(n) = 1\).
+-- Benefits higher-vote-getters because \(f^\prime(n) = 1\).
 dhondt :: Int -> Double
 dhondt n = fromIntegral $ n + 1
 
 -- | Geometric progression.
 --
--- \[ A_n = \sqrt{n(n+1)}
---    A_0 = \infty
--- \]
+-- \[ f(n) = \sqrt{n(n+1)} \]
 --
--- Benefits lower-vote-getters because \(f(0) = \infty\) and \(f\prime(n) = \frac{2n+1}{2\sqrt{n(n+1)}}\).
+-- Benefits lower-vote-getters because \(f(0) = 0\) and \(f^\prime(n) = \frac{2n+1}{2\sqrt{n(n+1)}}\).
 huntingtonHill :: Int -> Double
 huntingtonHill n =
     sqrt $ fromIntegral n * (fromIntegral n + 1)
 
 -- | Arithmetic progression.
 --
--- \[ A_n = 2n+1 \]
+-- \[ f(n) = 2n+1 \]
 --
--- Benefits lower-vote-getters because \(f\prime(n) = 2\).
+-- Benefits lower-vote-getters because \(f^\prime(n) = 2\).
 sainteLague :: Int -> Double
 sainteLague n = fromIntegral $ 2 * n + 1
 
 -- | Polynomial progression.
 --
--- \[ A_n = 2^n \]
+-- \[ f(n) = 2^n \]
 --
--- Benefits lower-vote-getters because \(f\prime(n) = 2^n\text{ln}2\).
+-- Benefits lower-vote-getters because \(f^\prime(n) = 2^n\text{ln}2\).
 macanese :: Int -> Double
 macanese n = 2 ** fromIntegral n
