@@ -507,41 +507,28 @@ redistributeNNNUPrecincts districts =
 
 -- Equalizer
 
--- | @'equalize' maxIter maxToleranceRatio districts@ returns @districts@ with populations brought within the bounds of @maxToleranceRatio@. The ratio is equal to the maximum district population divided
+-- | @'equalize' districts@ returns @districts@ with populations brought within the bounds of @maxToleranceRatio@. The ratio is equal to the maximum district population divided
 -- by the minimum district population. If the ratio cannot be achieved, will stop working at @maxIter@. @maxToleranceRatio@ must be at least 1.
-equalize :: Int -> Double -> [District] -> [District]
-equalize maxIter maxToleranceRatio districts = snd $ equalizeVerboseWorker [] 0 maxIter maxToleranceRatio districts
+equalize :: [District] -> [District]
+equalize districts = snd $ equalizeVerboseWorker [] 0 districts
 
 -- | Analogous to 'reduceVerbose'.
-equalizeVerbose :: Int -> Double -> [District] -> ([[String]], [District])
-equalizeVerbose maxIter maxToleranceRatio districts
-    | maxToleranceRatio < 1 = ([], districts)
-    | otherwise =
-        equalizeVerboseWorker
-            []
-            1
-            maxIter
-            maxToleranceRatio
-            (filter (not . isDissolved) districts)
+equalizeVerbose :: [District] -> ([[String]], [District])
+equalizeVerbose districts =
+    equalizeVerboseWorker
+        []
+        1
+        (filter (not . isDissolved) districts)
 
 equalizeVerboseWorker
-    :: [[String]] -> Int -> Int -> Double -> [District] -> ([[String]], [District])
-equalizeVerboseWorker record n maxIter maxToleranceRatio districts
-    | n > maxIter = (record, districts)
-    | otherwise =
-        let quota = hare (tvp districts) (length districts)
-            thisStep = equalizePairs districts
-            record' = record ++ recordStep Equalization n quota districts thisStep
-            nextStep =
-                equalizeVerboseWorker
-                    record'
-                    (n + 1)
-                    maxIter
-                    maxToleranceRatio
-                    thisStep
-         in if all (uncurry isSamePrecincts) $ zip (snd nextStep) districts
-                then (record', thisStep)
-                else nextStep
+    :: [[String]] -> Int -> [District] -> ([[String]], [District])
+equalizeVerboseWorker record n districts =
+    let quota = hare (tvp districts) (length districts)
+        thisStep = equalizePairs districts
+        record' = record ++ recordStep Equalization n quota districts thisStep
+     in if all (uncurry isSamePrecincts) $ zip thisStep districts
+            then (record, districts)
+            else equalizeVerboseWorker record' (n + 1) thisStep
 
 equalizePairs :: [District] -> [District]
 equalizePairs districts =
@@ -560,11 +547,10 @@ equalizePair districts (i, j)
         relativeSurplus = populationD di - hare (tvp [di, dj]) 2
         precincts = selectPrecinctsToTransfer relativeSurplus $ sortOn (\px -> utilityPD px di - utilityPD px dj) (precinctsD di)
 
--- | thenEqualizeVerbose maxIter maxToleranceRatio $ reduceVerbose noDistricts districts
-thenEqualizeVerbose
-    :: Int -> Double -> ([[String]], [District]) -> ([[String]], [District])
-thenEqualizeVerbose maxIter maxToleranceRatio (reductionRecord, districts) =
-    let (equalizationRecord, equalizedDistricts) = equalizeVerbose maxIter maxToleranceRatio districts
+-- | thenEqualizeVerbose $ reduceVerbose noDistricts districts
+thenEqualizeVerbose :: ([[String]], [District]) -> ([[String]], [District])
+thenEqualizeVerbose (reductionRecord, districts) =
+    let (equalizationRecord, equalizedDistricts) = equalizeVerbose districts
      in ( reductionRecord ++ equalizationRecord
         , equalizedDistricts
         )

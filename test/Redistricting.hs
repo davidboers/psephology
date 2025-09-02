@@ -208,11 +208,11 @@ testRedistricting =
         noDistricts = 5
 
         (csv1, districts1) =
-            thenEqualizeVerbose 100 1 $
+            thenEqualizeVerbose $
                 reduceVerbose noDistricts (precinctsToDistricts testPrecincts)
 
         (csv2, districts2) =
-            thenEqualizeVerbose 100 1.07 $
+            thenEqualizeVerbose $
                 reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
 
 districtsCSV :: [Precinct] -> [District] -> String
@@ -242,7 +242,7 @@ utilitarianStatewide = do
     case jsonContent :: Maybe [Precinct] of
         Just precincts -> do
             let reduced = reduce 14 (precinctsToDistricts precincts)
-            let equalized = equalize 100 1 reduced
+            let equalized = equalize reduced
             writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts equalized
         Nothing -> putStrLn "Failed to parse JSON."
 
