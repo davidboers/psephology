@@ -69,11 +69,14 @@ module Psephology.Redistricting.Utilitarian
     , equalize
     , equalizeVerbose
     , thenEqualizeVerbose
+    , redistributeNNNUPrecincts
     ) where
 
 import Data.List (delete, deleteBy, foldl', sort, sortOn, transpose)
 import Data.List.Extras (argmax, argmin)
 import qualified Data.Map.Strict as M
+import Data.Maybe (fromJust, isJust)
+import Prelude hiding (pi)
 
 import Psephology.Efficiency (distance, phi)
 import Psephology.Quotas (hare)
@@ -424,7 +427,7 @@ distributeSurplus quota districts district@(District idD precincts _ _)
 distributeSurplusWorker :: Int -> [District] -> [Precinct] -> [District]
 distributeSurplusWorker _ districts [] = districts
 distributeSurplusWorker idD districts (x : xs) =
-    let id' = transferTo idD districts x
+    let id' = transferTo (Just idD) districts x
      in distributeSurplusWorker idD (transfer districts id' x) xs
 
 -- | @'mergeSmallest' districts@ dissolves the non-established member of @districts@ with the smallest
@@ -450,7 +453,7 @@ splitSmallest districts =
     let smallest@(District idSmallest precincts _ _) = findSmallest districts
      in foldl'
             ( \districts' precinct ->
-                let idD = transferTo idSmallest districts' precinct
+                let idD = transferTo (Just idSmallest) districts' precinct
                  in transfer districts' idD precinct
             )
             districts
@@ -473,11 +476,13 @@ selectPrecinctsToTransfer surplusSize (x : xs)
         surplusWithout = surplusSize - population x
 
 -- | @'transferTo' idD districts precinct@ determines which member of @districts@ provides maximum utility for @precinct@, other than @idD@.
-transferTo :: Int -> [District] -> Precinct -> Int
+transferTo :: Maybe Int -> [District] -> Precinct -> Int
 transferTo idD districts precinct =
-    districtID $ argmax (utilityPD precinct) otherDistricts
+    districtID $ argmax (utilityPD precinct) considering
     where
-        otherDistricts = filter (\(District id' _ _ _) -> id' /= idD) districts
+        considering
+            | isJust idD = filter ((/=) (fromJust idD) . districtID) districts
+            | otherwise = districts
 
 -- | @'transfer' districts idD precinct@ transfers @precinct@ into @idD@ and out of the member of @districts@ it is currently in.
 transfer :: [District] -> Int -> Precinct -> [District]
@@ -488,6 +493,17 @@ transfer (d@(District id' precincts' _ _) : ds) idD precinct
     | precinct `elem` precincts' =
         updatePrecincts d (delete precinct precincts') : transfer ds idD precinct
     | otherwise = d : transfer ds idD precinct
+
+-- | @'transferToBest' districts precinct@ transfers @precinct@ to whichever member of @districts@ produces the highest utility.
+transferToBest :: [District] -> Precinct -> [District]
+transferToBest districts precinct =
+    transfer districts (transferTo Nothing districts precinct) precinct
+
+-- | Redistributes any precincts with net negative utility to the districts they would prefer to be in.
+redistributeNNNUPrecincts :: [District] -> [District]
+redistributeNNNUPrecincts districts =
+    let nNNUs = concatMap (\dx -> filter (\px -> netUtility districts px dx < 0) $ precinctsD dx) districts
+     in foldl transferToBest districts nNNUs
 
 -- Equalizer
 
