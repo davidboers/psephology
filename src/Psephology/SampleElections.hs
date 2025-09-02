@@ -1,4 +1,4 @@
--- | Contains two example elections and a small referendum for experimentation.
+-- | Contains some example elections and referenda for experimentation.
 module Psephology.SampleElections
     ( -- * Tennessee capital
       tennesseeCapital
@@ -11,6 +11,9 @@ module Psephology.SampleElections
       -- * Referendum
     , smallReferendum
     , yesOrNo
+
+      -- * Proportional representation
+    , proportionalRepresentation1
     ) where
 
 import Psephology.Candidate
@@ -77,3 +80,16 @@ smallReferendum =
 
 yesOrNo :: [Candidate]
 yesOrNo = map Categorical ["Yes", "No"]
+
+-- Proportional representation
+
+proportionalRepresentation1 :: [Int]
+proportionalRepresentation1 =
+    [ 2000 -- A
+    , 1900 -- B
+    , 900 -- C
+    , 850 -- D
+    , 575 -- E
+    , 450 -- F
+    , 400 -- G
+    ]

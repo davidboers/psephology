@@ -2,6 +2,7 @@
 
 module Main (main) where
 
+import ProportionalRepresentation
 import Redistricting
 
 import Test.Tasty
@@ -12,23 +13,25 @@ import Data.Bifunctor qualified
 import Data.List (intercalate)
 import Data.Maybe
 
-import Psephology (Strategy (Strategy), bordaCount, bordaTally, dowdallWeight, firstPastThePost, icelandicWeight, traditionalBordaWeight)
 import Psephology.BLT
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystem
+import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Condorcet
     ( dodgsonScore
     , kemenyOverallRanking
     )
+import Psephology.ElectoralSystems.Plurality
 import Psephology.ElectoralSystems.Runoff
 import Psephology.McKelveySchofield
 import Psephology.Parliament
 import Psephology.Pathologies
 import Psephology.SampleElections
 import Psephology.Spoilers
-import Psephology.Strategy.Abstention (abstain)
-import Psephology.Strategy.Burying (bury)
+import Psephology.Strategy
+import Psephology.Strategy.Abstention
+import Psephology.Strategy.Burying
 import Psephology.Voter
 
 useTAP :: Bool
@@ -52,6 +55,7 @@ tests _ =
         , testRedistricting
         , testDodgsonScores
         , testStrategy
+        , testProportionalRepresentation
         -- Enable as you wish
         -- , testGeneratedParliament parliament
         ]
