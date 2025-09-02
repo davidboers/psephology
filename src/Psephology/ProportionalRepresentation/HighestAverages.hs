@@ -31,10 +31,10 @@
 -- set to exclude low-performing competitors.
 --
 -- The choice of divisor function determines whether smaller or larger parties will win marginal
--- seats. Smaller parties will benefit if the derivative of the divisor function is at least 1 at
--- any point on the relevant interval.
+-- seats. Smaller parties will benefit if the derivative of the divisor function is greater than 1 
+-- at any point on the relevant interval.
 --
--- \[ \lim_{n \to x} f^\prime(n) \geq 1 \]
+-- \[ \lim_{n \to x} f^\prime(n) > 1 \]
 module Psephology.ProportionalRepresentation.HighestAverages
     ( -- * Entry point
       highestAverages
