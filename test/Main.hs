@@ -100,6 +100,14 @@ testTennesseeCapitalElection =
             bordaTally dowdallWeight candidates voters @?= [56.5, 57.66666666666674, 50.50000000000001, 43.666666666666664]
         , testCase "(Icelandic Borda tally)" $
             bordaTally icelandicWeight candidates voters @?= [56.5, 73.5, 68.25, 51.75]
+        , testCase "(.blt import)" $ do
+            (candidatesFromFile, votersFromFile) <- fromFile "test/BLT/tennessee.blt" :: IO ([Candidate], [[Candidate]])
+            testGroup
+                "BLT Import"
+                [ testCase "Candidates" $ candidates @?= candidatesFromFile
+                , testCase "Voters" $ voters @?= votersFromFile
+                ]
+                `seq` pure ()
         , testCase "(.blt export)" $
             export candidates voters "Tennessee capital election"
                 @?= "4 1\n42 1 2 3 4 0\n26 2 3 4 1 0\n15 3 4 2 1 0\n17 4 3 2 1 0\n0\n\"Memphis\"\n\"Nashville\"\n\"Chattanooga\"\n\"Knoxville\"\n\"Tennessee capital election\"\n"
