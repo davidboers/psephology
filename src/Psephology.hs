@@ -20,6 +20,7 @@ module Psephology
     , module Psephology.McKelveySchofield
     , module Psephology.Parliament
     , module Psephology.Pathologies
+    , module Psephology.ProportionalRepresentation
     , module Psephology.ProportionalRepresentation.HighestAverages
     , module Psephology.ProportionalRepresentation.LargestRemainder
     , module Psephology.Quotas
@@ -49,6 +50,7 @@ import Psephology.ElectoralSystems.Sortition
 import Psephology.McKelveySchofield
 import Psephology.Parliament
 import Psephology.Pathologies
+import Psephology.ProportionalRepresentation
 import Psephology.ProportionalRepresentation.HighestAverages
 import Psephology.ProportionalRepresentation.LargestRemainder
 import Psephology.Quotas

@@ -43,6 +43,7 @@ library
                       Psephology.McKelveySchofield
                       Psephology.Parliament
                       Psephology.Pathologies
+                      Psephology.ProportionalRepresentation
                       Psephology.ProportionalRepresentation.HighestAverages
                       Psephology.ProportionalRepresentation.LargestRemainder
                       Psephology.Quotas
