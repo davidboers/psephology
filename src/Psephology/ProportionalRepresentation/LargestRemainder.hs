@@ -4,6 +4,7 @@ module Psephology.ProportionalRepresentation.LargestRemainder where
 import Data.List (sortOn)
 import qualified Data.Ord
 
+-- | @'largestRemainder' quotaFunction votes x@ returns the number of seats allocated to each competitor.
 largestRemainder :: (Int -> Int -> Int) -> [Int] -> Int -> [Int]
 largestRemainder quotaFunction votes x =
     let totalVotes = sum votes
