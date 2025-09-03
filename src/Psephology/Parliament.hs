@@ -45,7 +45,7 @@ pathologies parliament = do
             , "# Smith failures"
             ]
     let systems' = systems :: [(String, ElectoralSystem [Double])]
-    let t0 = replicate (length systems') $ replicate 9 0
+    let t0 = replicate (length systems') $ replicate (length header + 1) 0
     let t = foldl' pathologiesElection t0 parliament
     let tstrings = map (map show) t
     let withRowLabels = zipWith (:) (map fst systems') tstrings
