@@ -103,7 +103,7 @@ instance Voter [[Candidate]] where
             Nothing -> length v + 1
 
     score mn _ candidates v c =
-        length candidates - rank candidates v c + mn
+        length v - rank candidates v c + mn
 
 -- | Returns the index of the candidate preferred least amongst the input list.
 -- The method does not need to be specialized for different instances of @Voter@,
