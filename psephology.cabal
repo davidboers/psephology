@@ -40,6 +40,7 @@ library
                       Psephology.ElectoralSystems.Rated
                       Psephology.ElectoralSystems.Runoff
                       Psephology.ElectoralSystems.Sortition
+                      Psephology.ElectoralSystems.Thiele
                       Psephology.McKelveySchofield
                       Psephology.Parliament
                       Psephology.Pathologies
