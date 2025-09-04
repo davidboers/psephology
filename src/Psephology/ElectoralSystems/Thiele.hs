@@ -1,6 +1,7 @@
 -- | [Thiele's voting rules](https://en.wikipedia.org/wiki/Thiele%27s_voting_rules)
 module Psephology.ElectoralSystems.Thiele
     ( thiele
+    , thieleAddition
 
       -- * Utility functions
     , indicator
@@ -8,7 +9,7 @@ module Psephology.ElectoralSystems.Thiele
     ) where
 
 import Data.List (findIndices, intersect, subsequences)
-import Data.List.Extras (argmax)
+import Data.List.Extras (argmax, argmaxWithMax)
 
 import Psephology.Candidate
 import Psephology.Voter
@@ -47,6 +48,24 @@ evaluateCommittee f candidates voters committee =
             let ai = findIndices (\ci -> score 0 1 candidates v ci == 1) candidates
              in length $ intersect ai committee
      in sum $ map (f . r) voters
+
+-- | Heuristic version of 'thiele' that approximates the winning set. Use in case Thiele's full 
+-- runtime is excessive. 
+--
+-- Uses an iterative process, adding the candidate that proves the maximum increase in total 
+-- satisfaction.
+thieleAddition :: Voter a => (Int -> Double) -> [Candidate] -> [a] -> Int -> [Int]
+thieleAddition f candidates voters x
+    | x < 1 || x > n = []
+    | otherwise      = fst $ iterate (additionRound f candidates voters) ([], 0) !! x
+    where
+        n = length candidates
+
+additionRound :: Voter a => (Int -> Double) -> [Candidate] -> [a] -> ([Int], Double) -> ([Int], Double)
+additionRound f candidates voters (committee, u) =
+    argmaxWithMax (\committee' -> evaluateCommittee f candidates voters committee' - u) is
+    where
+        is = [committee ++ [i] | i <- [0 .. length candidates - 1], i `notElem` committee]
 
 -- Utility functions
 

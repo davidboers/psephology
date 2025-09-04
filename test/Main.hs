@@ -10,7 +10,7 @@ import Test.Tasty.HUnit
 import Test.Tasty.Runners.TAP
 
 import Data.Bifunctor qualified
-import Data.List (intercalate)
+import Data.List
 import Data.Maybe
 
 import Psephology.BLT
@@ -276,7 +276,10 @@ testStrategy =
 
 testThiele :: TestTree
 testThiele =
-    testCase "Thiele" $ thiele harmonic approvalCandidates approval 3 @?= [0, 2, 3]
+    testGroup "Thiele"
+        [ testCase "Full"               $       thiele         harmonic approvalCandidates approval 3  @?= [0, 2, 3]
+        , testCase "Additive heuristic" $ sort (thieleAddition harmonic approvalCandidates approval 3) @?= [0, 2, 3]
+        ]
 
 -- Helpers
 
