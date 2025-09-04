@@ -31,25 +31,22 @@ import Psephology.Voter
 --      thiele 'harmonic'     -- Third option, guarantees [justified representation](https://en.wikipedia.org/wiki/Justified_representation).
 -- @
 --
---     +WARNING: This method has [exponential worst-case complexity](https://en.wikipedia.org/wiki/NP-hardness) 
+--     +WARNING: This method has [exponential worst-case complexity](https://en.wikipedia.org/wiki/NP-hardness)
 -- and may become impractical with more than ~10 candidates.
 thiele :: Voter a => (Int -> Double) -> [Candidate] -> [a] -> Int -> [Int]
-thiele f candidates voters x =
-    let n = length candidates
-     in if x < 1 || x > n
-            then []
-            else
-                let committees = filter ((x ==) . length) $ subsequences [0 .. n - 1]
-                 in argmax (evaluateCommittee f candidates voters) committees
+thiele f candidates voters x
+    | x < 1 || x > n = []
+    | otherwise      = argmax (evaluateCommittee f candidates voters) committees
+    where
+        n = length candidates
+        committees = filter ((x ==) . length) $ subsequences [0 .. n - 1]
 
 evaluateCommittee :: Voter a => (Int -> Double) -> [Candidate] -> [a] -> [Int] -> Double
 evaluateCommittee f candidates voters committee =
-    sum $ map (evaluateCommitteeI f candidates committee) voters
-
-evaluateCommitteeI :: Voter a => (Int -> Double) -> [Candidate] -> [Int] -> a -> Double
-evaluateCommitteeI f candidates committee v =
-    let ai = findIndices (\ci -> score 0 1 candidates v ci == 1) candidates
-     in f $ length $ intersect ai committee
+    let r v =
+            let ai = findIndices (\ci -> score 0 1 candidates v ci == 1) candidates
+             in length $ intersect ai committee
+     in sum $ map (f . r) voters
 
 -- Utility functions
 
