@@ -7,6 +7,7 @@ import Psephology.ProportionalRepresentation.HighestAverages
 import Psephology.ProportionalRepresentation.LargestRemainder
 import Psephology.Quotas
 import Psephology.SampleElections (proportionalRepresentation1)
+import Psephology.ProportionalRepresentation
 
 testProportionalRepresentation :: TestTree
 testProportionalRepresentation =
@@ -14,6 +15,7 @@ testProportionalRepresentation =
         "Proportional Representation"
         [ testQuotas
         , testResults
+        , testCompensation
         ]
 
 testQuotas :: TestTree
@@ -51,3 +53,14 @@ testResults =
         , testCase "Imperiali quota" $
             largestRemainder imperiali         proportionalRepresentation1 20 @?= [6, 6, 3, 2, 1, 1, 1]
         ]
+
+testCompensation :: TestTree
+testCompensation =
+    testGroup "(compensation; New Zealand)"
+        [ testCase "List seats"   $ listSeats           (highestAverages sainteLague) electorateSeats listVotes 49  @?= [19,   5, 14, 11, 1, 0, 0]
+        , testCase "w/o overhang" $ listSeatsWOOverhang (highestAverages sainteLague) electorateSeats listVotes 49  @?= [18,   5, 14, 11, 1, 0, 0]
+        , testCase "Leveling"     $ levelStartingWith   (highestAverages sainteLague) electorateSeats listVotes 120 @?= [107, 57, 24, 20, 3, 2, 1]
+        ]
+    where 
+        electorateSeats = [41, 27, 0, 0, 1, 1, 1]
+        listVotes = [1131501, 604535, 257359, 208300, 31849, 16689, 5286]

@@ -1,7 +1,27 @@
 -- | Tools for analyzing and calculating proportional representation.
-module Psephology.ProportionalRepresentation where
+module Psephology.ProportionalRepresentation
+    ( -- * General
+      gallagherIndex
+    , aboveThreshold
+    , apparentment
+    , level
+    , levelStartingWith
+    , listSeats
+    , listSeatsWOOverhang
+    , seatAssignmentByCompetitor
 
-import Data.List (findIndices)
+      -- * Entitlement
+    , entitlement
+    , upperQuota
+    , lowerQuota
+
+      -- * House monotonicity
+    , isHouseMonotoneAt
+    , alabamas
+    )
+where
+
+import Data.List (findIndices, intersect, nub, singleton, sortOn)
 
 -- | @'gallagherIndex' votes seats@ returns the index of relative disproportionality between
 -- @votes@ received and @seats@ won.
@@ -41,3 +61,143 @@ aboveThreshold threshold votes =
     let totalVotes = sum votes
         thresholdVotes = fromIntegral totalVotes * threshold
      in findIndices (\vi -> fromIntegral vi >= thresholdVotes) votes
+
+-- | @'apparentment' m apparentments votes x@ allocates @x@ seats between @apparentments@, and then 
+-- between members of each apparentment. Each apparentment is a list of competitor indexes. 
+-- Individual competitors may not be members of multiple apparentments, otherwise the apparentment 
+-- list will be disregarded.
+apparentment :: ([Int] -> Int -> [Int]) -> [[Int]] -> [Int] -> Int -> [Int]
+apparentment m apparentments votes x
+    | not $ validateApparentments apparentments = m votes x
+    | otherwise = apparentmentValidated m apparentments votes x
+
+apparentmentValidated :: ([Int] -> Int -> [Int]) -> [[Int]] -> [Int] -> Int -> [Int]
+apparentmentValidated m apparentments votes x =
+    let apparentments' = apparentments ++ map singleton (notInApparentments (length votes) apparentments)
+        seatsByApparentment = m (tallyByApparentment votes apparentments') x
+        seatsByCompetitor = [ m (map (votes !!) (apparentments' !! i)) (seatsByApparentment !! i) | i <- [0..length apparentments'] ]
+     in
+    map snd $ sortOn fst $ zip (concat apparentments') (concat seatsByCompetitor)
+
+validateApparentments :: [[Int]] -> Bool
+validateApparentments apparentments =
+    all null
+        [ x `intersect` y
+        | x <- nub apparentments
+        , y <- nub apparentments
+        , x /= y
+        ]
+
+notInApparentments :: Int -> [[Int]] -> [Int]
+notInApparentments ck apparentments =
+    let inApparentments = concat apparentments in
+    filter (`notElem` inApparentments) [0 .. ck - 1]
+
+tallyByApparentment :: [Int] -> [[Int]] -> [Int]
+tallyByApparentment votes apparentments =
+    [ sum $ map (votes !!) a
+    | a <- apparentments
+    ]
+
+-- | @'level' m seatsWithoutLeveling votes@ adds additional seats until every competitor has at 
+-- least as many seats as in @seatsWithoutLeveling@. 
+level :: ([Int] -> Int -> [Int]) -> [Int] -> [Int] -> [Int]
+level m seatsWithoutLeveling votes =
+    leveled m seatsWithoutLeveling votes (sum seatsWithoutLeveling)
+
+-- | @'levelStartingWith' m seatsWithoutLeveling votes k@ is the same as 'level', ensuring at
+-- least @k@ seats are allocated.
+levelStartingWith :: ([Int] -> Int -> [Int]) -> [Int] -> [Int] -> Int -> [Int]
+levelStartingWith = leveled
+
+leveled :: ([Int] -> Int -> [Int]) -> [Int] -> [Int] -> Int -> [Int]
+leveled m seatsWithoutLeveling votes k
+    | isLevel seatsWithoutLeveling seats = seats
+    | otherwise = leveled m seatsWithoutLeveling votes (k + 1)
+    where seats = m votes k
+
+isLevel :: [Int] -> [Int] -> Bool
+isLevel lhs rhs =
+    all (uncurry (<=)) $ zip lhs rhs
+
+-- | @'listSeats' m lowerSeats votes xl@ returns the number of list seats for each competitor, 
+-- which may be higher than @xl@ if there are overhang seats. New Zealand-style MMP.
+listSeats :: ([Int] -> Int -> [Int]) -> [Int] -> [Int] -> Int -> [Int]
+listSeats m lowerSeats votes xl =
+    let xc = sum lowerSeats in
+    zipWith (\ci ti -> max 0 (ti - ci))
+        lowerSeats
+        (m votes (xc + xl))
+
+-- | Iterate 'listSeats', removing a list seat until no more overhang is present. This is not the
+-- recommended method, 'highestAveragesWithInit' is preferred. This method should be used only in
+-- conjunction with a largest remainder method, where there is no other way to award compensatory
+-- seats. Bolivian-style MMP.
+listSeatsWOOverhang :: ([Int] -> Int -> [Int]) -> [Int] -> [Int] -> Int -> [Int]
+listSeatsWOOverhang m lowerSeats votes xl
+    | overhang == 0 = aln
+    | otherwise     = listSeats m lowerSeats votes (xl - overhang)
+    where 
+        aln = listSeats m lowerSeats votes xl
+        overhang = sum aln - xl
+
+
+-- | @'seatAssignmentByCompetitor' m votes x@ returns a list of length @x@. The list element at
+-- each index @n@ is the competitor('s index) that wins the final seat if @x@ were set to @n + 1@.
+--
+-- Assumes that @m@ 'isHouseMonotoneAt' the interval @[1 .. x]@
+seatAssignmentByCompetitor :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> [Int]
+seatAssignmentByCompetitor m votes x =
+    mapWithLastArg whoGained (replicate (length votes) 0) $ map (m votes) [1 .. x]
+
+whoGained :: [Int] -> [Int] -> Int
+whoGained al an =
+    head $ findIndices (uncurry (>)) $ zip an al
+
+mapWithLastArg :: (a -> a -> b) -> a -> [a] -> [b]
+mapWithLastArg _ _  []       = []
+mapWithLastArg f fl (x : xs) = let fn = f fl x in fn : mapWithLastArg f x xs
+
+-- * Entitlement
+
+-- | @'entitlement' votes i x@ returns the [entitlement](https://en.wikipedia.org/wiki/Entitlement_(fair_division))
+-- of competitor @i@, normalized by the number of seats @x@. In other words, the proportion of
+-- @votes@ for @i@ multiplied by the number of seats.
+--
+-- \[ t_i = \frac{v_i}{\sum_{j=1}^{n} v_j} \cdot x \]
+entitlement :: [Int] -> Int -> Int -> Double
+entitlement votes i x =
+    fromIntegral (votes !! i) / fromIntegral (sum votes) * fromIntegral x
+
+-- | A competitor's 'entitlement' rounded up to the nearest integer.
+--
+-- @ upperQuota votes i x = ceiling $ entitlement votes i x @
+--
+-- \[ U_i = \lceil t_i \rceil \]
+upperQuota :: [Int] -> Int -> Int -> Int
+upperQuota votes i x =
+    ceiling $ entitlement votes i x
+
+-- | A competitor's 'entitlement' rounded down to the nearest integer.
+--
+-- @ lowerQuota votes i x = floor $ entitlement votes i x @
+--
+-- \[ L_i = \lfloor t_i \rfloor \]
+lowerQuota :: [Int] -> Int -> Int -> Int
+lowerQuota votes i x =
+    floor $ entitlement votes i x
+
+-- * House monotonicity
+
+-- | @'isHouseMonotoneAt' m votes x@ returns @True@ if there are no 'alabamas' at @x@.
+isHouseMonotoneAt :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> Bool
+isHouseMonotoneAt m votes x =
+    null $ alabamas m votes x
+
+-- | @'alabamas' m votes x@ indicates which competitors would lose a seat if an additional seat was
+-- added, given allocation method @m@, @votes@, and original number of seats @x@.
+alabamas :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> [Int]
+alabamas m votes x =
+    let a = m votes x
+        ap1 = m votes (x + 1)
+     in findIndices (uncurry (>)) $ zip a ap1
