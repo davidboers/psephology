@@ -24,6 +24,7 @@ import Psephology.ElectoralSystems.Condorcet
     )
 import Psephology.ElectoralSystems.Plurality
 import Psephology.ElectoralSystems.Runoff
+import Psephology.ElectoralSystems.Thiele
 import Psephology.McKelveySchofield
 import Psephology.Parliament
 import Psephology.Pathologies
@@ -56,6 +57,7 @@ tests _ =
         , testDodgsonScores
         , testStrategy
         , testProportionalRepresentation
+        , testThiele
         -- Enable as you wish
         -- , testGeneratedParliament parliament
         ]
@@ -271,6 +273,10 @@ testStrategy =
         referendumFunc candidates voters = fromMaybe 1 $ turnoutRequirement 0.3 27 firstPastThePost candidates voters
         bordaStrategy = Strategy [[Categorical "B", Categorical "C", Categorical "A"]] 1
         referendumStrategy = Strategy (replicate 2 [Categorical "No", Categorical "Yes"]) 1
+
+testThiele :: TestTree
+testThiele =
+    testCase "Thiele" $ thiele harmonic approvalCandidates approval 3 @?= [0, 2, 3]
 
 -- Helpers
 

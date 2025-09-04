@@ -1,19 +1,23 @@
 -- | Contains some example elections and referenda for experimentation.
 module Psephology.SampleElections
-    ( -- * Tennessee capital
-      tennesseeCapital
-    , tennesseeCapitalCandidates
-
-      -- * Condorcet cycle
-    , condorcetCycle
+    ( -- * Condorcet cycle
+      condorcetCycle
     , condorcetCycleCandidates
+
+      -- * Proportional representation
+    , proportionalRepresentation1
 
       -- * Referendum
     , smallReferendum
     , yesOrNo
 
-      -- * Proportional representation
-    , proportionalRepresentation1
+      -- * Tennessee capital
+    , tennesseeCapital
+    , tennesseeCapitalCandidates
+
+      -- * Score
+    , approval
+    , approvalCandidates
     ) where
 
 import Psephology.Candidate
@@ -93,3 +97,52 @@ proportionalRepresentation1 =
     , 450 -- F
     , 400 -- G
     ]
+
+-- Thiele
+
+approval :: [[[Candidate]]]
+approval =
+    replicate
+        3
+        [ [Categorical "A", Categorical "B", Categorical "C", Categorical "D"]
+        , [Categorical "E"]
+        ]
+        ++ replicate
+            4
+            [ [Categorical "A", Categorical "B", Categorical "C"]
+            , [Categorical "D", Categorical "E"]
+            ]
+        ++ replicate
+            2
+            [ [Categorical "A", Categorical "C"]
+            , [Categorical "B", Categorical "D", Categorical "E"]
+            ]
+        ++ replicate
+            2
+            [ [Categorical "A", Categorical "B", Categorical "D"]
+            , [Categorical "C", Categorical "E"]
+            ]
+        ++ replicate
+            3
+            [ [Categorical "A", Categorical "D"]
+            , [Categorical "B", Categorical "C", Categorical "E"]
+            ]
+        ++ replicate
+            1
+            [ [Categorical "A", Categorical "D", Categorical "E"]
+            , [Categorical "B", Categorical "C"]
+            ]
+        ++ replicate
+            3
+            [ [Categorical "D", Categorical "E"]
+            , [Categorical "A", Categorical "B", Categorical "C"]
+            ]
+        ++ replicate
+            2
+            [ [Categorical "E"]
+            , [Categorical "A", Categorical "B", Categorical "C", Categorical "D"]
+            ]
+
+approvalCandidates :: [Candidate]
+approvalCandidates =
+    map Categorical ["A", "B", "C", "D", "E"]
