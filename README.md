@@ -1,4 +1,4 @@
-[![build](https://github.com/davidboers/psephology/actions/workflows/haskell.yml/badge.svg)](https://github.com/davidboers/psephology/actions?query=workflow%3AHaskell-CI)
+[![build](https://github.com/davidboers/psephology/actions/workflows/haskell-ci.yml/badge.svg)](https://github.com/davidboers/psephology/actions?query=workflow%3AHaskell-CI)
 
 <!-- [![Hackage](https://img.shields.io/hackage/v/psephology.svg)](https://hackage.haskell.org/package/psephology) -->
 
