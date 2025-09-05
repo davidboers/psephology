@@ -27,6 +27,12 @@
       "label": "Build distribution tarball",
       "command": "cabal",
       "args": ["sdist"]
+    },
+    {
+      "type": "shell",
+      "label": "Update GitHub workflow",
+      "command": "haskell-ci",
+      "args": ["github", "psephology.cabal"]
     }
   ]
 }
