@@ -18,6 +18,9 @@ category:           Math
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
 
+tested-with:
+    GHC == 9.4.8
+
 -- Extra source files to be distributed with the package, such as examples, or a tutorial module.
 -- extra-source-files:
 
@@ -28,39 +31,40 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  Psephology
-                      Psephology.BLT
-                      Psephology.Candidate
-                      Psephology.Condorcet
-                      Psephology.Efficiency
-                      Psephology.ElectoralSystem
-                      Psephology.ElectoralSystems.Borda
-                      Psephology.ElectoralSystems.Condorcet
-                      Psephology.ElectoralSystems.Plurality
-                      Psephology.ElectoralSystems.Rated
-                      Psephology.ElectoralSystems.Runoff
-                      Psephology.ElectoralSystems.Sortition
-                      Psephology.ElectoralSystems.Thiele
-                      Psephology.McKelveySchofield
-                      Psephology.Parliament
-                      Psephology.Pathologies
-                      Psephology.ProportionalRepresentation
-                      Psephology.ProportionalRepresentation.HighestAverages
-                      Psephology.ProportionalRepresentation.LargestRemainder
-                      Psephology.Quotas
-                      Psephology.Redistricting.Utilitarian
-                      Psephology.SampleElections
-                      Psephology.SinglePeakedPreferences
-                      Psephology.Spoilers
-                      Psephology.Spoilers.Clones
-                      Psephology.Spoilers.Proxies
-                      Psephology.Strategy
-                      Psephology.Strategy.Abstention
-                      Psephology.Strategy.Betrayal
-                      Psephology.Strategy.Burying
-                      Psephology.Strategy.Compression
-                      Psephology.Strategy.Turkeys
-                      Psephology.Voter
+    exposed-modules:  
+        Psephology
+        Psephology.BLT
+        Psephology.Candidate
+        Psephology.Condorcet
+        Psephology.Efficiency
+        Psephology.ElectoralSystem
+        Psephology.ElectoralSystems.Borda
+        Psephology.ElectoralSystems.Condorcet
+        Psephology.ElectoralSystems.Plurality
+        Psephology.ElectoralSystems.Rated
+        Psephology.ElectoralSystems.Runoff
+        Psephology.ElectoralSystems.Sortition
+        Psephology.ElectoralSystems.Thiele
+        Psephology.McKelveySchofield
+        Psephology.Parliament
+        Psephology.Pathologies
+        Psephology.ProportionalRepresentation
+        Psephology.ProportionalRepresentation.HighestAverages
+        Psephology.ProportionalRepresentation.LargestRemainder
+        Psephology.Quotas
+        Psephology.Redistricting.Utilitarian
+        Psephology.SampleElections
+        Psephology.SinglePeakedPreferences
+        Psephology.Spoilers
+        Psephology.Spoilers.Clones
+        Psephology.Spoilers.Proxies
+        Psephology.Strategy
+        Psephology.Strategy.Abstention
+        Psephology.Strategy.Betrayal
+        Psephology.Strategy.Burying
+        Psephology.Strategy.Compression
+        Psephology.Strategy.Turkeys
+        Psephology.Voter
 
     -- Modules included in this library but not exported.
     other-modules:
