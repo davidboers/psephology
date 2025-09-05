@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, integrate, median, medianI, split) where
+module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, integrate, median, medianI, split, incrementAt) where
 
 import Data.List (elemIndex)
 
@@ -23,6 +23,12 @@ split a l =
             let (before, after) = splitAt i l
              in before : split a (drop 1 after)
         Nothing -> [l]
+
+incrementAt :: Num a => [a] -> Int -> [a]
+incrementAt [] _ = []
+incrementAt (x : xs) i
+    | i == 0 = x + 1 : xs
+    | otherwise = x : incrementAt xs (i - 1)
 
 -- Permutations
 

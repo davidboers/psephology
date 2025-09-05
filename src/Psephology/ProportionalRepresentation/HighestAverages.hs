@@ -52,6 +52,8 @@ module Psephology.ProportionalRepresentation.HighestAverages
 import Data.Foldable (Foldable (foldl'))
 import Data.List.Extras (argmax)
 
+import Psephology.Utils (incrementAt)
+
 -- | @'highestAverages' divisor votes x@ returns the number of seats allocated to each competitor.
 highestAverages :: (Int -> Double) -> [Int] -> Int -> [Int]
 highestAverages divisor votes =
@@ -62,13 +64,7 @@ highestAverages divisor votes =
 -- [additional-member system](https://en.wikipedia.org/wiki/Additional-member_system).
 highestAveragesWithInit :: [Int] -> (Int -> Double) -> [Int] -> Int -> [Int]
 highestAveragesWithInit n0 divisor votes x =
-    foldl' (\seats _ -> incrementAt divisor seats $ winnerIndex divisor votes seats) n0 [1 .. x]
-
-incrementAt :: Num a => (Int -> Double) -> [a] -> Int -> [a]
-incrementAt _ [] _ = []
-incrementAt divisor (x : xs) i
-    | i == 0 = x + 1 : xs
-    | otherwise = x : incrementAt divisor xs (i - 1)
+    foldl' (\seats _ -> incrementAt seats $ winnerIndex divisor votes seats) n0 [1 .. x]
 
 winnerIndex :: (Int -> Double) -> [Int] -> [Int] -> Int
 winnerIndex divisor votes seats =

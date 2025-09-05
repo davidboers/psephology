@@ -8,6 +8,8 @@ module Psephology.ProportionalRepresentation
     , levelStartingWith
     , listSeats
     , listSeatsWOOverhang
+    , preserveMajority
+    , preserveMajorityProportional
     , seatAssignmentByCompetitor
 
       -- * Entitlement
@@ -21,7 +23,9 @@ module Psephology.ProportionalRepresentation
     )
 where
 
-import Data.List (findIndices, intersect, nub, singleton, sortOn)
+import Data.List (findIndices, intersect, nub, singleton, sortOn, findIndex)
+
+import Psephology.Utils (incrementAt)
 
 -- | @'gallagherIndex' votes seats@ returns the index of relative disproportionality between
 -- @votes@ received and @seats@ won.
@@ -141,6 +145,37 @@ listSeatsWOOverhang m lowerSeats votes xl
         aln = listSeats m lowerSeats votes xl
         overhang = sum aln - xl
 
+-- | @'preserveMajority' m votes x@ ensures that a party that has won a majority of votes will win 
+-- at least half of the seats, by adding seats to that party until the condition is satisfied. This 
+-- is unnecessary for the 'dhondt' method.
+preserveMajority :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> [Int]
+preserveMajority m votes x =
+    case withMajority votes of
+        Just w  -> withSeatMajority w a
+        Nothing -> a
+    where
+        a = m votes x
+        withSeatMajority w ae
+            | ae !! w >= halfSeats (sum ae) = ae
+            | otherwise                     = withSeatMajority w $ incrementAt ae w
+
+preserveMajorityProportional :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> [Int]
+preserveMajorityProportional m votes x =
+    case withMajority votes of
+        Nothing -> a
+        Just w  | a !! w >= halfSeats x -> a
+                | otherwise             -> preserveMajorityProportional m votes (x + 1)
+    where
+        a = m votes x
+    
+withMajority :: [Int] -> Maybe Int    
+withMajority votes = 
+    let voteMajorityMark = sum votes `div` 2 in
+    findIndex (> voteMajorityMark) votes
+
+halfSeats :: Int -> Int
+halfSeats x | even x    =  x `div` 2
+            | otherwise = (x `div` 2) + 1
 
 -- | @'seatAssignmentByCompetitor' m votes x@ returns a list of length @x@. The list element at
 -- each index @n@ is the competitor('s index) that wins the final seat if @x@ were set to @n + 1@.
