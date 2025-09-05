@@ -8,8 +8,8 @@
 
 A Haskell language library dedicated to the study of psephology.
 
-- Compiled using the Glasgow Haskell Compiler, version 9.4.8
-- Cabal version 3.10.3.0
+- Compiled using the Glasgow Haskell Compiler, version 9.12.2
+- Cabal version 3.16.0.0
 
 # Docs
 
