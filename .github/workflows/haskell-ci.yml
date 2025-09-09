@@ -13,6 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    continue-on-error: ${{ matrix.allow-failure }}
+
     strategy:
       matrix:
         cabal: ["3.10.3"]
@@ -24,6 +26,11 @@ jobs:
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
+
+      - name: Install GHC
+        run: ghcup install ghc "$HCVER"
+        env:
+          HCVER: ${{ matrix.ghc }}
 
       - name: Cache
         uses: actions/cache@v3
