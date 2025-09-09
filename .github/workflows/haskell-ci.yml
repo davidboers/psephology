@@ -13,13 +13,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    continue-on-error: ${{ matrix.allow-failure }}
-
     strategy:
       matrix:
         cabal: ["3.10.3"]
         ghc: ["9.4.8", "9.6.7", "9.8.4", "9.10.2", "9.12.2"]
-        allow-failure: false
 
     steps:
       - uses: actions/checkout@v4
