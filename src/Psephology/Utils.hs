@@ -1,8 +1,9 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, integrate, median, medianI, split, incrementAt) where
+module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, factorial, integrate, median, medianI, split, incrementAt) where
 
 import Data.List (elemIndex)
+import Data.Fixed
 
 factorial :: Integral a => a -> a
 factorial n = product [1 .. n]
