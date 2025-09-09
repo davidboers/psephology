@@ -6,21 +6,29 @@ module Psephology.ElectoralSystems.Thiele
       -- * Utility functions
     , indicator
     , harmonic
+
+      -- * Runtime
+    , estimateRuntime
+    , estimateRuntimeGeneral
+    , describeSeconds
     ) where
 
 import Data.List (findIndices, intersect, subsequences)
 import Data.List.Extras (argmax, argmaxWithMax)
+import Data.Time.Clock
+import Data.Fixed
 
 import Psephology.Candidate
 import Psephology.Voter
+import Psephology.Utils (factorial)
 
 -- | @'thiele' f candidates voters x@ returns a subset of @candidates@ of length @x@ that maximizes
 -- a utility function @f@ across all @voters@. Returns an empty list if @x@ is not a positive integer
 -- or it exceeds the number of candidates. There are three options for picking a utility function:
 --
 -- \[
---      f(r) = r
---      g(r) = 1 \text{ and } g(0) = 0
+--      f(r) = r\\
+--      g(r) = 1 \text{ and } g(0) = 0\\
 --      h(r) = \sum_{i=1}^{r} \frac{1}{i}
 -- \]
 --
@@ -33,7 +41,7 @@ import Psephology.Voter
 -- @
 --
 --     +WARNING: This method has [exponential worst-case complexity](https://en.wikipedia.org/wiki/NP-hardness)
--- and may become impractical with more than ~10 candidates.
+-- and may become impractical with more than ~10 candidates. \(\mathcal{O}((n\text{ choose }k)nm)\).
 thiele :: Voter a => (Int -> Double) -> [Candidate] -> [a] -> Int -> [Int]
 thiele f candidates voters x
     | x < 1 || x > n = []
@@ -78,3 +86,54 @@ indicator _ = 1
 harmonic :: Int -> Double
 harmonic r =
     sum [1 / fromIntegral n | n <- [1 .. r]]
+
+-- Runtime
+
+-- | @'estimateRuntime' candidates voters x@ returns the predicted number of seconds required to 
+-- calculate the winning 'thiele' committee without a heuristic.
+estimateRuntime :: Voter a => [Candidate] -> [a] -> Int -> IO Pico
+estimateRuntime candidates voters x = do
+    let n = length candidates
+    if x < 1 || x > n then error "x must be between 0 and the number of candidates"
+    else do
+        let n' = toInteger n
+            x' = toInteger x
+            iters = factorial n' `div` (factorial x' * factorial (n' - x'))
+        startTime <- getCurrentTime
+        let tally = evaluateCommittee harmonic candidates voters (take x [0..n-1])
+        tally `seq` return ()
+        endTime <- getCurrentTime
+        let diff = nominalDiffTimeToSeconds $ diffUTCTime endTime startTime
+        return $ diff * fromIntegral iters
+
+-- | @'estimateRuntimeGeneral' n m x@ calls 'estimateRuntime' for number of candidates @n@, 
+-- number of voters @m@, and number of seats @x@.
+-- 
+-- @
+--      > 'describeSeconds' <$> estimateRuntimeGeneral 5 1000 3
+--      "0.079123000000 seconds"
+--      > 'describeSeconds' <$> estimateRuntimeGeneral 20 10000 3
+--      "4.376927400000 minutes"
+--      > 'describeSeconds' <$> estimateRuntimeGeneral 40 20000 10
+--      "33.210087456744 years"
+-- @
+estimateRuntimeGeneral :: Int -> Int -> Int -> IO Pico
+estimateRuntimeGeneral n m x = 
+    let candidates = [ Categorical $ show i | i <- [1..n] ]
+        voters     = replicate m candidates
+     in estimateRuntime candidates voters x
+
+-- | Indicates how long a number of seconds is, in terms of years, days, hours, or minutes, 
+-- whichever is greatest.
+describeSeconds :: Pico -> String
+describeSeconds pico 
+    | years   > 1 = show years ++ " years"
+    | days    > 1 = show days ++ " days"
+    | hours   > 1 = show hours ++ " hours"
+    | minutes > 1 = show minutes ++ " minutes"
+    | otherwise   = show pico ++ " seconds"
+    where
+        years   = days / 365
+        days    = hours / 24
+        hours   = minutes / 60
+        minutes = pico / 60
