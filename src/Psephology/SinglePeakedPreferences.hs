@@ -57,5 +57,5 @@ singlePeakedVotersNormalCentered n dims = singlePeakedVotersNormalLim 100 (repli
 -- | Converts spacial voters (imaginary voters) into actual lists of preferences.
 formalize :: [Candidate] -> [[Double]] -> [[Candidate]]
 formalize _ [] = []
-formalize candidates (v : voters) =
-    sortOn (negate . utilityM v) candidates : formalize candidates voters
+formalize candidates voters =
+    map (\v -> sortOn (negate . utilityM v) candidates) voters
