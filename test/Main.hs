@@ -35,16 +35,11 @@ import Psephology.Strategy.Burying
 import Psephology.Voter
 
 -- To run examples, use the modules in examples/ (e.g. ExampleGeorgiaRedistricting, ExampleGenerateBLT)
-useTAP :: Bool
-useTAP = False
-
 main :: IO ()
 main = do
     -- 10 minutes
     parliament <- generate 1000 2 100 10 100
-    if useTAP
-        then defaultMainWithIngredients [tapRunner] (tests parliament)
-        else defaultMain $ tests parliament
+    defaultMain $ tests parliament
 
 tests :: Parliament [Double] -> TestTree
 tests _ =
