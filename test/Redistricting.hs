@@ -212,24 +212,3 @@ testRedistricting =
         (csv2, districts2) =
             thenEqualizeVerbose $
                 reduceVerbose noDistricts (precinctsToDistricts gwinnettPrecincts)
-
-districtsCSV :: [Precinct] -> [District] -> String
-districtsCSV precincts districts' =
-    unlines $
-        intercalate "," ["Precinct", "District", "Up", "Upn", "Upnn"]
-            : map
-                ( \precinct ->
-                    let district =
-                            find
-                                (\di -> nameP precinct `elem` map nameP (precinctsD di))
-                                districts'
-                     in intercalate
-                            ","
-                            [ nameP precinct
-                            , maybe "none" (show . districtID) district
-                            , maybe "0" (show . flip utilityDP precinct) district
-                            , maybe "0" (show . utilityPDNorm precinct) district
-                            , maybe "0" (show . netUtility districts' precinct) district
-                            ]
-                )
-                precincts

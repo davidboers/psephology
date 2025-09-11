@@ -51,6 +51,7 @@ module Psephology.Redistricting.Utilitarian
     , centerD
     , noNonDissolved
     , utilityD
+    , districtsCSV
 
       -- * District status
     , Status (..)
@@ -72,7 +73,7 @@ module Psephology.Redistricting.Utilitarian
     , redistributeNNNUPrecincts
     ) where
 
-import Data.List (delete, deleteBy, foldl', sort, sortOn, transpose)
+import Data.List
 import Data.List.Extras (argmax, argmin)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromJust, isJust)
@@ -260,6 +261,23 @@ utilityD xi x =
 updateStatus :: District -> Status -> District
 updateStatus (District idD precincts _ cachedCenter) status =
     District idD precincts status cachedCenter
+
+-- | Returns a list of districts mapped to precincts in CSV format.
+districtsCSV :: [Precinct] -> [District] -> String
+districtsCSV precincts districts =
+    unlines $
+        header : map precinctLine precincts
+  where
+    header = intercalate "," ["Precinct", "District", "Up", "Upn", "Upnn"]
+    precinctLine precinct =
+        let district = find (\d -> nameP precinct `elem` map nameP (precinctsD d)) districts
+        in intercalate ","
+            [ nameP precinct
+            , maybe "none" (show . districtID) district
+            , maybe "0" (show . flip utilityDP precinct) district
+            , maybe "0" (show . utilityPDNorm precinct) district
+            , maybe "0" (show . netUtility districts precinct) district
+            ]
 
 -- Statuses
 
