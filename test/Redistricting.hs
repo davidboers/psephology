@@ -8,8 +8,6 @@ import Test.Tasty.HUnit
 
 import Psephology.Redistricting.Utilitarian
 
-import Data.List (find, intercalate)
-
 testRedistricting :: TestTree
 testRedistricting =
     testGroup
