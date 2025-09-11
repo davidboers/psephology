@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ExampleGeorgiaRedistricting where
+module Main where
 
 import Psephology.Redistricting.Utilitarian
 
@@ -9,8 +9,8 @@ import Data.Aeson
 import Data.List (find, intercalate)
 
 -- | Run the Georgia state-wide redistricting example and export results to CSV.
-runGeorgiaRedistricting :: IO ()
-runGeorgiaRedistricting = do
+main :: IO ()
+main = do
     jsonContent <- decodeFileStrict "test/redistricting/georgia.json"
     case jsonContent :: Maybe [Precinct] of
         Just precincts -> do

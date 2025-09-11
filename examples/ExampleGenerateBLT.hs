@@ -1,4 +1,4 @@
-module ExampleGenerateBLT where
+module Main where
 
 import Control.Monad (zipWithM_)
 
@@ -8,8 +8,8 @@ import Psephology.SinglePeakedPreferences (singlePeakedVotersNormalCentered, sin
 
 import Data.List (zip4, partition)
 
-runGenerateBLT :: IO ()
-runGenerateBLT = do
+main :: IO ()
+main = do
     candidates <- singlePeakedVotersNormalCentered 1000 2
     let (as1, others1) = partition (\x -> head x > 50 && x !! 1 > 50) candidates
     let (bs1, others2) = partition (\x -> head x > 50) $ others1 ++ drop 140 as1
