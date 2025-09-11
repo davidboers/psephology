@@ -14,7 +14,7 @@
       },
       "label": "Run tests (tests/Main.hs)",
       "command": "cabal",
-      "args": ["run"]
+      "args": ["run", "tests"]
     },
     {
       "type": "shell",
