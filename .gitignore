@@ -6,3 +6,6 @@ dist-newstyle
 
 # Docs
 docs
+
+# Local settings
+cabal.project.local
