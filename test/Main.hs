@@ -7,7 +7,6 @@ import Redistricting
 
 import Test.Tasty
 import Test.Tasty.HUnit
-import Test.Tasty.Runners.TAP
 
 import Data.Bifunctor qualified
 import Data.List

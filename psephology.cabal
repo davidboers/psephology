@@ -129,7 +129,6 @@ test-suite psephology-test
         psephology,
         tasty,
         tasty-hunit,
-        tasty-tap,
         aeson
     hs-source-dirs:   test
     default-language: Haskell2010
