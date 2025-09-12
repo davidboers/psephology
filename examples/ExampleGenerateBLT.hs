@@ -4,6 +4,10 @@ import Control.Monad (zipWithM_)
 
 import Psephology.BLT (export)
 import Psephology.Candidate
+import Psephology.Counting (votes)
+import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
+import Psephology.ElectoralSystems.Condorcet (rankedPairs)
+import Psephology.ProportionalRepresentation.HighestAverages (highestAveragesWithInit, dhondt)
 import Psephology.SinglePeakedPreferences (singlePeakedVotersNormalCentered, singlePeakedVotersNormalLim, formalize)
 
 import Data.List (zip4, partition)
@@ -21,15 +25,35 @@ main = do
     let ds = gather 2 $ map Spacial $ take 140 ds1
     let others4 = drop 140 ds1
     let is = take 85 others4
-    avs <- singlePeakedVotersNormalLim 100 [60, 55] 1925000 2
-    bvs <- singlePeakedVotersNormalLim 100 [37.5, 37.5] 1575000 2
-    let candidates' = map (\(a, b, c, d) -> concat [a, b, c, d ]) $ zip4 as bs cs ds
-    let votes = interweave avs bvs
-    let votesByDistrict = gather 50000 votes 
+    avs <- singlePeakedVotersNormalLim 100 [70, 60] 192500 2
+    bvs <- singlePeakedVotersNormalLim 100 [40, 40] 157500 2
+    let candidates' = map (\(a, b, c, d) -> concat [a, b, c, d]) $ zip4 as bs cs ds
+    let votes' = interweave avs bvs
+    let votesByDistrict = gather 5000 votes'
     let formalizedVotersByDistrict = zipWith formalize candidates' votesByDistrict
     let names = map show [1..70]
     let fileContents = zipWith3 export candidates' formalizedVotersByDistrict names
-    zipWithM_ writeFile (map (\fn -> "examples/" ++ fn ++ ".blt") names) fileContents
+    --zipWithM_ writeFile (map (\fn -> "examples/" ++ fn ++ ".blt") names) fileContents
+    writeFile "test/heatmaps/voters.csv" $ unlines $ map (concatMap (\x -> show x ++ ",")) votes'
+    let winners = zipWith instantRunoffVoting candidates' formalizedVotersByDistrict
+    let firstSeats = [ length (filter (\i -> 0 <= i && i <= 1) winners)
+                     , length (filter (\i -> 2 <= i && i <= 3) winners)
+                     , length (filter (\i -> 4 <= i && i <= 5) winners)
+                     , length (filter (\i -> 6 <= i && i <= 7) winners)
+                     ]
+
+    putStrLn "Constituency Seats"
+    putStrLn $ "A: " ++ show (head firstSeats)
+    putStrLn $ "B: " ++ show (firstSeats !! 1)
+    putStrLn $ "C: " ++ show (firstSeats !! 2)
+    putStrLn $ "D: " ++ show (firstSeats !! 3)
+
+    let partyVotes = votes (zipWith NamedSpacial ["A", "B", "C", "D"] [[51, 51], [51, 49], [49, 51], [49, 49]]) votes'
+    let totalSeats = highestAveragesWithInit firstSeats dhondt partyVotes 70
+    putStrLn "Party votes"
+    print partyVotes
+    putStrLn "Total seats"
+    print totalSeats
 
 interweave :: [a] -> [a] -> [a]
 interweave (x:xs) (y:ys) = x : y : interweave xs ys
