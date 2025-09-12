@@ -21,16 +21,11 @@ for system,i in zip(systems, range(0, len(df_electeds.columns), 2)):
 fig = plt.figure(figsize=(16, 7))
 axes = fig.subplots(2, 4)
 
-max_count = 0
 def make_plot(x, y, title, axis):
     hb = axis.hexbin(x, y, gridsize=50, cmap='viridis', extent=(0,100,0,100))
     axis.set_xlabel('X')
     axis.set_ylabel('Y')
     axis.set_title(title)
-
-    if any([s > max_count for s in hb.get_sizes()]):
-        max_count = max(hb.sizes)
-        fig.colorbar(hb, ax=axis, label='Counts')
 
 make_plot(x_voters, y_voters, 'Voters', axes[0, 0])
 for (system, df), axis in zip(elected_points.items(), axes.flat[1:]):
