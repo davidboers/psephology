@@ -40,6 +40,7 @@ library
         Psephology.BLT
         Psephology.Candidate
         Psephology.Condorcet
+        Psephology.Counting
         Psephology.Efficiency
         Psephology.ElectoralSystem
         Psephology.ElectoralSystems.Borda
@@ -74,7 +75,6 @@ library
     other-modules:
         Psephology.Utils
         Psephology.Spoilers.Utils
-        Psephology.Counting
 
     build-depends:
         base,
