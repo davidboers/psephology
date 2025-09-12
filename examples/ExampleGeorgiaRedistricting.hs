@@ -11,12 +11,12 @@ import Data.List (find, intercalate)
 -- | Run the Georgia state-wide redistricting example and export results to CSV.
 main :: IO ()
 main = do
-    jsonContent <- decodeFileStrict "test/redistricting/georgia.json"
+    jsonContent <- decodeFileStrict "examples/redistricting/georgia.json"
     case jsonContent :: Maybe [Precinct] of
         Just precincts -> do
             let reduced = reduce 14 (precinctsToDistricts precincts)
             let equalized = equalize reduced
-            writeFile "test/redistricting/georgia.csv" $ districtsCSV precincts equalized
+            writeFile "examples/redistricting/georgia.csv" $ districtsCSV precincts equalized
         Nothing -> putStrLn "Failed to parse JSON."
 
 instance FromJSON Precinct where

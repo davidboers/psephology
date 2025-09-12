@@ -107,6 +107,14 @@ executable example-generate-blt
 
     default-language: Haskell2010
 
+executable example-sample-parliament
+    main-is: ExampleSampleParliament.hs
+    hs-source-dirs: examples
+    build-depends:
+        base,
+        psephology
+    default-language: Haskell2010
+
 test-suite psephology-test
     import:           warnings
 

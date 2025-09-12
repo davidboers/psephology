@@ -37,8 +37,6 @@ import Psephology.Voter
 -- To run examples, use the modules in examples/ (e.g. ExampleGeorgiaRedistricting, ExampleGenerateBLT)
 main :: IO ()
 main = do
-    -- 10 minutes
-    parliament <- generate 1000 2 100 10 100
     defaultMain $ tests parliament
 
 tests :: Parliament [Double] -> TestTree
@@ -52,8 +50,6 @@ tests _ =
         , testStrategy
         , testProportionalRepresentation
         , testThiele
-        -- Enable as you wish
-        -- , testGeneratedParliament parliament
         ]
 
 testTennesseeCapitalElection :: TestTree
@@ -207,35 +203,6 @@ testMcKelveySchofield =
         p1 = [9, 1]
         voters = [[0, 0], [10, 0], [10, 10]]
         basicSpoiler = [1, 9]
-
-testGeneratedParliament :: Parliament [Double] -> TestTree
-testGeneratedParliament parliament =
-    testGroup
-        "Generated parliament"
-        [ testCase "Export generated voters to CSV" $
-            do
-                let csv =
-                        unlines $
-                            map (concatMap (\x -> show x ++ ",")) $
-                                concatMap (\(Election _ voters) -> voters) parliament
-                writeFile "test/heatmaps/voters.csv" csv
-                True @?= True
-        , testCase "Export generated electeds to CSV" $
-            do
-                let csv =
-                        unlines $
-                            zipWith
-                                (\winner (Election candidates _) -> show $ candidates !! winner)
-                                (winners instantRunoffVoting parliament)
-                                parliament
-                writeFile "test/heatmaps/elected.csv" csv
-                True @?= True
-        , testCase "Mass analysis" $
-            do
-                let csv = unlines $ map (intercalate ",") $ pathologies parliament
-                writeFile "test/pathologies.csv" csv
-                True @?= True
-        ]
 
 testDodgsonScores :: TestTree
 testDodgsonScores =

@@ -34,7 +34,7 @@ main = do
     let names = map show [1..70]
     let fileContents = zipWith3 export candidates' formalizedVotersByDistrict names
     --zipWithM_ writeFile (map (\fn -> "examples/" ++ fn ++ ".blt") names) fileContents
-    writeFile "test/heatmaps/voters.csv" $ unlines $ map (concatMap (\x -> show x ++ ",")) votes'
+    writeFile "examples/heatmaps/voters.csv" $ unlines $ map (concatMap (\x -> show x ++ ",")) votes'
     let winners = zipWith instantRunoffVoting candidates' formalizedVotersByDistrict
     let firstSeats = [ length (filter (\i -> 0 <= i && i <= 1) winners)
                      , length (filter (\i -> 2 <= i && i <= 3) winners)
