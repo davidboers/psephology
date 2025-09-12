@@ -21,14 +21,27 @@ type Parliament a = [Election a]
 winners :: ElectoralSystem a -> Parliament a -> [Int]
 winners es = map (\(Election candidates voters) -> es candidates voters)
 
-generate :: Int -> Int -> Int -> Int -> Double -> IO (Parliament [Double])
-generate n dims no_voters no_candidates limit =
+-- | @'generate' limit center no_candidates no_voters dims n@ generates @n@ elections from
+-- 'singlePeakedVotersNormLim' with the given settings.
+generate :: Double -> [Double] -> Int -> Int -> Int -> Int -> IO (Parliament [Double])
+generate limit center no_candidates no_voters dims n =
     Control.Monad.replicateM n $ do
-        let center = replicate dims (limit / 2)
         cs <- singlePeakedVotersNormalLim limit center no_candidates dims
         let candidates = map Spacial cs
         voters <- singlePeakedVotersNormalLim limit center no_voters dims
         return $ Election candidates voters
+
+-- | Combines two @'Parliament'@s by merging the candidate and voter lists of each
+-- respective @'Election'@. Importantly, this does not simply concatenate the two lists of
+-- @'Election'@s. This function is intended for where a parliament is to be generated with variable
+-- settings.
+merge :: Parliament a -> Parliament a -> Parliament a
+merge (x : xs) (y : ys) =
+    let (Election candidates1 voters1) = x; (Election candidates2 voters2) = y
+     in Election (candidates1 ++ candidates2) (voters1 ++ voters2)
+            : merge xs ys
+merge [] rhs = rhs
+merge lhs [] = lhs
 
 pathologies :: Voter a => Parliament a -> [[String]]
 pathologies parliament = do

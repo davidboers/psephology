@@ -9,12 +9,14 @@ import Psephology.ElectoralSystems.Plurality
 import Psephology.ElectoralSystems.Rated
 import Psephology.ElectoralSystems.Runoff
 import Psephology.ElectoralSystems.Sortition
+
 import System.IO (writeFile)
 
 main :: IO ()
 main = do
-    -- Generate a sample parliament with 5000 voters, 2 parties, 100 seats, 10 districts, 100 iterations
-    parliament <- generate 5000 2 100 10 100
+    p1 <- generate 100 [70, 60] 5 60 2 1000
+    p2 <- generate 100 [40, 40] 5 40 2 1000
+    let parliament = merge p1 p2
     writeFile "examples/heatmaps/voters.csv" $ votersCSV parliament
     writeFile "examples/heatmaps/elected.csv" $ electedsCSV parliament
     -- 10 minutes
