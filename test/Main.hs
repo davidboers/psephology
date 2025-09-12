@@ -36,11 +36,10 @@ import Psephology.Voter
 
 -- To run examples, use the modules in examples/ (e.g. ExampleGeorgiaRedistricting, ExampleGenerateBLT)
 main :: IO ()
-main = do
-    defaultMain $ tests parliament
+main = defaultMain tests
 
-tests :: Parliament [Double] -> TestTree
-tests _ =
+tests :: TestTree
+tests =
     testGroup
         "Tests"
         [ testTennesseeCapitalElection
