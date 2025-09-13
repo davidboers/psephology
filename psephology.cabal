@@ -89,15 +89,6 @@ library
 
     default-language: Haskell2010
 
-executable example-georgia-redistricting
-    main-is: ExampleGeorgiaRedistricting.hs
-    hs-source-dirs: examples
-    build-depends:
-        base,
-        psephology,
-        aeson
-    default-language: Haskell2010
-
 executable example-generate-blt
     main-is: ExampleGenerateBLT.hs
     hs-source-dirs: examples
@@ -105,6 +96,15 @@ executable example-generate-blt
         base,
         psephology
 
+    default-language: Haskell2010
+
+executable example-georgia-redistricting
+    main-is: ExampleGeorgiaRedistricting.hs
+    hs-source-dirs: examples
+    build-depends:
+        base,
+        psephology,
+        aeson
     default-language: Haskell2010
 
 executable example-sample-parliament
