@@ -8,31 +8,14 @@
     },
     {
       "type": "shell",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
-      "label": "Run tests (tests/Main.hs)",
-      "command": "cabal",
-      "args": ["run", "tests"]
-    },
-    {
-      "type": "shell",
-      "label": "Build library",
-      "command": "cabal",
-      "args": ["build"]
+      "label": "Verify",
+      "command": "bash verify.sh"
     },
     {
       "type": "shell",
       "label": "Build distribution tarball",
       "command": "cabal",
       "args": ["sdist"]
-    },
-    {
-      "type": "shell",
-      "label": "Update GitHub workflow",
-      "command": "haskell-ci",
-      "args": ["github", "psephology.cabal"]
     }
   ]
 }
