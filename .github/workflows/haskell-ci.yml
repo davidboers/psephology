@@ -57,4 +57,6 @@ jobs:
           cabal run example-georgia-redistricting
           cabal run example-sample-parliament
       - name: Build docs
-        run: ./docs.sh
+        run: |
+          chmod +x docs.sh
+          ./docs.sh
