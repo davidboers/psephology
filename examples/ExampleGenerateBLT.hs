@@ -25,8 +25,8 @@ main = do
     let ds = gather 2 $ map Spacial $ take 140 ds1
     let others4 = drop 140 ds1
     let is = take 85 others4
-    avs <- singlePeakedVotersNormalLim 100 [70, 60] 192500 2
-    bvs <- singlePeakedVotersNormalLim 100 [40, 40] 157500 2
+    avs <- singlePeakedVotersNormalLim 100 [70, 60] 210000 2
+    bvs <- singlePeakedVotersNormalLim 100 [40, 40] 140000 2
     let candidates' = map (\(a, b, c, d) -> concat [a, b, c, d]) $ zip4 as bs cs ds
     let votes' = interweave avs bvs
     let votesByDistrict = gather 5000 votes'
