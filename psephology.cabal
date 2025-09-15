@@ -54,6 +54,7 @@ library
         Psephology.Parliament
         Psephology.Pathologies
         Psephology.Polling.MRP
+        Psephology.Polling.Swingometer
         Psephology.ProportionalRepresentation
         Psephology.ProportionalRepresentation.HighestAverages
         Psephology.ProportionalRepresentation.LargestRemainder

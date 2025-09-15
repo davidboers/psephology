@@ -23,6 +23,7 @@ module Psephology
     , module Psephology.Parliament
     , module Psephology.Pathologies
     , module Psephology.Polling.MRP
+    , module Psephology.Polling.Swingometer
     , module Psephology.ProportionalRepresentation
     , module Psephology.ProportionalRepresentation.HighestAverages
     , module Psephology.ProportionalRepresentation.LargestRemainder
@@ -56,6 +57,7 @@ import Psephology.McKelveySchofield
 import Psephology.Parliament
 import Psephology.Pathologies
 import Psephology.Polling.MRP
+import Psephology.Polling.Swingometer
 import Psephology.ProportionalRepresentation
 import Psephology.ProportionalRepresentation.HighestAverages
 import Psephology.ProportionalRepresentation.LargestRemainder
