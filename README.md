@@ -9,7 +9,7 @@
 A Haskell language library dedicated to the study of psephology.
 
 - Compiled using the Glasgow Haskell Compiler, version 9.12.2
-- Cabal version 3.16.0.0
+- Cabal version 3.12.1.0 (later Cabal versions are finicky with HLS)
 
 # Docs
 
@@ -25,7 +25,7 @@ $ docs/index.html
 Planned features (not necessarily planned for first release):
 
 - Proxy cycles
-- Convert a list of formal voters into a list of theoretical voters
+- Convert a list of formal voters into a list of theoretical voters (use k-means)
 - System-wise efficiency
 - Finish weak orderings
 - Polsby-Popper
