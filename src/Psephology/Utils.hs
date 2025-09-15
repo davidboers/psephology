@@ -5,7 +5,8 @@ module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermu
 import Data.List (elemIndex)
 
 factorial :: Integral a => a -> a
-factorial n = product [1 .. n]
+factorial 0 = 1
+factorial n = n * (n - 1)
 
 -- Simple trapezoid rule implementation
 integrate :: (Double -> Double) -> Double -> Double -> Int -> Double
@@ -46,7 +47,7 @@ median :: Fractional a => [a] -> a
 median [] = 0
 median [a] = a
 median [a, b] = (a + b) / 2
-median l@(_ : _ : _ : _) = median $ tail $ init l
+median l@(_ : _ : _ : _) = median $ drop 1 $ init l
 
 medianI :: Integral a => [a] -> a
 medianI l = round $ median (map fromIntegral l :: Fractional b => [b])
