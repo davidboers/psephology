@@ -1,6 +1,16 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 -- | The BBC's patented seat projector. [Read more](https://en.wikipedia.org/wiki/Swingometer).
-module Psephology.Polling.Swingometer (swing, swingSeat, seatProjection, makeDeltas) where
+module Psephology.Polling.Swingometer (
+      swing
+    , swingSeat 
+    , seatProjection 
+
+    -- * Two-party swing
+    , sortByTwoPartySwingRequired
+    , twoPartySwingRequired
+    
+    -- * National swings
+    , makeDeltas) where
 
 import Data.List.Extras.Argmax (argmax)
 
@@ -18,6 +28,21 @@ swingSeat deltas lastResultSeat =
 seatProjection :: [Double] -> [[Int]] -> [Int]
 seatProjection deltas lastResults =
     counts $ map winner $ swing deltas lastResults
+
+-- | Calculates 'twoPartySwingRequired' for all contests, and returns a sorted list of the contests
+-- with the contest index and required swing. Will include contests where @x@ and @y@ aren't major
+-- competitors.
+sortByTwoPartySwingRequired :: Integral a => Int -> Int -> [[a]] -> [(Int, a)]
+sortByTwoPartySwingRequired x y lastResults =
+    zipWith (\i ns -> (i, twoPartySwingRequired x y ns)) [0..length lastResults-1] lastResults
+
+-- | @'twoPartySwingRequired' x y ns@ returns the minimum two-party swing required for @y@ to 
+-- defeat @x@. Can be either raw votes or vote percentages.
+--
+-- \[ SR = \frac{v_x - x_y}{2} \] 
+twoPartySwingRequired :: Integral a => Int -> Int -> [a] -> a
+twoPartySwingRequired x y ns =
+    ((ns !! x) - (ns !! y)) `div` 2
 
 -- | @'makeDeltas' last now@ returns the delta vector between @now@ and @last@. Input vectors are
 -- normalized, so it doesn't matter if you input raw votes or vote percentages.
