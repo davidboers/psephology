@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, factorial, integrate, median, medianI, split, incrementAt, tallyWinner, tallyLoser) where
+module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, factorial, integrate, median, medianI, split, incrementAt, tallyWinner, tallyLoser, normalize) where
 
 import Data.List.Extras (argmax, argmin)
 import Data.List (elemIndex)
@@ -8,6 +8,11 @@ import Data.List (elemIndex)
 factorial :: Integral a => a -> a
 factorial 0 = 1
 factorial n = n * (n - 1)
+
+normalize :: [Double] -> [Double]
+normalize x =
+    let total = sum x
+     in map (/ total) x
 
 -- Simple trapezoid rule implementation
 integrate :: (Double -> Double) -> Double -> Double -> Int -> Double
