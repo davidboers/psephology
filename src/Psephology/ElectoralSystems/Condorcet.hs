@@ -60,35 +60,32 @@ module Psephology.ElectoralSystems.Condorcet
 import Data.List
 import Data.List.Extras (argmax)
 import Data.Maybe
-import qualified Data.Ord
+import Data.Function ((&))
 
 import Psephology.Candidate
 import Psephology.Condorcet
 import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
 import Psephology.Voter
+import Psephology.Utils (tallyWinner)
 
 -- | [Nanson](https://en.wikipedia.org/wiki/Nanson%27s_method#Nanson_method)
 nansonsMethod :: Voter a => [Candidate] -> [a] -> Int
-nansonsMethod [_] _ = 0
-nansonsMethod candidates voters =
-    let tally = bordaTally traditionalBordaWeight candidates voters
-        threshold = sum tally / fromIntegral (length candidates)
-        keeping = filter (\i -> (tally !! i) > threshold) [0 .. length candidates - 1]
-     in if null keeping -- Double check
-            then argmax (tally !!) [0 .. length candidates - 1]
-            else keeping !! nansonsMethod (map (candidates !!) keeping) voters
+nansonsMethod = excludeByThreshold (\tally -> sum tally / fromIntegral (length tally))
 
 -- | [Baldwin](https://en.wikipedia.org/wiki/Nanson%27s_method#Baldwin_method)
 baldwinsMethod :: Voter a => [Candidate] -> [a] -> Int
-baldwinsMethod [_] _ = 0
-baldwinsMethod candidates voters =
+baldwinsMethod = excludeByThreshold minimum
+
+excludeByThreshold :: Voter a => ([Double] -> Double) -> [Candidate] -> [a] -> Int
+excludeByThreshold _             [_]        _      = 0
+excludeByThreshold thresholdFunc candidates voters =
     let tally = bordaTally traditionalBordaWeight candidates voters
-        threshold = minimum tally
-        keeping = filter (\i -> (tally !! i) /= threshold) [0 .. length candidates - 1]
+        threshold = thresholdFunc tally
+        keeping = findIndices (> threshold) tally
      in if null keeping -- Double check
-            then argmax (tally !!) [0 .. length candidates - 1]
-            else keeping !! baldwinsMethod (map (candidates !!) keeping) voters
+            then tallyWinner tally
+            else keeping !! excludeByThreshold thresholdFunc (map (candidates !!) keeping) voters
 
 -- | [Tideman alternative](https://en.wikipedia.org/wiki/Tideman_alternative_method)
 tidemanAlternative :: Voter a => [Candidate] -> [a] -> Int
@@ -118,27 +115,29 @@ black weightFormula candidates voters =
 
 -- Kemeny
 
--- | \(\mathcal{O}(n!)\). [Kemeny](https://en.wikipedia.org/wiki/Kemeny_method). Computationally difficult with greater than ~10-12 candidates.
+-- | \(\mathcal{O}(n!)\). [Kemeny](https://en.wikipedia.org/wiki/Kemeny_method). Computationally 
+-- difficult with greater than ~10-12 candidates.
 kemeny :: Voter a => [Candidate] -> [a] -> Int
 kemeny candidates voters =
     head $ kemenyOverallRanking candidates voters
 
--- | \(\mathcal{O}(n!)\). Returns the ranking with the largest Kemeny score, as a list of candidate indexes.
--- The winner of the Kemeny system is the candidate ranked first. Computationally difficult with greater than ~10-12 candidates.
+-- | \(\mathcal{O}(n!)\). Returns the ranking with the largest Kemeny score, as a list of candidate 
+-- indexes. The winner of the Kemeny system is the candidate ranked first. Computationally difficult 
+-- with greater than ~10-12 candidates.
 kemenyOverallRanking :: Voter a => [Candidate] -> [a] -> [Int]
 kemenyOverallRanking candidates voters =
     argmax (kemenyScore candidates voters) $
         permutations [0 .. length candidates - 1]
 
--- | @'kemenyScore' candidates voters ordering@ is the sum of the number of voters that prefer X over Y for every X \(\succ\) Y in @ordering@.
+-- | @'kemenyScore' candidates voters ordering@ is the sum of the number of voters that prefer X over 
+-- Y for every X \(\succ\) Y in @ordering@.
 kemenyScore :: Voter a => [Candidate] -> [a] -> [Int] -> Int
 kemenyScore candidates voters ordering =
-    let pairs =
-            [ (candidates !! (ordering !! i), candidates !! (ordering !! j))
-            | i <- [0 .. length ordering - 1]
-            , j <- [i + 1 .. length ordering - 1]
-            ]
-     in sum $ map (uncurry (numPreferOver voters)) pairs
+    [ (candidates !! (ordering !! i), candidates !! (ordering !! j))
+    | i <- [0     .. length ordering - 1]
+    , j <- [i + 1 .. length ordering - 1]
+    ]   & map (uncurry (numPreferOver voters))
+        & sum
 
 -- Dodgson
 
@@ -154,19 +153,18 @@ dodgson candidates voters =
 -- * Catching Condorcet winners early, and only defaulting to the swap algorithm in case of a paradox.
 -- * If a paradox is present, simplifying the count by limiting the search for each candidate Dodgson score to the running minimum.
 safeDodgson :: Voter a => [Candidate] -> [a] -> Int
+safeDodgson []         _      = -1
 safeDodgson candidates voters =
     case condorcetWinner candidates voters of
         Just cw -> cw
         Nothing ->
-            case candidates of
-                [] -> -1 -- defensive fallback; unreachable in valid elections
-                (c0 : cs) ->
-                    let s0 = fromJust (dodgsonScoreWorker Nothing candidates voters c0)
-                        step (bestS, bestI) (idx, ci) =
-                            case dodgsonScoreWorker (Just bestS) candidates voters ci of
-                                Just dscore | dscore < bestS -> (dscore, idx)
-                                _ -> (bestS, bestI)
-                     in snd $ foldl' step (s0, 0) (zip [1 .. length cs - 1] cs)
+            let (c0 : cs) = candidates
+                s0 = fromJust (dodgsonScoreWorker Nothing candidates voters c0)
+                step (bestS, bestI) (idx, ci) =
+                    case dodgsonScoreWorker (Just bestS) candidates voters ci of
+                        Just dscore | dscore < bestS -> (dscore, idx)
+                        _                            -> (bestS, bestI)
+                in snd $ foldl' step (s0, 0) (zip [1 .. length cs - 1] cs)
 
 -- | @'dodgsonScore' candidates voters c@ is the minimum number of pairwise swaps in voting profile @voters@ needed to make @c@ a Condorcet winner.
 -- Calculation of Dodgson score for a single candidate is itself [NP-hard](https://en.wikipedia.org/wiki/NP-hardness): runs in \(\mathcal{O}(2^k * nk+nm)\) where k is the Dodgson score,
@@ -223,48 +221,42 @@ dodgsonScoreWorker k candidates voters c =
 -- | [Ranked pairs](https://en.wikipedia.org/wiki/Ranked_pairs)
 rankedPairs :: Voter a => [Candidate] -> [a] -> Int
 rankedPairs candidates voters =
-    fromJust
-        $ findWinner
-        $ foldl
-            ( \l (i, j, _) ->
-                if createsParadox ((i, j) : l)
-                    then l
-                    else (i, j) : l
-            )
-            []
-        $ sortOn (Data.Ord.Down . (\(_, _, maj) -> maj)) pairs
+    [ case pairwiseMaj voters (candidates !! i) (candidates !! j) of
+        maj | maj >= 0 -> (i, j, maj)
+        maj            -> (j, i, -maj)
+    | i <- [0 .. length candidates - 1]
+    , j <- [0 .. length candidates - 1]
+    , i /= j
+    ] & sortOn (negate . (\(_, _, maj) -> maj))
+      & foldl addUnlessParadox []
+      & findWinner
+      & fromJust
     where
-        pairs =
-            [ let maj = pairwiseMaj voters (candidates !! i) (candidates !! j)
-               in if maj >= 0
-                    then (i, j, maj)
-                    else (j, i, -maj)
-            | i <- [0 .. length candidates - 1]
-            , j <- [0 .. length candidates - 1]
-            , i /= j
-            ]
-
         createsParadox :: [(Int, Int)] -> Bool
         createsParadox l' = isNothing (findWinner l')
 
+        addUnlessParadox l (i, j, _)
+            | createsParadox ((i, j) : l) = l
+            | otherwise                   = (i, j) : l
+
         findWinner :: [(Int, Int)] -> Maybe Int
         findWinner l' =
-            find (\c -> not $ any (\(_, j'') -> j'' == c) l') (map fst l')
+            let (winners, losers) = unzip l'
+             in fst <$> uncons (winners \\ losers)
 
 -- Schulze method
 
 -- | [Schulze](https://en.wikipedia.org/wiki/Schulze_method)
 schulze :: Voter a => [Candidate] -> [a] -> Int
 schulze candidates voters =
-    beatpathWinner $
-        foldl' schulzeStep (condorcetMatrix pairwiseMaj candidates voters) $
-            [ (k, i, j)
-            | k <- [0 .. length candidates - 1]
-            , i <- [0 .. length candidates - 1]
-            , i /= k
-            , j <- [0 .. length candidates - 1]
-            , j /= k && j /= i
-            ]
+    [ (k, i, j)
+    | k <- [0 .. length candidates - 1]
+    , i <- [0 .. length candidates - 1]
+    , i /= k
+    , j <- [0 .. length candidates - 1]
+    , j /= k && j /= i
+    ] & foldl' schulzeStep (condorcetMatrix pairwiseMaj candidates voters)
+      & beatpathWinner
 
 schulzeStep :: [[Int]] -> (Int, Int, Int) -> [[Int]]
 schulzeStep p (k, i, j) =

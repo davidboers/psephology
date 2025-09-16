@@ -43,10 +43,9 @@ module Psephology.ElectoralSystems.Borda
     , icelandicBorda
     ) where
 
-import Data.List.Extras (argmax)
-
 import Psephology.Candidate
 import Psephology.Voter
+import Psephology.Utils (tallyWinner)
 
 -- Borda count
 
@@ -64,6 +63,7 @@ dowdallWeight _ r =
 
 -- | @'icelandicWeight' n r@ returns (@n@ - @r@ + 1) / @n@ where @n@ is the total number of candidates and @r@ is the candidate rank.
 icelandicWeight :: Int -> Int -> Double
+icelandicWeight _ (-1) = 0
 icelandicWeight n r =
     fromIntegral (n - r + 1) / fromIntegral n
 
@@ -74,19 +74,16 @@ weights weightFormula candidates v =
      in map (weightFormula n . rank candidates v) candidates
 
 -- | @'bordaTally' weightFormula candidates voters@ returns the Borda tally for each candidate.
-bordaTally
-    :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> [Double]
+bordaTally :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> [Double]
 bordaTally weightFormula candidates =
     foldl
         (\t -> zipWith (+) t . weights weightFormula candidates)
-        (replicate (length candidates) 0)
+        (map (const 0) candidates)
 
 -- | @'bordaCountWFormula' weightFormula candidates voters@ returns the index of the candidate that wins a Borda count using @weightFormula@.
-bordaCountWFormula
-    :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
+bordaCountWFormula :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
 bordaCountWFormula weightFormula candidates voters =
-    let points = bordaTally weightFormula candidates voters
-     in argmax (points !!) [0 .. length candidates - 1]
+    tallyWinner $ bordaTally weightFormula candidates voters
 
 -- | Shortcut for 'bordaCountWFormula'
 bordaCount :: Voter a => [Candidate] -> [a] -> Int

@@ -18,13 +18,11 @@ module Psephology.ElectoralSystems.Rated
 where
 
 import Data.List (sortOn)
-import Data.List.Extras (argmax)
-import qualified Data.Ord as Ord
 
 import Psephology.Candidate
-import Psephology.Condorcet (numPreferOver)
+import Psephology.ElectoralSystems.Plurality
 import Psephology.Counting (scores)
-import Psephology.Utils (medianI)
+import Psephology.Utils (medianI, tallyWinner)
 import Psephology.Voter
 
 -- Approval voting
@@ -32,8 +30,7 @@ import Psephology.Voter
 -- | Returns the index of the [approval voting](https://en.wikipedia.org/wiki/Approval_voting) winner.
 approvalVoting :: Voter a => [Candidate] -> [a] -> Int
 approvalVoting candidates voters =
-    let tally = approvalVotes candidates voters
-     in argmax (tally !!) [0 .. length candidates - 1]
+    tallyWinner $ approvalVotes candidates voters
 
 -- | Reduces the voter's scoring system to a 0/1 binary, assuming they vote for all candidates with an above average score.
 approvalVotes :: Voter a => [Candidate] -> [a] -> [Int]
@@ -46,8 +43,7 @@ approvalVotes =
 -- Test suite defaults to @highestMedian 0 10@
 highestMedian :: Voter a => Int -> Int -> [Candidate] -> [a] -> Int
 highestMedian mn mx candidates voters =
-    let medians = map (\c -> medianI $ map (\v -> score mn mx candidates v c) voters) candidates
-     in argmax (medians !!) [0 .. length candidates - 1]
+    tallyWinner $ map (\c -> medianI $ map (\v -> score mn mx candidates v c) voters) candidates
 
 -- Score voting
 
@@ -55,8 +51,7 @@ highestMedian mn mx candidates voters =
 -- Test suite defaults to @scoreVoting 0 10@
 scoreVoting :: Voter a => Int -> Int -> [Candidate] -> [a] -> Int
 scoreVoting mn mx candidates voters =
-    let tally = scores mn mx candidates voters
-     in argmax (tally !!) [0 .. length candidates - 1]
+    tallyWinner $ scores mn mx candidates voters
 
 -- Star voting
 
@@ -66,13 +61,11 @@ starVoting :: Voter a => Int -> Int -> [Candidate] -> [a] -> Int
 starVoting mn mx candidates voters =
     let tally = scores mn mx candidates voters
         (f1, f2) = starFinalists tally
-     in if numPreferOver voters (candidates !! f1) (candidates !! f2) > 0
-            then f1
-            else f2
+     in firstPastThePost [candidates !! f1, candidates !! f2] voters
 
 -- | Returns a tuple of the indexes of the candidates that progress into the second round of the STAR voting election.
 starFinalists :: [Int] -> (Int, Int)
 starFinalists tally =
-    let tally_sorted = sortOn (Ord.Down . snd) $ zip [0 .. length tally - 1] tally
+    let tally_sorted = sortOn (negate . snd) $ zip [0 .. length tally - 1] tally
         [f1, f2] = take 2 $ map fst tally_sorted
      in (f1, f2)
