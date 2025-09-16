@@ -26,6 +26,9 @@ data Cell = Cell
     { p :: Double
     -- ^ Between @[0-1]@
     , n :: Int
+    -- ^ The **sample size** in this cell (number of respondents).
+    , popN :: Int
+    -- ^ The **population size** of this cell.
     , specifiers :: [Int]
     }
 
@@ -49,7 +52,7 @@ data Model = Model
 model :: [Int] -> RVar Model
 model limits = do
     b0 <- cauchy 0 1
-    ss <- replicateM (length limits) (cauchy 0 1)
+    ss <- replicateM (length limits) (cauchy 0 0.5)
     as <- zipWithM (\limit s -> replicateM limit $ normal 0 (s ** 2)) limits ss
     return $ Model b0 as ss
 
@@ -83,9 +86,9 @@ fitModel iter cells = do
 meanPS :: Int -> [Cell] -> RVar Double
 meanPS iter cells = do
     m <- fitModel iter cells
-    let ns = map (fromIntegral . n) m
+    let popNs = map (fromIntegral . popN) m
     let phats = map p m
-    return $ sum (zipWith (*) ns phats) / sum ns
+    return $ sum (zipWith (*) popNs phats) / sum popNs
 
 out :: IO ()
 out = do
@@ -95,12 +98,12 @@ out = do
 
 testCells :: [Cell]
 testCells =
-    [ Cell (12 / 20) 20 [0, 0]
-    , Cell (4 / 10) 10 [0, 1]
-    , Cell (6 / 15) 15 [1, 0]
-    , Cell (3 / 12) 12 [1, 1]
-    , Cell (6 / 8) 8 [2, 0]
-    , Cell (2 / 5) 5 [2, 1]
+    [ Cell (12 / 20) 20 1200000 [0, 0]
+    , Cell (4 / 10) 10 800000 [0, 1]
+    , Cell (6 / 15) 15 800000 [1, 0]
+    , Cell (3 / 12) 12 900000 [1, 1]
+    , Cell (6 / 8) 8 20000 [2, 0]
+    , Cell (2 / 5) 5 300000 [2, 1]
     ]
 
 -- Tests
