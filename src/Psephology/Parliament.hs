@@ -1,4 +1,5 @@
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE CPP #-}
 -- | This module allows the user to perform statistical analysis on a set of elections, called a parliament, across different voting systems. All
 -- candidates in voters exist on the same space (same dimensions and bounds).
 module Psephology.Parliament
@@ -12,6 +13,10 @@ module Psephology.Parliament
 
 import qualified Control.Monad
 import Data.Maybe (isNothing)
+
+#if __GLASGOW_HASKELL__ <= 910
+import Data.List (foldl')
+#endif
 
 import Psephology.Candidate
 import Psephology.Condorcet (condorcetWinner, smithSet)

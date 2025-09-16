@@ -35,6 +35,7 @@
 -- at any point on the relevant interval.
 --
 -- \[ \lim_{n \to x} f^\prime(n) > 1 \]
+{-# LANGUAGE CPP #-}
 module Psephology.ProportionalRepresentation.HighestAverages
     ( -- * Entry point
       highestAverages
@@ -48,6 +49,10 @@ module Psephology.ProportionalRepresentation.HighestAverages
     , sainteLague
     , macanese
     ) where
+
+#if __GLASGOW_HASKELL__ <= 910
+import Data.List (foldl')
+#endif
 
 import Psephology.Utils (incrementAt, tallyWinner)
 
