@@ -60,6 +60,7 @@ library
         Psephology.ElectoralSystems.Sortition
         Psephology.ElectoralSystems.Thiele
         Psephology.McKelveySchofield
+        Psephology.NumberOfParties
         Psephology.Parliament
         Psephology.Pathologies
         Psephology.Polling.MRP
