@@ -12,7 +12,7 @@ module Psephology.Polling.Swingometer (
     -- * National swings
     , makeDeltas) where
 
-import Data.List.Extras.Argmax (argmax)
+import Psephology.Utils (tallyWinner, normalize)
 
 -- | Computes the projected results for multiple seats.
 swing :: [Double] -> [[Int]] -> [[Int]]
@@ -27,7 +27,7 @@ swingSeat deltas lastResultSeat =
 -- | Returns the projected seat count for each party.
 seatProjection :: [Double] -> [[Int]] -> [Int]
 seatProjection deltas lastResults =
-    counts $ map winner $ swing deltas lastResults
+    counts $ map tallyWinner $ swing deltas lastResults
 
 -- | Calculates 'twoPartySwingRequired' for all contests, and returns a sorted list of the contests
 -- with the contest index and required swing. Will include contests where @x@ and @y@ aren't major
@@ -57,16 +57,8 @@ makeDeltas :: [Double] -> [Double] -> [Double]
 makeDeltas last now =
     zipWith (-) (normalize now) (normalize last)
 
-normalize :: [Double] -> [Double]
-normalize x =
-    let total = sum x
-     in map (/ total) x
-
 counts :: [Int] -> [Int]
 counts is =
     [ length $ filter (== i) is
     | i <- [0..maximum is]
     ]
-
-winner :: Ord a => [a] -> Int
-winner ns = argmax (ns !!) [0..length ns-1]
