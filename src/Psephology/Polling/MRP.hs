@@ -8,6 +8,7 @@
 -- combined.
 module Psephology.Polling.MRP
     ( meanPS
+    , out
 
       -- * Cell
     , Cell (..)

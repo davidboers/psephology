@@ -11,17 +11,15 @@ votesOrdinal f candidates =
             | i <- [0 .. length candidates - 1]
             ]
         )
-        (replicate (length candidates) 0)
+        (map (const 0) candidates)
 
 -- | Returns the tally for each candidate based on 'preference'.
 votes :: (Voter a) => [Candidate] -> [a] -> [Int]
-votes =
-    votesOrdinal preference
+votes = votesOrdinal preference
 
 -- | Returns the tally for each candidate based on 'lastPreference'.
 antiVotes :: (Voter a) => [Candidate] -> [a] -> [Int]
-antiVotes =
-    votesOrdinal lastPreference
+antiVotes = votesOrdinal lastPreference
 
 -- | Returns the total scores for each candidate.
 scores :: (Voter a) => Int -> Int -> [Candidate] -> [a] -> [Int]
@@ -32,4 +30,4 @@ scores mn mx candidates =
             | i <- [0 .. length candidates - 1]
             ]
         )
-        (replicate (length candidates) 0)
+        (map (const 0) candidates)

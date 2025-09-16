@@ -22,10 +22,8 @@ import Psephology.ElectoralSystems.Condorcet
     , kemenyOverallRanking
     )
 import Psephology.ElectoralSystems.Plurality
-import Psephology.ElectoralSystems.Runoff
 import Psephology.ElectoralSystems.Thiele
 import Psephology.McKelveySchofield
-import Psephology.Parliament
 import Psephology.Pathologies
 import Psephology.SampleElections
 import Psephology.Spoilers

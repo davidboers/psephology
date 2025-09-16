@@ -75,6 +75,7 @@ module Psephology.Redistricting.Utilitarian
 
 import Data.List
 import Data.List.Extras (argmax, argmin)
+import Data.Function ((&))
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromJust, isJust)
 import Prelude hiding (pi)
@@ -152,7 +153,7 @@ utilityDP district precinct =
 -- that can be obtained by @precinct@.
 utilityPDNorm :: Precinct -> District -> Double
 utilityPDNorm precinct district =
-    utilityPD precinct district / distance (replicate (length (point precinct)) 0) (point precinct)
+    utilityPD precinct district / distance (map (const 0) (point precinct)) (point precinct)
 
 -- | @'netUtility' districts precinct district@ returns the net increase in normalized utility obtained by @precinct@ being allocated to
 -- @district@, in comparison to the member of @districts@ that is the highest opportunity cost. The full formula is:
@@ -333,13 +334,7 @@ reduceVerbose x districts =
             ]
         record = header : recordStep Reduction 0 quota districts districts
 
-reduceVerboseWorker
-    :: Int
-    -> [[String]]
-    -> Int
-    -> Int
-    -> [District]
-    -> ([[String]], [District])
+reduceVerboseWorker :: Int -> [[String]] -> Int -> Int -> [District] -> ([[String]], [District])
 reduceVerboseWorker quota record n x districts
     | noNonDissolved districts <= x = (record, establishRest districts)
     | otherwise =
@@ -430,14 +425,10 @@ distributeSurpluses quota districts =
 distributeSurplus :: Int -> [District] -> District -> [District]
 distributeSurplus quota districts district@(District idD precincts _ _)
     | surplusSize > 0 =
-        let precinctsSorted =
-                sortOn
-                    ( \precinct ->
-                        netUtility districts precinct district
-                    )
-                    precincts
-            precinctsToTransfer = sort $ selectPrecinctsToTransfer surplusSize precinctsSorted
-         in distributeSurplusWorker idD districts precinctsToTransfer
+        sortOn (\precinct -> netUtility districts precinct district) precincts
+            & selectPrecinctsToTransfer surplusSize
+            & sort
+            & distributeSurplusWorker idD districts
     | otherwise = districts
     where
         surplusSize = surplus quota district
@@ -453,16 +444,16 @@ distributeSurplusWorker idD districts (x : xs) =
 -- voter at it's central point.
 mergeSmallest :: [District] -> [District]
 mergeSmallest districts =
-    let smallest@(District _ precincts _ _) = findSmallest districts
-        (District mergeInto _ _ _) =
+    let smallest = findSmallest districts
+        mergeInto = districtID $
             argmax
                 (utilityD smallest)
                 ( deleteBy
-                    (\(District lhs _ _ _) (District rhs _ _ _) -> lhs == rhs)
+                    (\lhs rhs -> districtID lhs == districtID rhs)
                     smallest
                     districts
                 )
-     in foldl' (`transfer` mergeInto) districts precincts
+     in foldl' (`transfer` mergeInto) districts (precinctsD smallest)
 
 -- | @'splitSmallest' districts@ dissolves the non-established member of @districts@ with the smallest
 -- population, and re-assigns its precincts to the district that maximizes utility.
@@ -520,8 +511,8 @@ transferToBest districts precinct =
 -- | Redistributes any precincts with net negative utility to the districts they would prefer to be in.
 redistributeNNNUPrecincts :: [District] -> [District]
 redistributeNNNUPrecincts districts =
-    let nNNUs = concatMap (\dx -> filter (\px -> netUtility districts px dx < 0) $ precinctsD dx) districts
-     in foldl transferToBest districts nNNUs
+    concatMap (\dx -> filter (\px -> netUtility districts px dx < 0) $ precinctsD dx) districts
+        & foldl transferToBest districts
 
 -- Equalizer
 
@@ -557,7 +548,6 @@ equalizePairs districts =
 equalizePair :: [District] -> (Int, Int) -> [District]
 equalizePair districts (i, j)
     | populationD di < populationD dj = equalizePair districts (j, i)
-    -- \| null precincts =
     | otherwise = distributeSurplusWorker (districtID di) districts precincts
     where
         di = districts !! i
@@ -568,14 +558,15 @@ equalizePair districts (i, j)
 -- | thenEqualizeVerbose $ reduceVerbose noDistricts districts
 thenEqualizeVerbose :: ([[String]], [District]) -> ([[String]], [District])
 thenEqualizeVerbose (reductionRecord, districts) =
-    let (equalizationRecord, equalizedDistricts) = equalizeVerbose districts
-     in ( reductionRecord ++ equalizationRecord
-        , equalizedDistricts
-        )
+    case equalizeVerbose districts of
+        (equalizationRecord, equalizedDistricts) ->
+            ( reductionRecord ++ equalizationRecord
+            , equalizedDistricts
+            )
 
 -- Print to journal and expose
 currentRatio :: [District] -> Double
 currentRatio districts =
     let nonDissolved = filter (not . isDissolved) districts
      in fromIntegral (maximum $ map populationD nonDissolved)
-            / fromIntegral (minimum $ map populationD nonDissolved)
+      / fromIntegral (minimum $ map populationD nonDissolved)

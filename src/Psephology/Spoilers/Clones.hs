@@ -15,23 +15,22 @@ import Psephology.Candidate
 import Psephology.Voter
 
 import Data.List
+import Data.Function ((&))
 
 {- | Returns lists of indexes of clone candidates. The function evaluates all possible subsequences of the input list, so some of the
 output lists may be subsequences of each other.
 -}
 clones :: Voter a => [Candidate] -> [a] -> [[Int]]
 clones candidates voters =
-    filter (isClones voters . map (candidates !!)) $
-        filter (\s -> length s > 1 && length s < length candidates) $
-            subsequences [0 .. length candidates - 1]
+    subsequences [0 .. length candidates - 1]
+        & filter (\s -> length s > 1 && length s < length candidates)
+        & filter (isClones voters . map (candidates !!))
 
 -- | Returns @True@ if all candidates in the input list are clones of each other.
 isClones :: Voter a => [a] -> [Candidate] -> Bool
 isClones voters candidates =
-    all
-        ( \v ->
-            let ranks = map (rank candidates v) candidates
-             in isContinuous ranks
+    all ( \v ->
+            isContinuous $ map (rank candidates v) candidates
         )
         voters
 

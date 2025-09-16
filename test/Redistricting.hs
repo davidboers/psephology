@@ -8,6 +8,8 @@ import Test.Tasty.HUnit
 
 import Psephology.Redistricting.Utilitarian
 
+import Data.List
+
 testRedistricting :: TestTree
 testRedistricting =
     testGroup
@@ -15,16 +17,12 @@ testRedistricting =
         [ testCase "(utilitarian)" $
             noNonDissolved districts1 @?= noDistricts
         , testCase "(export journal1)" $
-            do
-                writeFile "test/redistricting/journal1.csv" $
-                    unlines $
-                        map (concatMap (++ ",")) csv1
+            do  writeFile "test/redistricting/journal1.csv" $
+                    unlines $ map (intercalate ",") csv1
                 True @?= True
         , testCase "(export journal2)" $
-            do
-                writeFile "test/redistricting/journal2.csv" $
-                    unlines $
-                        map (concatMap (++ ",")) csv2
+            do  writeFile "test/redistricting/journal2.csv" $
+                    unlines $ map (intercalate ",") csv2
                 True @?= True
         , testCase "(export districts)" $
             writeFile "test/redistricting/test1.csv" $

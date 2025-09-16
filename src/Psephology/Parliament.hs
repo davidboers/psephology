@@ -1,9 +1,16 @@
+{-# LANGUAGE PartialTypeSignatures #-}
 -- | This module allows the user to perform statistical analysis on a set of elections, called a parliament, across different voting systems. All
 -- candidates in voters exist on the same space (same dimensions and bounds).
-module Psephology.Parliament where
+module Psephology.Parliament
+    ( Parliament
+    , Election(..)
+    , winners
+    , generate
+    , merge
+    , pathologies
+    ) where
 
 import qualified Control.Monad
-import Data.List (foldl')
 import Data.Maybe (isNothing)
 
 import Psephology.Candidate
@@ -26,8 +33,7 @@ winners es = map (\(Election candidates voters) -> es candidates voters)
 generate :: Double -> [Double] -> Int -> Int -> Int -> Int -> IO (Parliament [Double])
 generate limit center no_candidates no_voters dims n =
     Control.Monad.replicateM n $ do
-        cs <- singlePeakedVotersNormalLim limit center no_candidates dims
-        let candidates = map Spacial cs
+        candidates <- map Spacial <$> singlePeakedVotersNormalLim limit center no_candidates dims
         voters <- singlePeakedVotersNormalLim limit center no_voters dims
         return $ Election candidates voters
 
@@ -36,15 +42,16 @@ generate limit center no_candidates no_voters dims n =
 -- @'Election'@s. This function is intended for where a parliament is to be generated with variable
 -- settings.
 merge :: Parliament a -> Parliament a -> Parliament a
-merge (x : xs) (y : ys) =
-    let (Election candidates1 voters1) = x; (Election candidates2 voters2) = y
-     in Election (candidates1 ++ candidates2) (voters1 ++ voters2)
-            : merge xs ys
-merge [] rhs = rhs
-merge lhs [] = lhs
+merge xs ys = zipWith mergeElections xs ys 
+    ++ drop (length ys) xs 
+    ++ drop (length xs) ys
+
+mergeElections :: Election a -> Election a -> Election a
+mergeElections (Election candidates1 voters1) (Election candidates2 voters2) =
+    Election (candidates1 ++ candidates2) (voters1 ++ voters2)
 
 pathologies :: Voter a => Parliament a -> [[String]]
-pathologies parliament = do
+pathologies parliament =
     let header =
             [ ""
             , "# paradoxes"
@@ -57,12 +64,11 @@ pathologies parliament = do
             , "# Mutual majority failures"
             , "# Smith failures"
             ]
-    let systems' = systems :: [(String, ElectoralSystem [Double])]
-    let t0 = replicate (length systems') $ replicate (length header + 1) 0
-    let t = foldl' pathologiesElection t0 parliament
-    let tstrings = map (map show) t
-    let withRowLabels = zipWith (:) (map fst systems') tstrings
-    header : withRowLabels
+        systemNames = map fst (systems :: [(String, ElectoralSystem [Double])])
+        t0 = map (const $ replicate (length header + 1) 0) systemNames
+        t = foldl' pathologiesElection t0 parliament
+        withRowLabels = zipWith (:) systemNames $ map (map show) t
+     in header : withRowLabels
 
 pathologiesElection :: Voter a => [[Int]] -> Election a -> [[Int]]
 pathologiesElection t e@(Election candidates voters) =
@@ -75,8 +81,7 @@ pathologiesElectionES (Election candidates voters) es =
     let actualWinner = es candidates voters
         listSpoilers = spoilers candidates voters es
         smith = smithSet candidates voters
-     in map
-            fromEnum
+     in map fromEnum
             [ not $ null listSpoilers
             , length (proxies candidates voters es) > 1
             , not $ any (`elem` smith) listSpoilers

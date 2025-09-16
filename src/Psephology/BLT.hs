@@ -52,9 +52,8 @@ ci candidates c =
 
 -- | @'fromFile' pathName@ returns a tuple of candidates and voters.
 fromFile :: ReadableVoter a => FilePath -> IO ([Candidate], [a])
-fromFile pathName = do
-    contents <- readFile pathName
-    return $ parse contents
+fromFile pathName =
+    parse <$> readFile pathName
 
 -- | @'parse' text@ parses plain text to election details.
 parse :: ReadableVoter a => String -> ([Candidate], [a])

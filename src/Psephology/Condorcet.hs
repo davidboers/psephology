@@ -24,10 +24,9 @@ import Data.List
 -- | Returns the Condorcet winner if there is one.
 condorcetWinner :: Voter a => [Candidate] -> [a] -> Maybe Int
 condorcetWinner candidates voters =
-    let winningScore = fromIntegral $ length candidates - 1
-     in findIndex
-            ((==) winningScore . copelandScore candidates voters)
-            [0 .. length candidates - 1]
+    elemIndex
+        (fromIntegral $ length candidates - 1) -- Winning score
+        (copelandScores candidates voters)
 
 -- | @'numPreferOver' returns voters a b@ number of @voters@ that prefer @a@ over @b@.
 numPreferOver :: Voter a => [a] -> Candidate -> Candidate -> Int
@@ -48,12 +47,7 @@ relativeMaj voters a b =
      in pa - pb
 
 -- | A map function used to analyze Condorcet pairs.
-condorcetMatrix ::
-    Voter a =>
-    ([a] -> Candidate -> Candidate -> Int) ->
-    [Candidate] ->
-    [a] ->
-    [[Int]]
+condorcetMatrix :: Voter a => ([a] -> Candidate -> Candidate -> Int) -> [Candidate] -> [a] -> [[Int]]
 condorcetMatrix f candidates voters =
     [ [ f voters a b
       | b <- candidates
@@ -65,11 +59,14 @@ condorcetMatrix f candidates voters =
 -- the [Copeland score](https://en.wikipedia.org/wiki/Copeland%27s_method#Computation) is 0.5 for tied pairs.
 copelandScore :: Voter a => [Candidate] -> [a] -> Int -> Double
 copelandScore candidates voters c =
-    sum
-        [ copelandij $ pairwiseMaj voters (candidates !! c) (candidates !! b)
+    sum [ copelandij $ pairwiseMaj voters (candidates !! c) (candidates !! b)
         | b <- [0 .. length candidates - 1]
         , c /= b
         ]
+
+copelandScores :: Voter a => [Candidate] -> [a] -> [Double]
+copelandScores candidates voters =
+    map (copelandScore candidates voters) [0..length candidates - 1]
 
 copelandij :: Int -> Double
 copelandij m =
@@ -81,11 +78,8 @@ copelandij m =
 -- | @'copelandSet' candidates voters@ returns a non-empty subset of @candidates@ that have the maximum Copeland score.
 copelandSet :: Voter a => [Candidate] -> [a] -> [Int]
 copelandSet candidates voters =
-    let copelandScores = map (copelandScore candidates voters) [0 .. length candidates - 1]
-        maxCopelandScore = maximum copelandScores
-     in filter
-            (\i -> maxCopelandScore == copelandScores !! i)
-            [0 .. length candidates - 1]
+    let maxCopelandScore = maximum (copelandScores candidates voters)
+     in elemIndices maxCopelandScore (copelandScores candidates voters)
 
 -- | @'smithSet' candidates voters@ returns the smallest non-empty subset of @candidates@ that beat every candidate outside the set.
 smithSet :: Voter a => [Candidate] -> [a] -> [Int]

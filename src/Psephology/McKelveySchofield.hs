@@ -13,14 +13,14 @@ module Psephology.McKelveySchofield (
 ) where
 
 import Psephology.Candidate (Candidate (Spacial))
-import Psephology.Condorcet
+import Psephology.Condorcet (pairwiseMaj)
 import Psephology.Utils (integrate)
 import Psephology.Voter (preference)
+import Psephology.Efficiency (utilityV)
 
 import Data.List
 import Data.List.Extras (argmin)
 import Data.Maybe (fromMaybe)
-import Psephology.Efficiency (utilityV)
 
 -- | Step size for candidate generation in the policy space.
 candidateStep :: Double
@@ -37,12 +37,13 @@ bounds = map makeBounds . transpose
     makeBounds values = (minimum values, maximum values)
 
 candidates :: [(Double, Double)] -> [[Double]]
-candidates bs =
-    let makeCandidates (mn, mx) =
-            let v0 = mn - (mx - mn)
-                vi = mx + (mx - mn)
-             in [v0, v0 + candidateStep .. vi]
-     in mapM makeCandidates bs
+candidates = mapM makeCandidates
+
+makeCandidates :: (Double, Double) -> [Double]
+makeCandidates (mn, mx) =
+    let v0 = mn - (mx - mn)
+        vi = mx + (mx - mn)
+     in [v0, v0 + candidateStep .. vi]
 
 {- | @'findASpoiler' p1 voters@ returns a new policy that is preferred by a majority of @voters@ to the current policy @p1@.
 This solution does not produce the optimal spoiler, but only the first one found.
@@ -99,7 +100,7 @@ utility = utilityV
 -- | @'newMajority' p1 voters p2@ returns a list of the indexes of @voters@ that prefer @p2@ over @p1@.
 newMajority :: [Double] -> [[Double]] -> [Double] -> [Int]
 newMajority p1 voters p2 =
-    filter (\i -> preference [Spacial p2, Spacial p1] (voters !! i) == 0) [0 .. length voters - 1]
+    findIndices (\vi -> preference [Spacial p2, Spacial p1] vi == 0) voters
 
 {- | @'isChaotic' voters@ returns true if @length voters >= 3@ and @all ((>= 2) . length) voters@. The McKelvey-Schofield chaos
 theorem applies only if there are at least 3 voters and 2 dimensions.

@@ -54,5 +54,6 @@ systems =
 -- | @'turnoutRequirement' threshold registered@ returns the winner if at least a certain portion @threshold@ of @registered@ voters cast ballots.
 turnoutRequirement :: Voter a => Double -> Int -> ElectoralSystem a -> [Candidate] -> [a] -> Maybe Int
 turnoutRequirement threshold registered es candidates voters
-    | fromIntegral (length voters) >= threshold * fromIntegral registered = Just $ es candidates voters
+    | no_voters >= threshold * fromIntegral registered = return $ es candidates voters
     | otherwise = Nothing
+    where no_voters = fromIntegral (length voters)

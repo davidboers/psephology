@@ -49,15 +49,12 @@ module Psephology.ProportionalRepresentation.HighestAverages
     , macanese
     ) where
 
-import Data.Foldable (Foldable (foldl'))
-import Data.List.Extras (argmax)
-
-import Psephology.Utils (incrementAt)
+import Psephology.Utils (incrementAt, tallyWinner)
 
 -- | @'highestAverages' divisor votes x@ returns the number of seats allocated to each competitor.
 highestAverages :: (Int -> Double) -> [Int] -> Int -> [Int]
 highestAverages divisor votes =
-    highestAveragesWithInit (replicate (length votes) 0) divisor votes
+    highestAveragesWithInit (map (const 0) votes) divisor votes
 
 -- | @'highestAveragesWithInit' init divisor votes x@ returns the number of seats allocated to each
 -- competitor, with a custom initial seat count (@init@), allowing for calculation of the
@@ -68,7 +65,7 @@ highestAveragesWithInit n0 divisor votes x =
 
 winnerIndex :: (Int -> Double) -> [Int] -> [Int] -> Int
 winnerIndex divisor votes seats =
-    argmax (\i -> fromIntegral (votes !! i) / divisor (seats !! i)) [0 .. length votes - 1]
+    tallyWinner $ zipWith (\vi si -> fromIntegral vi / divisor si) votes seats
 
 -- | Rounding up of seats.
 --
@@ -80,11 +77,11 @@ adams = fromIntegral
 
 -- | Harmonic progression.
 --
--- \[ f(n) = \frac{2}{\frac{1}{n} + \frac{1}{n+1}} \]
+-- \[ f(n) = \frac{2n(n+1)}{2n+1} \]
 --
--- Complex \(f^\prime(n) = 1 + \frac{1}{4(n+\frac{1}{2})^2}\).
+-- Complex \(f^\prime(n) = \frac{x^2 + x + \frac{1}{2}}{x^2 + x + \frac{1}{4}}\).
 dean :: Int -> Double
-dean n = 2 / ((1 / fromIntegral n) + (1 / (fromIntegral n + 1)))
+dean n = fromIntegral (2 * n * (n + 1)) / fromIntegral (2 * n + 1) 
 
 -- | Rounding down of seats.
 --

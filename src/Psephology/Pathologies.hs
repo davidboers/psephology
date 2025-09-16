@@ -19,6 +19,7 @@ import Psephology.Quotas
 import Psephology.Voter
 
 import Data.List
+import Data.Function ((&))
 
 -- Pathologies
 
@@ -54,32 +55,29 @@ smithFailure
     -> [a]
     -> Bool
 smithFailure winner candidates voters =
-    let smith = smithSet candidates voters
-     in winner `notElem` smith
+    winner `notElem` smithSet candidates voters
 
 -- Helpers
 
-findMajority :: Voter a => [Candidate] -> [a] -> [Int] -> Maybe Int
-findMajority candidates voters tally =
-    find (\i -> tally !! i >= majority voters) [0 .. length candidates - 1]
+findMajority :: Voter a => [a] -> [Int] -> Maybe Int
+findMajority voters =
+    findIndex (>= majority voters)
 
 -- | Returns the majority winner (winner of a majority of first preferences) if there is one.
 majorityWinner :: Voter a => [Candidate] -> [a] -> Maybe Int
 majorityWinner candidates voters =
-    let tally = votes candidates voters
-     in findMajority candidates voters tally
+    findMajority voters $ votes candidates voters
 
 -- | Returns the majority loser (candidate disliked the most by a majority of voters) if there is one.
 majorityLoser :: Voter a => [Candidate] -> [a] -> Maybe Int
 majorityLoser candidates voters =
-    let tally = antiVotes candidates voters
-     in findMajority candidates voters tally
+    findMajority voters $ antiVotes candidates voters
 
 -- | Returns a list of 'solidCoalition's that are supported by a majority of @voters@.
 majorityCoalitions :: Voter a => [Candidate] -> [a] -> [[Int]]
 majorityCoalitions candidates voters =
-    let subs = filter (\sub -> length sub > 1 && length sub < length candidates) $ subsequences [0 .. length candidates - 1]
-     in filter (\sub -> length (solidCoalition candidates voters sub) >= majority voters) subs
+    filter (\sub -> length sub > 1 && length sub < length candidates) $ subsequences [0 .. length candidates - 1]
+        & filter (\sub -> length (solidCoalition candidates voters sub) >= majority voters)
 
 -- | @'solidCoalition' candidates voters l@ returns a (possibly empty) subset of @voters@ that prefers all candidates in @l@ to all others.
 solidCoalition :: Voter a => [Candidate] -> [a] -> [Int] -> [a]
