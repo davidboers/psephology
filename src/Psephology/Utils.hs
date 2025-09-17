@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, factorial, integrate, median, medianI, split, incrementAt, tallyWinner, tallyLoser, normalize) where
+module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, factorial, integrate, median, medianI, split, incrementAt, tallyWinner, tallyLoser, normalize, zipWith2D, replace, update) where
 
 import Data.List.Extras (argmax, argmin)
 import Data.List (elemIndex)
@@ -13,6 +13,19 @@ normalize :: [Double] -> [Double]
 normalize x =
     let total = sum x
      in map (/ total) x
+
+{-# INLINE zipWith2D #-}
+zipWith2D :: (a -> b -> c) -> [[a]] -> [[b]] -> [[c]]
+zipWith2D f =
+    zipWith (zipWith f)
+
+replace :: [a] -> a -> Int -> [a]
+replace xs x = update xs (const x)
+
+update :: [a] -> (a -> a) -> Int -> [a]
+update [] _ _ = []
+update (x : xs) f 0 = f x : xs
+update (x : xs) f i = x : update xs f (i - 1)
 
 -- Simple trapezoid rule implementation
 integrate :: (Double -> Double) -> Double -> Double -> Int -> Double

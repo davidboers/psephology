@@ -67,7 +67,7 @@ import Psephology.Condorcet
 import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
 import Psephology.Voter
-import Psephology.Utils (tallyWinner)
+import Psephology.Utils (tallyWinner, replace)
 
 -- | [Nanson](https://en.wikipedia.org/wiki/Nanson%27s_method#Nanson_method)
 nansonsMethod :: Voter a => [Candidate] -> [a] -> Int
@@ -273,8 +273,3 @@ beatpathWinner p =
      in case find isSchulzeWinner [0 .. n - 1] of
             Just i -> i
             Nothing -> -1 -- deterministic fallback on full tie/cycle
-
-replace :: [a] -> a -> Int -> [a]
-replace [] _ _ = []
-replace (_ : ls) x 0 = x : ls
-replace (l : ls) x i = l : replace ls x (i - 1)
