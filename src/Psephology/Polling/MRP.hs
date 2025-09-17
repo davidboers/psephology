@@ -1,5 +1,4 @@
 {-# LANGUAGE NamedFieldPuns #-}
-{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 -- | [Multilevel regression with poststratification](https://en.wikipedia.org/wiki/Multilevel_regression_with_poststratification) (MRP) polling.
 --
@@ -14,11 +13,12 @@ module Psephology.Polling.MRP
     , Cell (..)
     ) where
 
-import Control.Monad (replicateM, zipWithM)
-import Data.List.Extras.Argmax (argmin)
+import Control.Monad (replicateM)
 import Data.Random
 import GHC.Float (tanDouble)
 import System.Random.MWC (createSystemRandom)
+
+import Psephology.Utils (zipWith2D, replace, update)
 
 -- Cell
 
@@ -34,7 +34,7 @@ data Cell = Cell
 
 variance :: Cell -> Double
 variance cell =
-    1 / (fromIntegral (n cell) * p cell * (1 - p cell))
+    fromIntegral (n cell) * p cell * (1 - p cell)
 
 updateCell :: Model -> Cell -> Cell
 updateCell m cell =
@@ -49,16 +49,9 @@ data Model = Model
     }
     deriving (Show)
 
-model :: [Int] -> RVar Model
-model limits = do
-    b0 <- cauchy 0 1
-    ss <- replicateM (length limits) (cauchy 0 0.5)
-    as <- zipWithM (\limit s -> replicateM limit $ normal 0 (s ** 2)) limits ss
-    return $ Model b0 as ss
-
 weightedLeastSquaresForCell :: Model -> Cell -> Double
 weightedLeastSquaresForCell Model {b0, as} cell =
-    ((logit (p cell) - b0 - sum (zipWith (!!) as (specifiers cell))) ** 2) / variance cell
+    ((logit (p cell) - b0 - sum (zipWith (!!) as (specifiers cell))) ** 2) * variance cell
 
 weightedLeastSquares :: [Cell] -> [Int] -> Model -> Double
 weightedLeastSquares cells limits m =
@@ -73,27 +66,63 @@ findLimits :: [Cell] -> [Int]
 findLimits cells =
     map (+ 1) $ foldl1 (zipWith max) (map specifiers cells)
 
-fitModel :: Int -> [Cell] -> RVar [Cell]
-fitModel iter cells = do
+fitModel :: Int -> Double -> [Double] -> [Cell] -> Model
+fitModel iter eta ss cells =
     let limits = findLimits cells
-    models <- replicateM iter $ model limits
-    let model1 = argmin (weightedLeastSquares cells limits) models
-    return $ map (updateCell model1) cells
+        m0     = initModel limits ss
+        go 0 m = m
+        go t m = go (t-1) (gdStep eta cells m)
+     in go iter m0
+
+initModel :: [Int] -> [Double] -> Model
+initModel limits ss =
+    let as0 = [ replicate m 0.0 | m <- limits ]
+     in Model { b0 = 0.0, as = as0, ss = ss }
+
+bumpA :: Int -> Int -> Double -> Model -> Model
+bumpA k i delta m@Model{as} =
+    m { as = replace as (update (as !! k) (+ delta) i) k }
+
+-- | One gradient-descent step on the penalized WLS objective.
+gdStep :: Double -> [Cell] -> Model -> Model
+gdStep eta cells m@Model{b0, as} =
+    let limits = findLimits cells
+        
+        loss :: Model -> Double
+        loss = weightedLeastSquares cells limits
+
+        db0 = (loss m{ b0 = b0 + eta } - loss m{ b0 = b0 - eta }) / (2 * eta)
+
+        gradAs :: [[Double]]
+        gradAs =
+            [ [ let mPlus  = bumpA k i  eta m
+                    mMinus = bumpA k i (-eta) m
+                 in (loss mPlus - loss mMinus) / (2 * eta)
+                | i <- [0 .. length (as !! k) - 1]
+                ]
+            | k <- [0 .. length as - 1]
+            ]
+
+        b0' = b0 - eta * db0
+        as' = zipWith2D (\aski gradAski -> aski - eta * gradAski) as gradAs
+    in m { b0 = b0', as = as' }
 
 -- Poststratification
 
--- | @'meanPS' iter cells@ conducts full regression and stratification. The predicted mean is returned.
-meanPS :: Int -> [Cell] -> RVar Double
-meanPS iter cells = do
-    m <- fitModel iter cells
-    let popNs = map (fromIntegral . popN) m
-    let phats = map p m
+-- | @'meanPS' iter eta cells@ conducts full regression and stratification. The predicted mean is returned.
+meanPS :: Int -> Double -> [Cell] -> RVar Double
+meanPS iter eta cells = do
+    ss <- map abs <$> replicateM (length cells) (cauchy 0 2.5)
+    let m = fitModel iter eta ss cells
+        preds = map (updateCell m) cells
+        popNs = map (fromIntegral . popN) preds
+        phats = map p preds
     return $ sum (zipWith (*) popNs phats) / sum popNs
 
 out :: IO ()
 out = do
     mwc <- createSystemRandom
-    y <- sampleFrom mwc (meanPS 50000 testCells)
+    y <- sampleFrom mwc (meanPS 2000 1e-3 testCells)
     print y
 
 testCells :: [Cell]
