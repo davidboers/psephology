@@ -55,6 +55,7 @@ jobs:
         run: |
           cabal run example-generate-blt
           cabal run example-georgia-redistricting
+          cabal run example-mrp
           cabal run example-sample-parliament
       - name: Build docs
         run: |
