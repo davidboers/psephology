@@ -28,7 +28,7 @@ main = do
     let polling' = map (updateStateLabel states) polling
     let cells' = mrpCells polling' postStratCells
     mwc <- createSystemRandom
-    ps <- sampleFrom mwc (meanPS 2000 1e-3 cells')
+    ps <- sampleFrom mwc (meanPS 200 1e-5 cells')
     print ps
 
 filterNonRespondents :: [Participant] -> [Participant]
