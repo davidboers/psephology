@@ -95,6 +95,9 @@
 --
 module Psephology.Polling.MRP
     ( meanPS
+    , meanStratify
+    , stratifyBy
+    , regress
 
       -- * Cell
     , Cell (..)
@@ -102,6 +105,8 @@ module Psephology.Polling.MRP
 
 import Control.Monad (replicateM)
 import Data.Random (stdUniform, RVar)
+import Data.List (groupBy, sortOn)
+import Data.Function ((&))
 import GHC.Float (tanDouble)
 
 import Psephology.Utils (zipWith2D)
@@ -178,19 +183,48 @@ gdStep eta cells m@Model{b0, as, ss} =
         , as = zipWith2D (\aki gaki -> aki - eta * gaki) as gas
         }
 
+-- | Same as 'meanPS' but only performs the regression.
+regress :: Int -> Double -> [Cell] -> RVar [Cell]
+regress iter eta cells = do
+    ss <- map abs <$> replicateM (length cells) (cauchy 0 2.5)
+    let m = fitModel iter eta ss cells
+    return $ map (updateCell m) cells
+
 -- Poststratification
+
+-- | Returns stratified mean for the list of cells. Can be used to compare the difference between
+-- the prior and posterior means.
+--
+-- @ let y    = 'meanStratify'     cells
+--   let yHat = 'meanPS' 2000 1e-3 cells
+--   print $ yHat - y
+-- @
+--
+meanStratify :: [Cell] -> Double
+meanStratify cells = 
+    let popNs = map (fromIntegral . popN) cells
+        yhats = map y cells
+     in sum (zipWith (*) popNs yhats) / sum popNs
+
+-- | @'stratifyBy' k cells@ returns a list of stratified means sorted by a particular specifier. This
+-- can be used, for example, to de-aggregate the data onto sub-national units or constituencies. 
+-- Imagine the first specifier (\(k=1\)) is the state/province:
+--
+-- @ stratifyBy 1 cells @ 
+--
+-- Will return a list containing the means for each state/province.
+stratifyBy :: Int -> [Cell] -> [Double]
+stratifyBy k cells =
+    groupBy (\lhs rhs -> specifiers lhs !! k == specifiers rhs !! k) cells
+        & sortOn (\grp -> specifiers (head grp) !! k)
+        & map meanStratify
 
 -- | @'meanPS' iter eta cells@ conducts full regression and stratification. The predicted mean is returned.
 -- 
 -- See module docs.
 meanPS :: Int -> Double -> [Cell] -> RVar Double
-meanPS iter eta cells = do
-    ss <- map abs <$> replicateM (length cells) (cauchy 0 2.5)
-    let m = fitModel iter eta ss cells
-        preds = map (updateCell m) cells
-        popNs = map (fromIntegral . popN) preds
-        yhats = map y preds
-    return $ sum (zipWith (*) popNs yhats) / sum popNs
+meanPS iter eta cells =
+    meanStratify <$> regress iter eta cells
 
 -- Helpers
 
