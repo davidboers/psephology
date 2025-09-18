@@ -67,7 +67,7 @@ import Psephology.Condorcet
 import Psephology.ElectoralSystems.Borda
 import Psephology.ElectoralSystems.Runoff (instantRunoffVoting)
 import Psephology.Voter
-import Psephology.Utils (tallyWinner, replace)
+import Psephology.Utils (tallyWinner, replace, indices)
 
 -- | [Nanson](https://en.wikipedia.org/wiki/Nanson%27s_method#Nanson_method)
 nansonsMethod :: Voter a => [Candidate] -> [a] -> Int
@@ -104,7 +104,7 @@ minimax candidates voters =
 -- | [Copeland-Llull](https://en.wikipedia.org/wiki/Copeland%27s_method)
 copelandLlull :: Voter a => [Candidate] -> [a] -> Int
 copelandLlull candidates voters =
-    argmax (copelandScore candidates voters) [0 .. length candidates - 1]
+    argmax (copelandScore candidates voters) (indices candidates)
 
 -- | [Black](https://en.wikipedia.org/wiki/Black%27s_method). First argument is a Borda weight formula.
 black :: Voter a => (Int -> Int -> Double) -> [Candidate] -> [a] -> Int
@@ -127,13 +127,15 @@ kemeny candidates voters =
 kemenyOverallRanking :: Voter a => [Candidate] -> [a] -> [Int]
 kemenyOverallRanking candidates voters =
     argmax (kemenyScore candidates voters) $
-        permutations [0 .. length candidates - 1]
+        permutations (indices candidates)
 
 -- | @'kemenyScore' candidates voters ordering@ is the sum of the number of voters that prefer X over 
 -- Y for every X \(\succ\) Y in @ordering@.
 kemenyScore :: Voter a => [Candidate] -> [a] -> [Int] -> Int
 kemenyScore candidates voters ordering =
-    [ (candidates !! (ordering !! i), candidates !! (ordering !! j))
+    [ ( candidates !! (ordering !! i)
+      , candidates !! (ordering !! j)
+      )
     | i <- [0     .. length ordering - 1]
     , j <- [i + 1 .. length ordering - 1]
     ]   & map (uncurry (numPreferOver voters))
@@ -187,13 +189,14 @@ dodgsonScoreWorker k candidates voters c =
 
         d = map deficit cd
         deficit ci = pairwiseMaj voters ci c + 1
-        p = length cd
         cd = filter (\ci -> ci /= c && deficit ci > 0) candidates
 
         lastD' :: [Int] -> [Candidate] -> [Int]
         lastD' d' s =
-            [ if (cd !! i) `elem` s then max 0 (d' !! i - 1) else d' !! i
-            | i <- [0 .. p - 1]
+            [ if (cd !! i) `elem` s 
+                then max 0 (d' !! i - 1) 
+                else d' !! i
+            | i <- indices cd
             ]
 
         swapTable :: Voter a => [a] -> [Int] -> Maybe Int
@@ -208,7 +211,7 @@ dodgsonScoreWorker k candidates voters c =
                         then Nothing
                         else minM sq $ Just new
 
-                passable = [cd !! j | j <- [0 .. p - 1], d' !! j > 0, preference [cd !! j, c] vi == 0]
+                passable = [cd !! j | j <- indices cd, d' !! j > 0, preference [cd !! j, c] vi == 0]
                 subsets = filter (not . null) (subsequences passable)
              in foldl' step (swapTable vs d') subsets
 
@@ -224,8 +227,8 @@ rankedPairs candidates voters =
     [ case pairwiseMaj voters (candidates !! i) (candidates !! j) of
         maj | maj >= 0 -> (i, j, maj)
         maj            -> (j, i, -maj)
-    | i <- [0 .. length candidates - 1]
-    , j <- [0 .. length candidates - 1]
+    | i <- indices candidates
+    , j <- indices candidates
     , i /= j
     ] & sortOn (negate . (\(_, _, maj) -> maj))
       & foldl addUnlessParadox []
@@ -250,10 +253,10 @@ rankedPairs candidates voters =
 schulze :: Voter a => [Candidate] -> [a] -> Int
 schulze candidates voters =
     [ (k, i, j)
-    | k <- [0 .. length candidates - 1]
-    , i <- [0 .. length candidates - 1]
+    | k <- indices candidates
+    , i <- indices candidates
     , i /= k
-    , j <- [0 .. length candidates - 1]
+    , j <- indices candidates
     , j /= k && j /= i
     ] & foldl' schulzeStep (condorcetMatrix pairwiseMaj candidates voters)
       & beatpathWinner
@@ -266,10 +269,9 @@ schulzeStep p (k, i, j) =
 beatpathWinner :: [[Int]] -> Int
 beatpathWinner [] = -1
 beatpathWinner p =
-    let n = length p
-        strength i j = p !! i !! j
+    let strength i j = p !! i !! j
         isSchulzeWinner i =
-            all (\j -> i == j || strength i j >= strength j i) [0 .. n - 1]
-     in case find isSchulzeWinner [0 .. n - 1] of
+            all (\j -> i == j || strength i j >= strength j i) (indices p)
+     in case find isSchulzeWinner (indices p) of
             Just i -> i
             Nothing -> -1 -- deterministic fallback on full tie/cycle
