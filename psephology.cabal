@@ -132,6 +132,7 @@ executable example-mrp
         cassava,
         bytestring,
         vector,
+        mwc-random,
         random,
         random-fu
 
