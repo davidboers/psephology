@@ -229,8 +229,8 @@ testStrategy =
         ]
     where
         referendumFunc candidates voters = fromMaybe 1 $ turnoutRequirement 0.3 27 firstPastThePost candidates voters
-        bordaStrategy = Strategy [[Categorical "B", Categorical "C", Categorical "A"]] 1
-        referendumStrategy = Strategy (replicate 2 [Categorical "No", Categorical "Yes"]) 1
+        bordaStrategy = Strategy 1 [[Categorical "B", Categorical "C", Categorical "A"]]
+        referendumStrategy = Strategy 1 (replicate 2 [Categorical "No", Categorical "Yes"])
 
 testThiele :: TestTree
 testThiele =
