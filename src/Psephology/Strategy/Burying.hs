@@ -5,6 +5,7 @@ import Psephology.Candidate
 import Psephology.ElectoralSystem (ElectoralSystem)
 import Psephology.Strategy
 import Psephology.Voter
+import Psephology.Utils (indices)
 
 import Data.List (delete, find, partition, sortOn, subsequences)
 
@@ -18,12 +19,17 @@ import Data.List (delete, find, partition, sortOn, subsequences)
 -- Will return @Nothing@ if the strategy is impossible. First-past-the-post, the two-round system, and instant
 -- runoff voting are immune from burying. [Read more](https://en.wikipedia.org/wiki/Later-no-harm_criterion).
 bury :: [Candidate] -> [[Candidate]] -> ElectoralSystem [Candidate] -> Int -> Maybe (Strategy [Candidate])
-bury candidates voters es y = do
-    let (possibleParticipants, yvoters) = partition (\vi -> preference candidates vi /= y) voters
-    let subs = sortOn length $ subsequences [0 .. length possibleParticipants - 1]
-    let bury_v = delete (candidates !! y)
-    let nonYVoters' sub = map (\i -> if i `elem` sub then bury_v $ possibleParticipants !! i else possibleParticipants !! i) [0 .. length possibleParticipants - 1]
-    participantsi <- find (\sub -> y /= es candidates (nonYVoters' sub ++ yvoters)) subs
-    let participantsi' = map (possibleParticipants !!) participantsi
-    let newWinneri = es candidates (nonYVoters' participantsi ++ yvoters)
-    return $ Strategy participantsi' newWinneri
+bury candidates voters es y =
+    let (yvoters, possibleParticipants) = partition (\vi -> preference candidates vi == y) voters
+        subs = sortOn length $ subsequences $ indices possibleParticipants
+        cy = candidates !! y
+        nonYVoters' sub = 
+            [ if i `elem` sub 
+                then delete cy $ possibleParticipants !! i
+                else             possibleParticipants !! i
+            | i <- indices possibleParticipants
+            ]
+     in 
+     do participantsi <- find (\sub -> y /= es candidates (nonYVoters' sub ++ yvoters)) subs
+        return $ Strategy (es candidates (nonYVoters' participantsi ++ yvoters))
+                          (map (possibleParticipants !!) participantsi)

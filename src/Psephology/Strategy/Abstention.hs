@@ -29,14 +29,12 @@ abstainWeak candidates voters es x =
      in abstainWorker candidates voters verifyChange x
 
 abstainWorker :: Voter a => [Candidate] -> [a] -> ([a] -> Bool) -> Int -> Maybe (Strategy a)
-abstainWorker candidates voters test x = do
+abstainWorker candidates voters test x =
     let (xvoters, othervoters) = partition (\vi -> preference candidates vi == x) voters
-    let findAbstainers xvoters'
+        findAbstainers xvoters'
             | test (xvoters' ++ othervoters) = Just []
-            | null xvoters' = Nothing
-            | otherwise = do
-                let abstainer = head xvoters'
-                ls <- findAbstainers $ drop 1 xvoters'
-                return (abstainer : ls)
-    abstainers <- findAbstainers xvoters
-    return $ Strategy abstainers x
+            | otherwise = 
+                case xvoters' of
+                    []             -> Nothing
+                    (abstainer:ls) -> (abstainer :) <$> findAbstainers ls
+     in Strategy x <$> findAbstainers xvoters
