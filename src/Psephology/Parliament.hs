@@ -14,7 +14,7 @@ module Psephology.Parliament
 import qualified Control.Monad
 import Data.Maybe (isNothing)
 
-#if __GLASGOW_HASKELL__ <= 910
+#if __GLASGOW_HASKELL__ < 910
 import Data.List (foldl')
 #endif
 

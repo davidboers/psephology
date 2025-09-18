@@ -50,7 +50,7 @@ module Psephology.ProportionalRepresentation.HighestAverages
     , macanese
     ) where
 
-#if __GLASGOW_HASKELL__ <= 910
+#if __GLASGOW_HASKELL__ < 910
 import Data.List (foldl')
 #endif
 
