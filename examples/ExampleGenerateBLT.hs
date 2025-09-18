@@ -12,11 +12,12 @@ import Psephology.SinglePeakedPreferences (singlePeakedVotersNormalCentered, sin
 
 import Data.List (zip4, partition)
 
+{-# ANN main "HLint: use head" #-}
 main :: IO ()
 main = do
     candidates <- singlePeakedVotersNormalCentered 1000 2
-    let (as1, others1) = partition (\x -> head x > 50 && x !! 1 > 50) candidates
-    let (bs1, others2) = partition (\x -> head x > 50) $ others1 ++ drop 140 as1
+    let (as1, others1) = partition (\x -> x !! 0 > 50 && x !! 1 > 50) candidates
+    let (bs1, others2) = partition (\x -> x !! 0 > 50) $ others1 ++ drop 140 as1
     let (cs1, others3) = partition (\x -> x !! 1 > 50) $ others2 ++ drop 140 bs1
     let ds1            = others3 ++ drop 140 cs1
     let as = gather 2 $ map Spacial $ take 140 as1
@@ -43,7 +44,7 @@ main = do
                      ]
 
     putStrLn "Constituency Seats"
-    putStrLn $ "A: " ++ show (head firstSeats)
+    putStrLn $ "A: " ++ show (firstSeats !! 0)
     putStrLn $ "B: " ++ show (firstSeats !! 1)
     putStrLn $ "C: " ++ show (firstSeats !! 2)
     putStrLn $ "D: " ++ show (firstSeats !! 3)
