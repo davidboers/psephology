@@ -195,9 +195,10 @@ regress iter eta cells = do
 -- | Returns stratified mean for the list of cells. Can be used to compare the difference between
 -- the prior and posterior means.
 --
--- @ let y    = 'meanStratify'     cells
---   let yHat = 'meanPS' 2000 1e-3 cells
---   print $ yHat - y
+-- @ 
+--   let theta    = 'meanStratify'     cells
+--   let thetaHat = 'meanPS' 2000 1e-3 cells
+--   print $ thetaHat - theta
 -- @
 --
 meanStratify :: [Cell] -> Double
