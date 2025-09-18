@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 
-module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, factorial, integrate, median, medianI, split, incrementAt, tallyWinner, tallyLoser, normalize, zipWith2D, replace, update) where
+module Psephology.Utils (fullPreferentialPermutations, optionalPreferentialPermutations, factorial, indices, integrate, median, medianI, split, incrementAt, tallyWinner, tallyLoser, normalize, zipWith2D, replace, update) where
 
 import Data.List.Extras (argmax, argmin)
 import Data.List (elemIndex)
@@ -8,6 +8,10 @@ import Data.List (elemIndex)
 factorial :: Integral a => a -> a
 factorial 0 = 1
 factorial n = n * (n - 1)
+
+{-# INLINE indices #-}
+indices :: [a] -> [Int]
+indices l = [0..length l - 1]
 
 normalize :: [Double] -> [Double]
 normalize x =
@@ -75,8 +79,8 @@ medianI l = round $ median (map fromIntegral l :: Fractional b => [b])
 
 tallyWinner :: Ord a => [a] -> Int
 tallyWinner tally = 
-    argmax (tally !!) [0 .. length tally - 1]
+    argmax (tally !!) (indices tally)
 
 tallyLoser :: Ord a => [a] -> Int
 tallyLoser tally =
-    argmin (tally !!) [0 .. length tally - 1]
+    argmin (tally !!) (indices tally)
