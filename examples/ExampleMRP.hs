@@ -119,7 +119,7 @@ educLabel 4 = "Some college"
 educLabel 5 = "4-year College"
 educLabel 6 = "Post-grad"
 
-{-# ANN CellData "HLint: Functor law" #-}
+{-# ANN CellData ("HLint: Functor law" :: String) #-}
 instance FromNamedRecord Participant where
     parseNamedRecord v =
         Participant

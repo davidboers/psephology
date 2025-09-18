@@ -12,7 +12,7 @@ import Psephology.SinglePeakedPreferences (singlePeakedVotersNormalCentered, sin
 
 import Data.List (zip4, partition)
 
-{-# ANN main "HLint: use head" #-}
+{-# ANN main ("HLint: use head" :: String) #-}
 main :: IO ()
 main = do
     candidates <- singlePeakedVotersNormalCentered 1000 2
