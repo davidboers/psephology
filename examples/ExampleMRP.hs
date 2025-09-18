@@ -27,8 +27,11 @@ main = do
     let states = nub $ map (_state . cdata) postStratCells 
     let polling' = map (updateStateLabel states) polling
     let cells' = mrpCells polling' postStratCells
+    putStrLn "Prior theta:"
+    print $ meanStratify cells'
     mwc <- createSystemRandom
     ps <- sampleFrom mwc (meanPS 200 1e-5 cells')
+    putStrLn "Posterior theta:"
     print ps
 
 filterNonRespondents :: [Participant] -> [Participant]
@@ -116,17 +119,17 @@ educLabel 4 = "Some college"
 educLabel 5 = "4-year College"
 educLabel 6 = "Post-grad"
 
+{-# ANN CellData "HLint: Functor law" #-}
 instance FromNamedRecord Participant where
     parseNamedRecord v =
         Participant
-            <$> abortLabel <$> v .: "CC18_321d"
+             .  abortLabel <$> v .: "CC18_321d"
             <*> (CellData
                 <$> (statLabel <$> v .: "inputstate")
                 <*> (raceLabel <$> v .: "race")
                 <*> (gendLabel <$> v .: "gender")
                 <*> (ageLabel  <$> v .: "birthyr")
                 <*> (educLabel <$> v .: "educ"))
-
 
 instance FromNamedRecord CellImport where
     parseNamedRecord v =
