@@ -153,7 +153,7 @@ fitModel iter eta ss cells =
 
 initModel :: [Int] -> [Double] -> Model
 initModel limits ss =
-    let as0 = [ replicate m 0.0 | m <- limits ]
+    let as0 = [ replicate (m+1) 0.0 | m <- limits ]
      in Model { b0 = 0.0, as = as0, ss = ss }
 
 -- | One gradient-descent step on the penalized WLS objective.
