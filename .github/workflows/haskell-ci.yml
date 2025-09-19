@@ -39,10 +39,9 @@ jobs:
         run: docker build -t psephology --build-arg GHC_VERSION=${{ matrix.ghc }} .
       - name: Run tests
         run: docker run --rm -t psephology
-
       - name: Run examples
         run: |
-          cabal run example-generate-blt
-          cabal run example-georgia-redistricting
-          cabal run example-mrp
-          cabal run example-sample-parliament
+          docker run --rm -t psephology --build-arg EXEC=example-generate-blt
+          docker run --rm -t psephology --build-arg EXEC=example-georgia-redistricting
+          docker run --rm -t psephology --build-arg EXEC=example-mrp
+          docker run --rm -t psephology --build-arg EXEC=example-sample-parliament
