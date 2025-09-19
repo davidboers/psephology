@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  dockerfile:
     runs-on: ubuntu-latest
 
     strategy:
@@ -30,34 +30,14 @@ jobs:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
 
-      - name: Cache
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-cabal
-        with:
-          path: ~/.cabal
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/*.cabal') }}-${{ hashFiles('**/cabal.project') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
-      - name: Install dependencies
-        run: |
-          cabal update
-          cabal build --only-dependencies --enable-tests --enable-benchmarks
-          
-      - name: Build
-        run: cabal build --enable-tests --enable-benchmarks all
+      - name: Build container
+        run: docker build -t psephology --build-arg GHC_VERSION=${{ matrix.ghc }} .
       - name: Run tests
-        run: cabal run tests
+        run: docker run --rm -t psephology
+
       - name: Run examples
         run: |
           cabal run example-generate-blt
           cabal run example-georgia-redistricting
           cabal run example-mrp
           cabal run example-sample-parliament
-      - name: Build docs
-        run: |
-          chmod +x docs.sh
-          ./docs.sh

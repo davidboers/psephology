@@ -10,6 +10,22 @@ A Haskell language library dedicated to the study of psephology.
 
 - Compiled using the Glasgow Haskell Compiler, version 9.12.2
 - Cabal version 3.12.1.0 (later Cabal versions are finicky with HLS)
+- Docker version 28.4.0
+
+# Docker
+
+Use Docker to run test suite.
+
+```shell
+$ docker build -t psephology .
+$ docker run --rm -t psephology # run tests
+```
+
+Using a custom GHC version:
+
+```shell
+$ docker build -t psephology --build-arg GHC_VERSION=${GHC_VERSION} .
+```
 
 # Docs
 
