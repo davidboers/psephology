@@ -41,7 +41,7 @@ jobs:
         run: docker run --rm -t psephology
       - name: Run examples
         run: |
-          docker run --rm -t psephology --build-arg EXEC=example-generate-blt
-          docker run --rm -t psephology --build-arg EXEC=example-georgia-redistricting
-          docker run --rm -t psephology --build-arg EXEC=example-mrp
-          docker run --rm -t psephology --build-arg EXEC=example-sample-parliament
+          docker run --rm -t psephology cabal run example-generate-blt
+          docker run --rm -t psephology cabal run example-georgia-redistricting
+          docker run --rm -t psephology cabal run example-mrp
+          docker run --rm -t psephology cabal run example-sample-parliament

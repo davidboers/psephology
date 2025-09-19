@@ -16,5 +16,4 @@ COPY . /project
 RUN cabal build all --enable-tests
 RUN chmod +x /project/docs.sh && /project/docs.sh
 
-ARG EXEC=tests
-CMD [ "cabal", "run", "${EXEC}" ]
+CMD [ "cabal", "run", "tests" ]
