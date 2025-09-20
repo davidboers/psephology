@@ -2,6 +2,7 @@
 
 module Main (main) where
 
+import Fraud
 import ProportionalRepresentation
 import Redistricting
 
@@ -47,6 +48,7 @@ tests =
         , testStrategy
         , testProportionalRepresentation
         , testThiele
+        , testFraud
         ]
 
 testTennesseeCapitalElection :: TestTree

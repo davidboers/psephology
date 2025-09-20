@@ -19,6 +19,7 @@ module Psephology
     , module Psephology.ElectoralSystems.Runoff
     , module Psephology.ElectoralSystems.Sortition
     , module Psephology.ElectoralSystems.Thiele
+    , module Psephology.Fraud
     , module Psephology.McKelveySchofield
     , module Psephology.NumberOfParties
     , module Psephology.Parliament
@@ -54,6 +55,7 @@ import Psephology.ElectoralSystems.Rated
 import Psephology.ElectoralSystems.Runoff
 import Psephology.ElectoralSystems.Sortition
 import Psephology.ElectoralSystems.Thiele
+import Psephology.Fraud
 import Psephology.McKelveySchofield
 import Psephology.NumberOfParties
 import Psephology.Parliament
