@@ -84,9 +84,7 @@ instance Voter [Candidate] where
         fromMaybe (preference candidates v) $ elemIndex nextChoice candidates
 
     rank _ v c =
-        case elemIndex c v of
-            Just a -> a + 1
-            Nothing -> length v + 1
+        maybe (-1) (+1) $ elemIndex c v
 
     score mn _ candidates v c =
         length candidates - rank candidates v c + mn
@@ -98,9 +96,7 @@ instance Voter [[Candidate]] where
         argminC (rank candidates v) candidates
 
     rank _ v c =
-        case findIndex (elem c) v of
-            Just a -> a + 1
-            Nothing -> length v + 1
+        maybe (-1) (+1) $ findIndex (elem c) v
 
     score mn _ candidates v c =
         length v - rank candidates v c + mn
