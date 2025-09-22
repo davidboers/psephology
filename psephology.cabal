@@ -163,7 +163,11 @@ test-suite psephology-test
         base,
         psephology,
         tasty,
-        tasty-hunit
+        tasty-hunit,
+        cassava,
+        bytestring,
+        text,
+        vector
 
     hs-source-dirs:   
         test,

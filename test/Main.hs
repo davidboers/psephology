@@ -12,33 +12,18 @@ import Test.Tasty.HUnit
 import Data.Bifunctor qualified
 import Data.List
 import Data.Maybe
+import Data.IORef
 
-import Psephology.BLT
-import Psephology.Candidate
-import Psephology.Condorcet
-import Psephology.ElectoralSystem
-import Psephology.ElectoralSystems.Borda
-import Psephology.ElectoralSystems.Condorcet
-    ( dodgsonScore
-    , kemenyOverallRanking
-    )
-import Psephology.ElectoralSystems.Plurality
-import Psephology.ElectoralSystems.Thiele
-import Psephology.McKelveySchofield
-import Psephology.Pathologies
-import Psephology.SampleElections
-import Psephology.Spoilers
-import Psephology.Strategy
-import Psephology.Strategy.Abstention
-import Psephology.Strategy.Burying
-import Psephology.Voter
+import Psephology
 
 -- To run examples, use the modules in examples/ (e.g. ExampleGeorgiaRedistricting, ExampleGenerateBLT)
 main :: IO ()
-main = defaultMain tests
+main = do
+    russia2024 <- newIORef $ error "Resource not available"
+    defaultMain $ withResource (acquireRussia2024 russia2024) (const (return ())) tests
 
-tests :: TestTree
-tests =
+tests :: IO [Return] -> TestTree
+tests russia2024 =
     testGroup
         "Tests"
         [ testTennesseeCapitalElection
@@ -48,7 +33,7 @@ tests =
         , testStrategy
         , testProportionalRepresentation
         , testThiele
-        , testFraud
+        , testFraud russia2024
         ]
 
 testTennesseeCapitalElection :: TestTree

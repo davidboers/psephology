@@ -26,15 +26,15 @@ module Psephology.Fraud (
     -- * Turnout vs. vote share
     , turnoutAtOrBelow
     , cumulativeShareAt
-    , integerVoteShares
+    , roundVoteShares
     ) where
 
-import Data.List (elemIndices)
+import Data.List (elemIndices, genericLength)
 import Data.Either
 
 -- Data type
 
--- | A single return, from a precinct or in aggregate, for a candidate/party/ballot option x.
+-- | A single return, from a precinct or in aggregate, for a candidate, party, or ballot option x.
 data Return = Return
     { votesX :: Int
     -- ^ Number of votes for x.
@@ -105,32 +105,22 @@ cumulativeShareAt returns share =
 binFactor :: Double
 binFactor = 1000
 
-intFactor :: Double
-intFactor = 100
-
 -- Unused for now
 binSize :: Double
 binSize = 1 / binFactor
 
-stepSize :: Double
-stepSize = 1 / intFactor
-
-integerShares :: [Double]
-integerShares = [0, stepSize ..1]
+sharesAt :: Double -> [Double]
+sharesAt factor = let stepSize = 1 / factor in [0, stepSize..1]
 
 bin :: Double -> Double
 bin r = fromIntegral (round (r * binFactor)) / binFactor
 
-isInteger :: Double -> Bool
-isInteger r = 
-    bin r `elem` integerShares
-
--- | Returns a histogram of the number of returns in 0.1% bins. 
-integerVoteShares :: [Return] -> [Int]
-integerVoteShares returns =
+-- | Returns a histogram of the number of returns in 0.1% bins, filtered by whether the bin is round.
+roundVoteShares :: Double -> [Return] -> [Int]
+roundVoteShares factor returns =
     let shares = map (bin . voteShareX) returns in
     [ length $ elemIndices i shares
-    | i <- integerShares
+    | i <- sharesAt factor
     ]
 
 -- Analyze
@@ -145,25 +135,33 @@ showPct :: Double -> String
 showPct p = show (round (p * 100)) <> "%"
 
 report :: FraudMessage -> String
-report (Over100 noReturns lhs rhs) = show noReturns <> " returns reported more " <> lhs <> " than " <> rhs
-report (Clustering clusterType lhs rhs) = "In " <> clusterType <> ", x got " <> showPct lhs <> ", compared to the average of " <> showPct rhs <> "."
-report (Summary lhs rhs) = show lhs <> " of " <> show rhs <> " tests detected fraud."
+report (Over100 noReturns lhs rhs) = 
+    show noReturns <> " returns reported more " <> lhs <> " than " <> rhs <> "."
+
+report (Clustering clusterType lhs rhs) = 
+    "There are a suspiciously high proportion of returns for x (" <> showPct lhs <> ") clustered around " <> 
+        clusterType <> ". The predicted proportion (in a uniform distribution) would be " <> showPct rhs <> "."
+
+report (Summary lhs rhs) = 
+    show lhs <> " of " <> show rhs <> " tests detected fraud."
 
 reportE :: Either String FraudMessage -> String
 reportE (Left noFraud)  = "OK             " <> noFraud
 reportE (Right warning) = "FRAUD DETECTED " <> report warning
 
 over100Message :: Maybe [Return] -> String -> String -> Either String FraudMessage
-over100Message Nothing  lhs rhs = Left  $ "No returns recorded more " <> lhs <> " then " <> rhs <> "."
+over100Message Nothing  lhs rhs = Left  $ lhs <> "/" <> rhs <> ": No fraud."
 over100Message (Just l) lhs rhs = Right $ Over100 (length l) lhs rhs
 
 clusteringMessage :: [Return] -> Either String FraudMessage
 clusteringMessage returns 
-    | abs (integerX - averageX) > 0.05 = Left    "There is not a statistically significant clustering of votes for x in integer percentages."
-    | otherwise                        = Right $ Clustering "integer percentages" integerX averageX
+    | p < 0.05  = Left "Clustering: No fraud."
+    | otherwise = Right $ Clustering "integer percentages" inIntBins expectedIntReturns
     where
-        integerX = aggregateVoteShareX $ filter (isInteger . voteShareX) returns 
-        averageX = aggregateVoteShareX returns
+        factor = 100
+        inIntBins = fromIntegral $ sum $ roundVoteShares factor returns :: Double
+        expectedIntReturns = genericLength (sharesAt factor) / genericLength (sharesAt binFactor) -- What about if a normal distribution?
+        p = abs (1 - (inIntBins / (fromIntegral (length returns) - inIntBins)))
 
 makeMessages :: [Return] -> [Either String FraudMessage]
 makeMessages returns =
