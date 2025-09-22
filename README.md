@@ -35,12 +35,8 @@ $ docker run --rm -t psephology cabal run example-${EX}
 
 # Docs
 
-Access docs:
-
-```shell
-$ ./docs.sh
-$ docs/index.html
-```
+Building the Docker container using the command above will produce a directory called `docs/`.
+You can then pop into `docs/index.html`.
 
 # TODO list
 
