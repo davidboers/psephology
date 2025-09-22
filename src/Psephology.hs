@@ -33,6 +33,9 @@ module Psephology
     , module Psephology.Redistricting.Utilitarian
     , module Psephology.SampleElections
     , module Psephology.SinglePeakedPreferences
+    , module Psephology.Spoilers
+    , module Psephology.Spoilers.Clones
+    , module Psephology.Spoilers.Proxies
     , module Psephology.Strategy
     , module Psephology.Strategy.Abstention
     , module Psephology.Strategy.Betrayal
@@ -69,6 +72,9 @@ import Psephology.Quotas
 import Psephology.Redistricting.Utilitarian
 import Psephology.SampleElections
 import Psephology.SinglePeakedPreferences
+import Psephology.Spoilers
+import Psephology.Spoilers.Clones
+import Psephology.Spoilers.Proxies
 import Psephology.Strategy
 import Psephology.Strategy.Abstention
 import Psephology.Strategy.Betrayal
