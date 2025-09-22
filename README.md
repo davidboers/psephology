@@ -27,6 +27,12 @@ Using a custom GHC version:
 $ docker build -t psephology --build-arg GHC_VERSION=${GHC_VERSION} .
 ```
 
+Or you can run one of the examples:
+
+```shell
+$ docker run --rm -t psephology cabal run example-${EX}
+```
+
 # Docs
 
 Access docs:
@@ -45,3 +51,5 @@ Planned features (not necessarily planned for first release):
 - System-wise efficiency
 - Finish weak orderings
 - Polsby-Popper
+- Test suite
+    - Property lists
