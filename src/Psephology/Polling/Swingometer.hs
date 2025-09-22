@@ -14,17 +14,17 @@ module Psephology.Polling.Swingometer (
 
 import Psephology.Utils (tallyWinner, normalize)
 
--- | Computes the projected results for multiple seats.
+-- | @'swing' deltas prev@. Computes the projected results for multiple seats.
 swing :: [Double] -> [[Int]] -> [[Int]]
 swing deltas =
     map (swingSeat deltas)
 
--- | Computes the projected results for a single contest.
+-- | @'swingSeat' deltas prevS@. Computes the projected results for a single contest.
 swingSeat :: [Double] -> [Int] -> [Int]
 swingSeat deltas lastResultSeat =
     map round $ zipWith (+) deltas $ normalize $ map fromIntegral lastResultSeat
 
--- | Returns the projected seat count for each party.
+-- | @'seatProjection' deltas prev@. Returns the projected seat count for each party.
 seatProjection :: [Double] -> [[Int]] -> [Int]
 seatProjection deltas lastResults =
     counts $ map tallyWinner $ swing deltas lastResults
