@@ -164,6 +164,7 @@ test-suite psephology-test
         psephology,
         tasty,
         tasty-hunit,
+        tasty-quickcheck,
         cassava,
         bytestring,
         text,

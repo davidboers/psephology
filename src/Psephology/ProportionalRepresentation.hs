@@ -20,12 +20,15 @@ module Psephology.ProportionalRepresentation
       -- * House monotonicity
     , isHouseMonotoneAt
     , alabamas
+
+      -- * Rules
+    , checkRelative
     )
 where
 
 import Data.List (findIndices, intersect, nub, singleton, sortOn, findIndex)
 
-import Psephology.Utils (incrementAt)
+import Psephology.Utils (incrementAt, indices)
 
 -- | @'gallagherIndex' votes seats@ returns the index of relative disproportionality between
 -- @votes@ received and @seats@ won.
@@ -79,7 +82,7 @@ apparentmentValidated :: ([Int] -> Int -> [Int]) -> [[Int]] -> [Int] -> Int -> [
 apparentmentValidated m apparentments votes x =
     let apparentments' = apparentments ++ map singleton (notInApparentments (length votes) apparentments)
         seatsByApparentment = m (tallyByApparentment votes apparentments') x
-        seatsByCompetitor = [ m (map (votes !!) (apparentments' !! i)) (seatsByApparentment !! i) | i <- [0..length apparentments'] ]
+        seatsByCompetitor = [ m (map (votes !!) (apparentments' !! i)) (seatsByApparentment !! i) | i <- indices apparentments' ]
      in
     map snd $ sortOn fst $ zip (concat apparentments') (concat seatsByCompetitor)
 
@@ -236,3 +239,39 @@ alabamas m votes x =
     let a = m votes x
         ap1 = m votes (x + 1)
      in findIndices (uncurry (>)) $ zip a ap1
+
+-- * Properties
+
+matchups :: [a] -> [(Int, Int)]
+matchups l = 
+    [ (i, j)
+    | i <- indices l
+    , j <- indices l
+    , i > j
+    ]
+
+none :: Foldable t => (a -> Bool) -> t a -> Bool
+none f = not . any f
+
+improperOrder :: [Int] -> [Int] -> Int -> Int -> Bool
+improperOrder votes seats i j =
+    case compare (votes !! i) (votes !! j) of
+        GT -> seats !! i <  seats !! j
+        LT -> seats !! i >  seats !! j
+        EQ -> abs ((seats !! i) - (seats !! j)) > 1
+
+-- | @'checkRelative' votes seats@ determines whether every competitor obeys the requirement that 
+-- the proper relative position, with respect to votes, is also obeyed with respect to seats. In 
+-- other words, if party x receives less votes than party y, x should get a number of seats less 
+-- than or equal to y, and if x receives more votes than y, the opposite should be true. Stated 
+-- formally (for each @i@, @j@):
+--
+-- @
+--  case compare (votes !! i) (votes !! j) of
+--      GT -> seats !! i <  seats !! j
+--      LT -> seats !! i >  seats !! j
+--      EQ -> abs ((seats !! i) - (seats !! j)) > 1
+-- @
+checkRelative :: [Int] -> [Int] -> Bool
+checkRelative votes seats =
+    none (uncurry (improperOrder votes seats)) $ matchups votes

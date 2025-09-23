@@ -54,12 +54,35 @@ module Psephology.ProportionalRepresentation.HighestAverages
 import Data.List (foldl')
 #endif
 
+import Psephology.ProportionalRepresentation (checkRelative)
+
 import Psephology.Utils (incrementAt, tallyWinner)
 
 -- | @'highestAverages' divisor votes x@ returns the number of seats allocated to each competitor.
+{-# NOINLINE highestAverages #-}
 highestAverages :: (Int -> Double) -> [Int] -> Int -> [Int]
 highestAverages divisor votes =
     highestAveragesWithInit (map (const 0) votes) divisor votes
+
+{-# RULES 
+"Adams obey checkRelative" forall votes numSeats.
+    checkRelative votes (highestAverages adams votes numSeats) = True -- Does not apply
+
+"Dean obey checkRelative" forall votes numSeats.
+    checkRelative votes (highestAverages dean votes numSeats) = True -- Does not apply
+
+"D'Hondt obey checkRelative" forall votes numSeats. 
+    checkRelative votes (highestAverages dhondt votes numSeats) = True
+
+"Huntington-Hill obey checkRelative" forall votes numSeats. 
+    checkRelative votes (highestAverages huntingtonHill votes numSeats) = True -- Does not apply
+
+"Saintë-Lague obey checkRelative" forall votes numSeats. 
+    checkRelative votes (highestAverages sainteLague votes numSeats) = True
+
+"Macanese obey checkRelative" forall votes numSeats. 
+    checkRelative votes (highestAverages macanese votes numSeats) = True
+#-}
 
 -- | @'highestAveragesWithInit' init divisor votes x@ returns the number of seats allocated to each
 -- competitor, with a custom initial seat count (@init@), allowing for calculation of the
@@ -77,6 +100,7 @@ winnerIndex divisor votes seats =
 -- \[ f(n) = n \]
 --
 -- Benefits lower-vote-getters because \(f(0) = 0\).
+{-# INLINE [1] adams #-}
 adams :: Int -> Double
 adams = fromIntegral
 
@@ -85,6 +109,7 @@ adams = fromIntegral
 -- \[ f(n) = \frac{2n(n+1)}{2n+1} \]
 --
 -- Complex \(f^\prime(n) = \frac{x^2 + x + \frac{1}{2}}{x^2 + x + \frac{1}{4}}\).
+{-# INLINE [1] dean #-}
 dean :: Int -> Double
 dean n = fromIntegral (2 * n * (n + 1)) / fromIntegral (2 * n + 1) 
 
@@ -93,6 +118,7 @@ dean n = fromIntegral (2 * n * (n + 1)) / fromIntegral (2 * n + 1)
 -- \[ f(n) = n + 1 \]
 --
 -- Benefits higher-vote-getters because \(f^\prime(n) = 1\).
+{-# INLINE [1] dhondt #-}
 dhondt :: Int -> Double
 dhondt n = fromIntegral $ n + 1
 
@@ -101,6 +127,7 @@ dhondt n = fromIntegral $ n + 1
 -- \[ f(n) = \sqrt{n(n+1)} \]
 --
 -- Benefits lower-vote-getters because \(f(0) = 0\) and \(f^\prime(n) = \frac{2n+1}{2\sqrt{n(n+1)}}\).
+{-# INLINE [1] huntingtonHill #-}
 huntingtonHill :: Int -> Double
 huntingtonHill n =
     sqrt $ fromIntegral n * (fromIntegral n + 1)
@@ -110,6 +137,7 @@ huntingtonHill n =
 -- \[ f(n) = 2n+1 \]
 --
 -- Benefits lower-vote-getters because \(f^\prime(n) = 2\).
+{-# INLINE [1] sainteLague #-}
 sainteLague :: Int -> Double
 sainteLague n = fromIntegral $ 2 * n + 1
 
@@ -118,5 +146,6 @@ sainteLague n = fromIntegral $ 2 * n + 1
 -- \[ f(n) = 2^n \]
 --
 -- Benefits lower-vote-getters because \(f^\prime(n) = 2^n\text{ln}2\).
+{-# INLINE [1] macanese #-}
 macanese :: Int -> Double
 macanese n = 2 ** fromIntegral n
