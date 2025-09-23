@@ -3,13 +3,9 @@
   "tasks": [
     {
       "type": "shell",
-      "label": "Make documentation",
-      "command": "bash docs.sh"
-    },
-    {
-      "type": "shell",
-      "label": "Verify",
-      "command": "bash verify.sh"
+      "label": "Compile",
+      "command": "cabal",
+      "args": ["build", "all", "--enable-tests"]
     },
     {
       "type": "shell",
