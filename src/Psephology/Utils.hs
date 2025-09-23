@@ -10,7 +10,7 @@ factorial 0 = 1
 factorial n = n * (n - 1)
 
 {-# INLINE indices #-}
-indices :: [a] -> [Int]
+indices :: Foldable t => t a -> [Int]
 indices l = [0..length l - 1]
 
 normalize :: [Double] -> [Double]
