@@ -43,16 +43,20 @@ testRule ruleName rule =
     let underMethod methodName m = testProperty methodName (rule m) in
     testGroup ruleName $ map (uncurry underMethod) methods
 
-testCheckRelative :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> Bool
+testCheckRelative :: ([Int] -> Int -> [Int]) -> [Word] -> Word -> Bool
 testCheckRelative m votes numSeats = 
-    let votes' = map abs votes in
-    checkRelative votes' (m votes' numSeats)
+    let votes' = map fromIntegral votes 
+        numSeats' = fromIntegral numSeats
+     in
+    checkRelative votes' (m votes' numSeats')
 
-testCorrectSeats :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> Bool
+testCorrectSeats :: ([Int] -> Int -> [Int]) -> [Word] -> Word -> Bool
 testCorrectSeats _ []    _        = True -- Annoying
-testCorrectSeats m votes numSeats = 
-    let votes' = map abs votes in
-    correctNumSeats numSeats (m votes' numSeats)
+testCorrectSeats m votes numSeats =
+    let votes' = map fromIntegral votes 
+        numSeats' = fromIntegral numSeats
+     in
+    correctNumSeats numSeats' (m votes' numSeats')
 
 -- Cases
 
