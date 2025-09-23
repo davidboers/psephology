@@ -65,23 +65,17 @@ highestAverages divisor votes =
     highestAveragesWithInit (map (const 0) votes) divisor votes
 
 {-# RULES 
-"Adams obey checkRelative" forall votes numSeats.
-    checkRelative votes (highestAverages adams votes numSeats) = True -- Does not apply
-
-"Dean obey checkRelative" forall votes numSeats.
-    checkRelative votes (highestAverages dean votes numSeats) = True -- Does not apply
-
 "D'Hondt obey checkRelative" forall votes numSeats. 
     checkRelative votes (highestAverages dhondt votes numSeats) = True
-
-"Huntington-Hill obey checkRelative" forall votes numSeats. 
-    checkRelative votes (highestAverages huntingtonHill votes numSeats) = True -- Does not apply
 
 "Saintë-Lague obey checkRelative" forall votes numSeats. 
     checkRelative votes (highestAverages sainteLague votes numSeats) = True
 
 "Macanese obey checkRelative" forall votes numSeats. 
     checkRelative votes (highestAverages macanese votes numSeats) = True
+
+-- Note: The checkRelative rule does not apply to methods that award free seats, because they award
+-- the first seats to the first competitors in the list, not based on vote counts.
 #-}
 
 -- | @'highestAveragesWithInit' init divisor votes x@ returns the number of seats allocated to each
