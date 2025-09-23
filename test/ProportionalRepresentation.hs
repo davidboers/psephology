@@ -18,25 +18,43 @@ testProportionalRepresentation =
         , testResults
         , testCompensation
         , testIceland
-        , testComplianceWithRelativity
+        , testRule "Relative positions rule" testCheckRelative
+        , testRule "Correct number of seats allocated" testCorrectSeats
         ]
+        
+-- Rules
 
-testComplianceWithRelativity :: TestTree
-testComplianceWithRelativity =
-    let underMethod name m = testProperty name $ 
-            \votes numSeats -> checkRelative (map abs votes) (m (map abs votes) numSeats) in
-    testGroup "Relative positions rule" 
-        [ --underMethod "Adams"              (highestAverages adams)
-        -- underMethod "Dean"               (highestAverages dean)
-          underMethod "D'Hondt"            (highestAverages dhondt)
-        --, underMethod "Huntington-Hill"    (highestAverages huntingtonHill)
-        , underMethod "Sainte-Laguë"       (highestAverages sainteLague)
-        , underMethod "Macanese"           (highestAverages macanese)
-        , underMethod "Hare"               (largestRemainder hare)
-        , underMethod "Droop"              (largestRemainder droop)
-        , underMethod "Hagenbach-Bischoff" (largestRemainder hagenbachBischoff)
-        , underMethod "Imperiali"          (largestRemainder imperiali)
-        ]
+methods :: [(String, [Int] -> Int -> [Int])]
+methods =
+    [ ("Adams"              , highestAverages adams)
+    , ("Dean"               , highestAverages dean)
+    , ("D'Hondt"            , highestAverages dhondt)
+    , ("Huntington-Hill"    , highestAverages huntingtonHill)
+    , ("Sainte-Laguë"       , highestAverages sainteLague)
+    , ("Macanese"           , highestAverages macanese)
+    , ("Hare"               , largestRemainder hare)
+    , ("Droop"              , largestRemainder droop)
+    , ("Hagenbach-Bischoff" , largestRemainder hagenbachBischoff)
+    , ("Imperiali"          , largestRemainder imperiali)
+    ]
+
+testRule :: Testable a => String -> (([Int] -> Int -> [Int]) -> a) -> TestTree
+testRule ruleName rule =
+    let underMethod methodName m = testProperty methodName (rule m) in
+    testGroup ruleName $ map (uncurry underMethod) methods
+
+testCheckRelative :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> Bool
+testCheckRelative m votes numSeats = 
+    let votes' = map abs votes in
+    checkRelative votes' (m votes' numSeats)
+
+testCorrectSeats :: ([Int] -> Int -> [Int]) -> [Int] -> Int -> Bool
+testCorrectSeats _ []    _        = True -- Annoying
+testCorrectSeats m votes numSeats = 
+    let votes' = map abs votes in
+    correctNumSeats numSeats (m votes' numSeats)
+
+-- Cases
 
 testQuotas :: TestTree
 testQuotas =

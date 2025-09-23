@@ -23,6 +23,7 @@ module Psephology.ProportionalRepresentation
 
       -- * Rules
     , checkRelative
+    , correctNumSeats
     )
 where
 
@@ -275,3 +276,9 @@ improperOrder votes seats i j =
 checkRelative :: [Int] -> [Int] -> Bool
 checkRelative votes seats =
     none (uncurry (improperOrder votes seats)) $ matchups votes
+
+-- | @'correctNumSeats' x seats@ determines whether the correct number of seats @x@ has been 
+-- allocated.
+correctNumSeats :: Int -> [Int] -> Bool
+correctNumSeats x seats =
+    sum seats == x
