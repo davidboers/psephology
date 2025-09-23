@@ -34,6 +34,7 @@
 -- Given:
 --
 --      * A list of cells where:
+--
 --              * \(n_c\) ('n') is the number of respondents in that cell.
 --              * \(y_c\) ('y') is the proportion (percentage of \(n\)) of respondents in that cell 
 --              that responded in the affirmative. This is the posterior prior mean.
@@ -41,6 +42,7 @@
 --              Usually obtained from census data, etc.  
 --              * \(\text{spec}_c\) ('specifiers') is a list containing the representations for that cell 
 --              for each rule \(k\).
+--
 --      * An \(\eta\) in range \((0,1)\). Try starting with \(1e^{-3}\). The \(\alpha\) values 
 --      should not leave the range \([-1,1]\), and if they do, try reducing \(\eta\) by 10 times. 
 --      * A number of iterations usually derived from \(\eta\). Should not exceed \(\frac{2}{\eta}\), and
