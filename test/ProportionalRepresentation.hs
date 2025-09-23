@@ -18,13 +18,15 @@ testProportionalRepresentation =
         , testResults
         , testCompensation
         , testIceland
-        , testRule "Relative positions rule" testCheckRelative
-        , testRule "Correct number of seats allocated" testCorrectSeats
+        , testRule "Relative positions rule" testCheckRelative (grabMethods ["D'Hondt", "Sainte-Laguë", "Macanese", "Hare", "Droop", "Hagenbach-Bischoff", "Imperiali"])
+        , testRule "Correct number of seats allocated" testCorrectSeats (grabMethods ["Adams", "Dean", "D'Hondt", "Huntington-Hill", "Sainte-Laguë", "Macanese", "Droop"])
         ]
         
 -- Rules
 
-methods :: [(String, [Int] -> Int -> [Int])]
+type Method = (String, [Int] -> Int -> [Int])
+
+methods :: [Method]
 methods =
     [ ("Adams"              , highestAverages adams)
     , ("Dean"               , highestAverages dean)
@@ -38,22 +40,24 @@ methods =
     , ("Imperiali"          , largestRemainder imperiali)
     ]
 
-testRule :: Testable a => String -> (([Int] -> Int -> [Int]) -> a) -> TestTree
-testRule ruleName rule =
-    let underMethod methodName m = testProperty methodName (rule m) in
-    testGroup ruleName $ map (uncurry underMethod) methods
+grabMethods :: [String] -> [Method]
+grabMethods ms = filter (\(m, _) -> m `elem` ms) methods
 
-testCheckRelative :: ([Int] -> Int -> [Int]) -> [Word] -> Word -> Bool
+testRule :: Testable a => String -> (([Int] -> Int -> [Int]) -> a) -> [Method] -> TestTree
+testRule ruleName rule fMethods =
+    let underMethod methodName m = testProperty methodName (rule m) in
+    testGroup ruleName $ map (uncurry underMethod) fMethods
+
+testCheckRelative :: ([Int] -> Int -> [Int]) -> NonEmptyList Word -> Word -> Bool
 testCheckRelative m votes numSeats = 
-    let votes' = map fromIntegral votes 
+    let votes' = map fromIntegral $ getNonEmpty votes 
         numSeats' = fromIntegral numSeats
      in
     checkRelative votes' (m votes' numSeats')
 
-testCorrectSeats :: ([Int] -> Int -> [Int]) -> [Word] -> Word -> Bool
-testCorrectSeats _ []    _        = True -- Annoying
+testCorrectSeats :: ([Int] -> Int -> [Int]) -> NonEmptyList Word -> Word -> Bool
 testCorrectSeats m votes numSeats =
-    let votes' = map fromIntegral votes 
+    let votes' = map fromIntegral $ getNonEmpty votes 
         numSeats' = fromIntegral numSeats
      in
     correctNumSeats numSeats' (m votes' numSeats')
