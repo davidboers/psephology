@@ -12,17 +12,23 @@ module Psephology.Polling.Swingometer (
     -- * National swings
     , makeDeltas) where
 
-import Psephology.Utils (tallyWinner, normalize)
+import Data.Function ((&))
+
+import Psephology.Utils (tallyWinner, normalize, indices)
 
 -- | @'swing' deltas prev@. Computes the projected results for multiple seats.
-swing :: [Double] -> [[Int]] -> [[Int]]
+-- Returns projected vote shares.
+swing :: [Double] -> [[Int]] -> [[Double]]
 swing deltas =
     map (swingSeat deltas)
 
 -- | @'swingSeat' deltas prevS@. Computes the projected results for a single contest.
-swingSeat :: [Double] -> [Int] -> [Int]
+-- Returns projected vote shares.
+swingSeat :: [Double] -> [Int] -> [Double]
 swingSeat deltas lastResultSeat =
-    map round $ zipWith (+) deltas $ normalize $ map fromIntegral lastResultSeat
+    map fromIntegral lastResultSeat
+        & normalize 
+        & zipWith (+) deltas
 
 -- | @'seatProjection' deltas prev@. Returns the projected seat count for each party.
 seatProjection :: [Double] -> [[Int]] -> [Int]
@@ -34,7 +40,7 @@ seatProjection deltas lastResults =
 -- competitors.
 sortByTwoPartySwingRequired :: Integral a => Int -> Int -> [[a]] -> [(Int, a)]
 sortByTwoPartySwingRequired x y lastResults =
-    zipWith (\i ns -> (i, twoPartySwingRequired x y ns)) [0..length lastResults-1] lastResults
+    zipWith (\i ns -> (i, twoPartySwingRequired x y ns)) (indices lastResults) lastResults
 
 -- | @'twoPartySwingRequired' x y ns@ returns the minimum two-party swing required for @y@ to 
 -- defeat @x@. Can be either raw votes or vote percentages.
