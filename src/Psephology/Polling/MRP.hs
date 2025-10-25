@@ -25,7 +25,7 @@
 --
 -- The random coefficients \(\beta_0\) and \(\alpha\) are then used to re-estimate \(y\).
 --
--- \[ \hat{y}_c = \text{logit}^{-1}(\beta_0+\sum_{k}{a_{k,\text{spec}_c[k]}}) \]
+-- \[ \hat{y}_c = \text{logit}^{-1}(\beta_0+\sum_{k}{\alpha_{k,\text{spec}_c[k]}}) \]
 --
 -- Finally, the poststratification:
 --
@@ -119,9 +119,9 @@ data Cell = Cell
     { y :: Double
     -- ^ Between @[0-1]@
     , n :: Int
-    -- ^ The **sample size** in this cell (number of respondents).
+    -- ^ The __sample size__ in this cell (number of respondents).
     , popN :: Int
-    -- ^ The **population size** of this cell.
+    -- ^ The __population size__ of this cell.
     , specifiers :: [Int]
     }
 
