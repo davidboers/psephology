@@ -9,25 +9,56 @@ name:               psephology
 --                  | | | +--- code changes with no API change
 version:            0.1.0.0
 
-synopsis:           Library dedicated to the study of Psephology.
+synopsis:           Library dedicated to the study of elections.
 license:            GPL-3.0-or-later
 license-file:       LICENSE
-author:             davidboers
-maintainer:         kwmmineccraft@gmail.com
+author:             Dawie Boers
+maintainer:         dawie@dawieboers.com
 category:           Math
 build-type:         Simple
-extra-doc-files:    CHANGELOG.md
+
+description:
+    .
+    A detailed library containing many tools used to experiment with different theories and mathematical results 
+    related to psephology, the study of elections. It can also be used to experiment with different election systems.
+    .
+    == Feature list
+        - Algorithms to determine the victor under various single-winner election systems, including:
+        - Borda count
+        - Condorcet voting
+        - First-past-the-post
+        - Instant-Runoff Voting
+        - Rated voting (range, STAR, graduated majority)
+        - Sortition
+        - Two-round system
+        - and tools to evaluate the susceptibility of these systems to pathologies.
+    - Seat projections
+        - Multilevel regression with poststratification (MRP) polling
+        - Swingometer
+    - Algorithms to determine seat allocation under various party-list proportional representation systems, including 
+        both the highest averages method and the largest remainder method.
+        - Tools to evaluate the proportionality of these systems.
+        - Tools to evaluate the susceptibility of these systems to pathologies.
+    - A new algorithm to reapportion voting districts.
+    - Tools to evaluate and study the spoiler effect.
+    - Tools to devise and study voting strategies (strategic voting).
+    - Interface to handle .blt files.
+    - Tools to evaluate voting system efficiency.
+    - Tools to identify voter fraud through a statistical analysis of published election results.
+    - Tools to study the McKelvey-Schofield chaos theorem.
+    - Tools to generate synthetic voters under the single-peaked preferences model.
+    - and many others!
 
 tested-with:
-    GHC == 9.4.8
-     || == 9.6.7
+    GHC == 9.6.7
      || == 9.8.4 
-     || == 9.10.2
-     || == 9.12.2 
+     || == 9.10.3
+     || == 9.12.4
+     || == 9.14.1 
 
-extra-source-files:
-    CHANGELOG.md
-    README.md
+extra-source-files: README.md
+
+extra-doc-files:    CHANGELOG.md
 
 source-repository head
     type:     git
@@ -86,13 +117,12 @@ library
         Psephology.Spoilers.Utils
 
     build-depends:
-        base,
-        list-extras,
-        random,
-        random-fu,
-        containers,
-        time,
-        mwc-random
+        , base         >=4.12.0.0 && <5
+        , list-extras  >=0.4.1.11 && <0.5
+        , random       >=1.2.1.3  && <1.4
+        , random-fu    >=0.3.0.1  && <0.4
+        , containers   >=0.7      && <0.9
+        , time         >=1.14     && <1.17
 
     hs-source-dirs:
         src
@@ -103,8 +133,8 @@ executable example-generate-blt
     main-is: ExampleGenerateBLT.hs
     hs-source-dirs: examples
     build-depends:
-        base,
-        psephology
+        , psephology
+        , base         >=4.12.0.0 && <5
 
     default-language: Haskell2010
 
@@ -112,23 +142,24 @@ executable example-georgia-redistricting
     main-is: ExampleGeorgiaRedistricting.hs
     hs-source-dirs: examples
     build-depends:
-        base,
-        psephology,
-        aeson
+        , psephology
+        , base         >=4.12.0.0 && <5
+        , aeson        >=0.7.0.0  && <2.4
+
     default-language: Haskell2010
 
 executable example-mrp
     main-is: ExampleMRP.hs
     hs-source-dirs: examples
     build-depends:
-        base,
-        psephology,
-        cassava,
-        bytestring,
-        vector,
-        mwc-random,
-        random,
-        random-fu
+        , psephology
+        , base         >=4.12.0.0 && <5
+        , cassava      >=0.5.4.0  && <0.6
+        , bytestring   >=0.12.2.0 && <0.13
+        , vector       >=0.13.2.0 && <0.14
+        , mwc-random   >=0.15.2.0 && <0.16
+        , random       >=1.2.1.3  && <1.4
+        , random-fu    >=0.3.0.1  && <0.4
 
     default-language: Haskell2010
 
@@ -136,8 +167,8 @@ executable example-sample-parliament
     main-is: ExampleSampleParliament.hs
     hs-source-dirs: examples
     build-depends:
-        base,
-        psephology
+        , psephology
+        , base         >=4.12.0.0 && <5
 
     default-language: Haskell2010
 
@@ -160,15 +191,15 @@ test-suite psephology-test
 
     -- Test dependencies.
     build-depends:
-        base,
-        psephology,
-        tasty,
-        tasty-hunit,
-        tasty-quickcheck,
-        cassava,
-        bytestring,
-        text,
-        vector
+        , psephology
+        , base         >=4.12.0.0 && <5
+        , tasty
+        , tasty-hunit
+        , tasty-quickcheck
+        , cassava      >=0.5.4.0  && <0.6
+        , bytestring   >=0.12.2.0 && <0.13
+        , text         >=2.1.4    && <2.2
+        , vector       >=0.13.2.0 && <0.14
 
     hs-source-dirs:   
         test,

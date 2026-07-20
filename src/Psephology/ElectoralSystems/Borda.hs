@@ -1,8 +1,8 @@
 {- | Named after the Marquis de Borda, a contemporary of Condorcet, the [Borda count](https://en.wikipedia.org/wiki/Borda_count) is
 a simple, pragmatic voting method. It has some technical advantages over other ordinal methods, such as being easier to count. It
 also has a high probability of choosing the Condorcet winner, empirically the highest of any non-Condorcet ordinal voting method.
-However, it is often derided for its vulnerability to manipulation. Although less prone to *exhibiting* pathological behavior, 
-its vulnerable to a greater *number* of them than Condorcet methods, Instant Runoff Voting, or plurality systems.
+However, it is often derided for its vulnerability to manipulation. Although less prone to __exhibiting__ pathological behavior, 
+its vulnerable to a greater __number__ of them than Condorcet methods, Instant Runoff Voting, or plurality systems.
 
 The different Borda variants are procedurally identical. They differ only in the formula used to determine the number of points
 awarded for each ranking. The 'bordaCountWFormula' function is the general algorithm entry point, and can be specialized by passing

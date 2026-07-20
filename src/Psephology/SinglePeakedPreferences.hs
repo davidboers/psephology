@@ -1,7 +1,8 @@
 {-# LANGUAGE ImportQualifiedPost #-}
 
 -- | Single peaked preferences-- See [here](https://en.wikipedia.org/wiki/Single_peaked_preferences) for a description of single peaked preferences.
-module Psephology.SinglePeakedPreferences (singlePeakedVotersLim, singlePeakedVoters, formalize, singlePeakedVotersNormalLim, singlePeakedVotersNormal, singlePeakedVotersNormalCentered) where
+module Psephology.SinglePeakedPreferences (singlePeakedVotersLim, singlePeakedVoters, formalize, 
+    singlePeakedVotersNormalLim, singlePeakedVotersNormal, singlePeakedVotersNormalCentered) where
 
 import Control.Monad qualified
 import Data.List

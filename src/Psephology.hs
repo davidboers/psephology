@@ -2,6 +2,12 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
 -- |
+-- Module:      Psephology
+-- Copyright:   (c) 2026 Dawie Boers
+-- License:     GPL-3.0-or-later
+-- Maintainer:  Dawie Boers <dawie@dawieboers.com>
+-- Stability:   experimental
+-- Portability: GHC
 --
 -- Importing this module is not recommended. Users should instead import one or more of
 -- the following submodules.

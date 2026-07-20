@@ -89,7 +89,8 @@ instance Voter [Candidate] where
     score mn _ candidates v c =
         length candidates - rank candidates v c + mn
 
--- | A voter's preferences given as a list of options, ex. from a .blt file. A [weak ordering](https://en.wikipedia.org/wiki/Weak_ordering). Proof of concept.
+-- | A voter's preferences given as a list of options, ex. from a .blt file. 
+-- A [weak ordering](https://en.wikipedia.org/wiki/Weak_ordering). Proof of concept.
 instance Voter [[Candidate]] where
     preference _ [] = -1
     preference candidates v =

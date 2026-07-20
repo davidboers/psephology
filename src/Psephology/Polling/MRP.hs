@@ -6,7 +6,7 @@
 -- such as support for multiple political parties, multiple MRPs should be run and the results
 -- combined.
 --
--- ==== Specifications
+-- === Specifications
 --
 -- Below is a comprehensive description of the implementation in mathematical form. For the 
 -- multilevel regression phase, the below is repeated for a given number of iterations:
@@ -69,7 +69,7 @@
 --      \text{logit}^{-1} \alpha = \frac{1}{1+\exp(-\alpha)}\\
 -- \]
 --
--- ==== Calling
+-- === Calling
 -- 
 -- @
 --  import Data.Random

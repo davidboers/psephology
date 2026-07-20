@@ -1,4 +1,4 @@
--- | A placeholder module for the [largest remainder method](https://en.wikipedia.org/wiki/Quota_method).
+-- | Module for the [largest remainder method](https://en.wikipedia.org/wiki/Quota_method).
 module Psephology.ProportionalRepresentation.LargestRemainder where
 
 import Data.List (sortOn)

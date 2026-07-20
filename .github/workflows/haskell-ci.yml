@@ -3,8 +3,16 @@ name: Haskell CI
 on:
   push:
     branches: ["main"]
+    paths-ignore:
+      - ".vscode/**"
+      - "images/**"
+      - "**.md"
   pull_request:
     branches: ["main"]
+    paths-ignore:
+      - ".vscode/**"
+      - "images/**"
+      - "**.md"
 
 permissions:
   contents: read
@@ -15,8 +23,9 @@ jobs:
 
     strategy:
       matrix:
-        cabal: ["3.10.3"]
-        ghc: ["9.4.8", "9.6.7", "9.8.4", "9.10.2", "9.12.2"]
+        cabal: ["3.12.1"]
+        # This should be the same as the `tested-with` property in psephology.cabal
+        ghc: ["9.6.7", "9.8.4", "9.10.3", "9.12.4", "9.14.1"]
 
     steps:
       - uses: actions/checkout@v4
@@ -37,11 +46,5 @@ jobs:
 
       - name: Build container
         run: docker build -t psephology --build-arg GHC_VERSION=${{ matrix.ghc }} .
-      - name: Run tests
-        run: docker run --rm -t psephology
-      - name: Run examples
-        run: |
-          docker run --rm -t psephology cabal run example-generate-blt
-          docker run --rm -t psephology cabal run example-georgia-redistricting
-          docker run --rm -t psephology cabal run example-mrp
-          docker run --rm -t psephology cabal run example-sample-parliament
+      - name: Run CI
+        run: docker run --rm -t psephology make

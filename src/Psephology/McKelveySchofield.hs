@@ -12,6 +12,8 @@ module Psephology.McKelveySchofield (
     thetaPath,
 ) where
 
+-- https://www.aeaweb.org/content/file?id=19586
+
 import Psephology.Candidate (Candidate (Spacial))
 import Psephology.Condorcet (pairwiseMaj)
 import Psephology.Utils (integrate)

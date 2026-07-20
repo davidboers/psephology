@@ -1,23 +1,26 @@
+{-# LANGUAGE CPP #-}
+
 -- | Given a tally list of \(k\) competitors (parties, alliances, constituencies, etc.)
--- \(V=\{v_1,\ldots,v_k\}\), the algorithm returns a new list \(S(k)\) indicating the number of
+-- \(V = \{v_1,\ldots,v_k\}\), the algorithm returns a new list \(S(k)\) indicating the number of
 -- seats allocated to each competitor. The algorithm also takes in a number of seats to allocate
 -- \(x\) and a divisor function \(f(n)\).
 --
--- * Highest averages procedure
+-- === Highest averages procedure
 --
 -- The following procedure is repeated until \(\sum_{i=1}^{k} S(i) = x\).
 --
--- \[ \text{average}_i := \frac{v_i}{f \circ S(i)}\\
---    S(i) := S(i) +
---      \begin{cases}
+-- TODO: this documentation is not displaying correctly
+-- \[   \text{average}_i := \frac{v_i}{f \circ S(i)}\\
+--      S(i) := S(i) +\\
+--      \begin{cases}\\
 --          1 & \text{if }i\text{ maximizes average}\\
 --          0 & \text{otherwise}\\
---      \end{cases}
+--      \end{cases} //
 -- \]
 --
 -- \(S\) is preset to 0 for every \(i\).
 --
--- * Properties
+-- === Properties
 --
 -- Note that for some divisor functions \(f(0) = 0\), meaning the averages blow up to infinity.
 -- Because infinity is always the highest average, every party is destined to win a seat. This
@@ -35,7 +38,6 @@
 -- at any point on the relevant interval.
 --
 -- \[ \lim_{n \to x} f^\prime(n) > 1 \]
-{-# LANGUAGE CPP #-}
 module Psephology.ProportionalRepresentation.HighestAverages
     ( -- * Entry point
       highestAverages
